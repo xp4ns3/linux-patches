@@ -1,0 +1,94 @@
+From f4d6c646dce7408cb32946c48e80b760981f0f08 Mon Sep 17 00:00:00 2001
+From: "Fabio M. De Francesco" <fmdefrancesco@gmail.com>
+Date: Wed, 21 Jul 2021 20:05:03 +0200
+Subject: [PATCH 2/2] x86/resctrl: Fix kernel-doc in rdtgroup.c
+
+Add description of undocumented parameters. Issues detected by
+scripts/kernel-doc.
+
+Signed-off-by: Fabio M. De Francesco <fmdefrancesco@gmail.com>
+Reviewed-by: Reinette Chatre <reinette.chatre@intel.com>
+---
+ arch/x86/kernel/cpu/resctrl/rdtgroup.c | 19 +++++++++++++++++++
+ 1 file changed, 19 insertions(+)
+
+diff --git a/arch/x86/kernel/cpu/resctrl/rdtgroup.c b/arch/x86/kernel/cpu/resctrl/rdtgroup.c
+index 01fd30e7829d..b51513661469 100644
+--- a/arch/x86/kernel/cpu/resctrl/rdtgroup.c
++++ b/arch/x86/kernel/cpu/resctrl/rdtgroup.c
+@@ -877,6 +877,9 @@ static int rdt_shareable_bits_show(struct kernfs_open_file *of,
+ 
+ /**
+  * rdt_bit_usage_show - Display current usage of resources
++ * @of: pointer to opened "bit_usage" info file
++ * @seq: seq_file used to format output to "bit_usage"
++ * @v: unused pointer to void
+  *
+  * A domain is a shared resource that can now be allocated differently. Here
+  * we display the current regions of the domain as an annotated bitmask.
+@@ -888,6 +891,8 @@ static int rdt_shareable_bits_show(struct kernfs_open_file *of,
+  *   S - currently used and shareable by software only
+  *   E - currently used exclusively by one resource group
+  *   P - currently pseudo-locked by one resource group
++ *
++ * Return: 0
+  */
+ static int rdt_bit_usage_show(struct kernfs_open_file *of,
+ 			      struct seq_file *seq, void *v)
+@@ -1243,6 +1248,7 @@ bool rdtgroup_cbm_overlaps(struct rdt_resource *r, struct rdt_domain *d,
+ 
+ /**
+  * rdtgroup_mode_test_exclusive - Test if this resource group can be exclusive
++ * @rdtgrp: resource group
+  *
+  * An exclusive resource group implies that there should be no sharing of
+  * its allocated resources. At the time this group is considered to be
+@@ -1283,7 +1289,12 @@ static bool rdtgroup_mode_test_exclusive(struct rdtgroup *rdtgrp)
+ 
+ /**
+  * rdtgroup_mode_write - Modify the resource group's mode
++ * @of: pointer to opened "mode" file of a resource group
++ * @buf: data from user-space
++ * @nbytes: length of input data buffer
++ * @off: unsupported offset to input
+  *
++ * Return: @nbytes on success, <0 on failure
+  */
+ static ssize_t rdtgroup_mode_write(struct kernfs_open_file *of,
+ 				   char *buf, size_t nbytes, loff_t off)
+@@ -1367,6 +1378,8 @@ static ssize_t rdtgroup_mode_write(struct kernfs_open_file *of,
+  *
+  * @cbm is unsigned long, even if only 32 bits are used to make the
+  * bitmap functions work correctly.
++ *
++ * Return: how many bytes of the cache are represented by @cbm.
+  */
+ unsigned int rdtgroup_cbm_to_size(struct rdt_resource *r,
+ 				  struct rdt_domain *d, unsigned long cbm)
+@@ -1389,10 +1402,14 @@ unsigned int rdtgroup_cbm_to_size(struct rdt_resource *r,
+ 
+ /**
+  * rdtgroup_size_show - Display size in bytes of allocated regions
++ * @of: pointer to opened "size" file of a resource group
++ * @s: seq_file used to format output to "size"
++ * @v: unused pointer to void
+  *
+  * The "size" file mirrors the layout of the "schemata" file, printing the
+  * size in bytes of each region instead of the capacity bitmask.
+  *
++ * Return: 0 on success, <0 on failure
+  */
+ static int rdtgroup_size_show(struct kernfs_open_file *of,
+ 			      struct seq_file *s, void *v)
+@@ -2618,6 +2635,8 @@ static int mkdir_mondata_all(struct kernfs_node *parent_kn,
+  * resource group is initialized. The user can follow this with a
+  * modification to the CBM if the default does not satisfy the
+  * requirements.
++ *
++ * Return: A valid CBM, 0 if @_val is only 0 filled
+  */
+ static u32 cbm_ensure_valid(u32 _val, struct rdt_resource *r)
+ {
+-- 
+2.33.0
+
