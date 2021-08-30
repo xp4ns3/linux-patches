@@ -1,0 +1,447 @@
+From 51854d4a5b46626fed421d01afb79c19a87e93af Mon Sep 17 00:00:00 2001
+From: Pavel Skripkin <paskripkin@gmail.com>
+Date: Mon, 30 Aug 2021 23:27:56 +0300
+Subject: [PATCH] staging: r8188eu: remove ops abstraction
+
+/* Commit message :D */
+
+Signed-off-by: Pavel Skripkin <paskripkin@gmail.com>
+---
+ drivers/staging/r8188eu/core/rtw_io.c         | 152 +-----------------
+ drivers/staging/r8188eu/hal/usb_halinit.c     |   8 +-
+ drivers/staging/r8188eu/hal/usb_ops_linux.c   |  15 +-
+ drivers/staging/r8188eu/include/rtw_io.h      |  71 +++-----
+ .../staging/r8188eu/include/usb_ops_linux.h   |   9 +-
+ drivers/staging/r8188eu/os_dep/usb_intf.c     |   2 +-
+ .../staging/r8188eu/os_dep/usb_ops_linux.c    |  22 ++-
+ 7 files changed, 44 insertions(+), 235 deletions(-)
+
+diff --git a/drivers/staging/r8188eu/core/rtw_io.c b/drivers/staging/r8188eu/core/rtw_io.c
+index 6c45e68c868e..1badfd22285b 100644
+--- a/drivers/staging/r8188eu/core/rtw_io.c
++++ b/drivers/staging/r8188eu/core/rtw_io.c
+@@ -34,139 +34,6 @@ jackson@realtek.com.tw
+ #define rtw_cpu_to_le16(val)		cpu_to_le16(val)
+ #define rtw_cpu_to_le32(val)		cpu_to_le32(val)
+ 
+-
+-int _rtw_writeN(struct adapter *adapter, u32 addr, u32 length, u8 *pdata)
+-{
+-	struct io_priv *pio_priv = &adapter->iopriv;
+-	struct	intf_hdl *pintfhdl = (struct intf_hdl *)(&pio_priv->intf);
+-	int (*_writeN)(struct intf_hdl *pintfhdl, u32 addr, u32 length, u8 *pdata);
+-	int ret;
+-
+-	_writeN = pintfhdl->io_ops._writeN;
+-
+-	ret = _writeN(pintfhdl, addr, length, pdata);
+-
+-
+-	return RTW_STATUS_CODE(ret);
+-}
+-int _rtw_write8_async(struct adapter *adapter, u32 addr, u8 val)
+-{
+-	struct io_priv *pio_priv = &adapter->iopriv;
+-	struct	intf_hdl		*pintfhdl = &pio_priv->intf;
+-	int (*_write8_async)(struct intf_hdl *pintfhdl, u32 addr, u8 val);
+-	int ret;
+-
+-	_write8_async = pintfhdl->io_ops._write8_async;
+-
+-	ret = _write8_async(pintfhdl, addr, val);
+-
+-
+-	return RTW_STATUS_CODE(ret);
+-}
+-
+-int _rtw_write16_async(struct adapter *adapter, u32 addr, u16 val)
+-{
+-	struct io_priv *pio_priv = &adapter->iopriv;
+-	struct	intf_hdl		*pintfhdl = &pio_priv->intf;
+-	int (*_write16_async)(struct intf_hdl *pintfhdl, u32 addr, u16 val);
+-	int ret;
+-
+-	_write16_async = pintfhdl->io_ops._write16_async;
+-	ret = _write16_async(pintfhdl, addr, val);
+-
+-	return RTW_STATUS_CODE(ret);
+-}
+-
+-int _rtw_write32_async(struct adapter *adapter, u32 addr, u32 val)
+-{
+-	struct io_priv *pio_priv = &adapter->iopriv;
+-	struct	intf_hdl		*pintfhdl = &pio_priv->intf;
+-	int (*_write32_async)(struct intf_hdl *pintfhdl, u32 addr, u32 val);
+-	int ret;
+-
+-	_write32_async = pintfhdl->io_ops._write32_async;
+-	ret = _write32_async(pintfhdl, addr, val);
+-
+-	return RTW_STATUS_CODE(ret);
+-}
+-
+-void _rtw_read_mem(struct adapter *adapter, u32 addr, u32 cnt, u8 *pmem)
+-{
+-	void (*_read_mem)(struct intf_hdl *pintfhdl, u32 addr, u32 cnt, u8 *pmem);
+-	struct io_priv *pio_priv = &adapter->iopriv;
+-	struct	intf_hdl		*pintfhdl = &pio_priv->intf;
+-
+-
+-	if (adapter->bDriverStopped || adapter->bSurpriseRemoved)
+-	     return;
+-	_read_mem = pintfhdl->io_ops._read_mem;
+-	_read_mem(pintfhdl, addr, cnt, pmem);
+-
+-}
+-
+-void _rtw_write_mem(struct adapter *adapter, u32 addr, u32 cnt, u8 *pmem)
+-{
+-	void (*_write_mem)(struct intf_hdl *pintfhdl, u32 addr, u32 cnt, u8 *pmem);
+-	struct io_priv *pio_priv = &adapter->iopriv;
+-	struct	intf_hdl		*pintfhdl = &pio_priv->intf;
+-
+-
+-
+-	_write_mem = pintfhdl->io_ops._write_mem;
+-
+-	_write_mem(pintfhdl, addr, cnt, pmem);
+-
+-
+-}
+-
+-void _rtw_read_port(struct adapter *adapter, u32 addr, u32 cnt, u8 *pmem)
+-{
+-	u32 (*_read_port)(struct intf_hdl *pintfhdl, u32 addr, u32 cnt, u8 *pmem);
+-	struct io_priv *pio_priv = &adapter->iopriv;
+-	struct	intf_hdl		*pintfhdl = &pio_priv->intf;
+-
+-
+-
+-	if (adapter->bDriverStopped || adapter->bSurpriseRemoved)
+-	     return;
+-
+-	_read_port = pintfhdl->io_ops._read_port;
+-
+-	_read_port(pintfhdl, addr, cnt, pmem);
+-
+-
+-}
+-
+-void _rtw_read_port_cancel(struct adapter *adapter)
+-{
+-	void (*_read_port_cancel)(struct intf_hdl *pintfhdl);
+-	struct io_priv *pio_priv = &adapter->iopriv;
+-	struct intf_hdl *pintfhdl = &pio_priv->intf;
+-
+-	_read_port_cancel = pintfhdl->io_ops._read_port_cancel;
+-
+-	if (_read_port_cancel)
+-		_read_port_cancel(pintfhdl);
+-}
+-
+-u32 _rtw_write_port(struct adapter *adapter, u32 addr, u32 cnt, u8 *pmem)
+-{
+-	u32 (*_write_port)(struct intf_hdl *pintfhdl, u32 addr, u32 cnt, u8 *pmem);
+-	struct io_priv *pio_priv = &adapter->iopriv;
+-	struct	intf_hdl		*pintfhdl = &pio_priv->intf;
+-	u32 ret = _SUCCESS;
+-
+-
+-
+-	_write_port = pintfhdl->io_ops._write_port;
+-
+-	ret = _write_port(pintfhdl, addr, cnt, pmem);
+-
+-
+-
+-	return ret;
+-}
+-
+ u32 _rtw_write_port_and_wait(struct adapter *adapter, u32 addr, u32 cnt, u8 *pmem, int timeout_ms)
+ {
+ 	int ret = _SUCCESS;
+@@ -184,29 +51,12 @@ u32 _rtw_write_port_and_wait(struct adapter *adapter, u32 addr, u32 cnt, u8 *pme
+ 	return ret;
+ }
+ 
+-void _rtw_write_port_cancel(struct adapter *adapter)
+-{
+-	void (*_write_port_cancel)(struct intf_hdl *pintfhdl);
+-	struct io_priv *pio_priv = &adapter->iopriv;
+-	struct intf_hdl *pintfhdl = &pio_priv->intf;
+-
+-	_write_port_cancel = pintfhdl->io_ops._write_port_cancel;
+-
+-	if (_write_port_cancel)
+-		_write_port_cancel(pintfhdl);
+-}
+-
+-int rtw_init_io_priv(struct adapter *padapter)
++void rtw_init_io_priv(struct adapter *padapter)
+ {
+ 	struct io_priv	*piopriv = &padapter->iopriv;
+ 	struct intf_hdl *pintf = &piopriv->intf;
+ 
+-	if (!set_intf_ops)
+-		return _FAIL;
+-
+ 	piopriv->padapter = padapter;
+ 	pintf->padapter = padapter;
+ 	pintf->pintf_dev = adapter_to_dvobj(padapter);
+-
+-	return _SUCCESS;
+ }
+diff --git a/drivers/staging/r8188eu/hal/usb_halinit.c b/drivers/staging/r8188eu/hal/usb_halinit.c
+index 5cdabf43d4fd..11a14010472a 100644
+--- a/drivers/staging/r8188eu/hal/usb_halinit.c
++++ b/drivers/staging/r8188eu/hal/usb_halinit.c
+@@ -1051,12 +1051,8 @@ static unsigned int rtl8188eu_inirp_init(struct adapter *Adapter)
+ {
+ 	u8 i;
+ 	struct recv_buf *precvbuf;
+-	uint	status;
+-	struct intf_hdl *pintfhdl = &Adapter->iopriv.intf;
++	uint status;
+ 	struct recv_priv *precvpriv = &Adapter->recvpriv;
+-	u32 (*_read_port)(struct intf_hdl *pintfhdl, u32 addr, u32 cnt, u8 *pmem);
+-
+-	_read_port = pintfhdl->io_ops._read_port;
+ 
+ 	status = _SUCCESS;
+ 
+@@ -1065,7 +1061,7 @@ static unsigned int rtl8188eu_inirp_init(struct adapter *Adapter)
+ 	/* issue Rx irp to receive data */
+ 	precvbuf = (struct recv_buf *)precvpriv->precv_buf;
+ 	for (i = 0; i < NR_RECVBUFF; i++) {
+-		if (!_read_port(pintfhdl, precvpriv->ff_hwaddr, 0, (unsigned char *)precvbuf)) {
++		if (!rtw_read_port(Adapter, precvpriv->ff_hwaddr, 0, (unsigned char *)precvbuf)) {
+ 			status = _FAIL;
+ 			goto exit;
+ 		}
+diff --git a/drivers/staging/r8188eu/hal/usb_ops_linux.c b/drivers/staging/r8188eu/hal/usb_ops_linux.c
+index 0227420111ae..5be502c0e0d2 100644
+--- a/drivers/staging/r8188eu/hal/usb_ops_linux.c
++++ b/drivers/staging/r8188eu/hal/usb_ops_linux.c
+@@ -152,7 +152,7 @@ int rtw_write16(struct adapter *adapter, u32 addr, u16 val)
+ 	return usbctrl_vendorreq(pintfhdl, wvalue, &data, 2, REALTEK_USB_VENQT_WRITE);
+ }
+ 
+-int rtw_write32(struct adapter *adapter,, u32 addr, u32 val)
++int rtw_write32(struct adapter *adapter, u32 addr, u32 val)
+ {
+ 	struct io_priv *pio_priv = &adapter->iopriv;
+ 	struct intf_hdl *pintfhdl = &pio_priv->intf;
+@@ -445,14 +445,13 @@ static void usb_read_port_complete(struct urb *purb, struct pt_regs *regs)
+ 	}
+ }
+ 
+-static u32 usb_read_port(struct intf_hdl *pintfhdl, u32 addr, u32 cnt, u8 *rmem)
++u32 rtw_read_port(struct adapter *adapter, u32 addr, u32 cnt, u8 *rmem)
+ {
+ 	struct urb *purb = NULL;
+-	struct recv_buf	*precvbuf = (struct recv_buf *)rmem;
+-	struct adapter		*adapter = pintfhdl->padapter;
+-	struct dvobj_priv	*pdvobj = adapter_to_dvobj(adapter);
+-	struct recv_priv	*precvpriv = &adapter->recvpriv;
+-	struct usb_device	*pusbd = pdvobj->pusbdev;
++	struct recv_buf *precvbuf = (struct recv_buf *)rmem;
++	struct dvobj_priv *pdvobj = adapter_to_dvobj(adapter);
++	struct recv_priv *precvpriv = &adapter->recvpriv;
++	struct usb_device *pusbd = pdvobj->pusbdev;
+ 	int err;
+ 	unsigned int pipe;
+ 	size_t tmpaddr = 0;
+@@ -568,7 +567,7 @@ void rtl8188eu_set_intf_ops(struct _io_ops	*pops)
+ 	pops->_write_port_cancel = &usb_write_port_cancel;
+ 
+ }
+-#endi
++#endif
+ 
+ void rtl8188eu_set_hw_type(struct adapter *adapt)
+ {
+diff --git a/drivers/staging/r8188eu/include/rtw_io.h b/drivers/staging/r8188eu/include/rtw_io.h
+index d8db923033f4..025e09ca276a 100644
+--- a/drivers/staging/r8188eu/include/rtw_io.h
++++ b/drivers/staging/r8188eu/include/rtw_io.h
+@@ -220,58 +220,27 @@ void unregister_intf_hdl(struct intf_hdl *pintfhdl);
+ void _rtw_attrib_read(struct adapter *adapter, u32 addr, u32 cnt, u8 *pmem);
+ void _rtw_attrib_write(struct adapter *adapter, u32 addr, u32 cnt, u8 *pmem);
+ 
+-u8 _rtw_read8(struct adapter *adapter, u32 addr);
+-u16 _rtw_read16(struct adapter *adapter, u32 addr);
+-u32 _rtw_read32(struct adapter *adapter, u32 addr);
+-void _rtw_read_mem(struct adapter *adapter, u32 addr, u32 cnt, u8 *pmem);
+-void _rtw_read_port(struct adapter *adapter, u32 addr, u32 cnt, u8 *pmem);
+-void _rtw_read_port_cancel(struct adapter *adapter);
+-
+-int _rtw_write8(struct adapter *adapter, u32 addr, u8 val);
+-int _rtw_write16(struct adapter *adapter, u32 addr, u16 val);
+-int _rtw_write32(struct adapter *adapter, u32 addr, u32 val);
+-int _rtw_writeN(struct adapter *adapter, u32 addr, u32 length, u8 *pdata);
+-
+-int _rtw_write8_async(struct adapter *adapter, u32 addr, u8 val);
+-int _rtw_write16_async(struct adapter *adapter, u32 addr, u16 val);
+-int _rtw_write32_async(struct adapter *adapter, u32 addr, u32 val);
+-
+-void _rtw_write_mem(struct adapter *adapter, u32 addr, u32 cnt, u8 *pmem);
++u8 rtw_read8(struct adapter *adapter, u32 addr);
++u16 rtw_read16(struct adapter *adapter, u32 addr);
++u32 rtw_read32(struct adapter *adapter, u32 addr);
++void rtw_read_mem(struct adapter *adapter, u32 addr, u32 cnt, u8 *pmem);
++u32 rtw_read_port(struct adapter *adapter, u32 addr, u32 cnt, u8 *pmem);
++void rtw_read_port_cancel(struct adapter *adapter);
++
++int rtw_write8(struct adapter *adapter, u32 addr, u8 val);
++int rtw_write16(struct adapter *adapter, u32 addr, u16 val);
++int rtw_write32(struct adapter *adapter, u32 addr, u32 val);
++int rtw_writeN(struct adapter *adapter, u32 addr, u32 length, u8 *pdata);
++
++int rtw_write8_async(struct adapter *adapter, u32 addr, u8 val);
++int rtw_write16_async(struct adapter *adapter, u32 addr, u16 val);
++int rtw_write32_async(struct adapter *adapter, u32 addr, u32 val);
++
++void rtw_write_mem(struct adapter *adapter, u32 addr, u32 cnt, u8 *pmem);
+ u32 _rtw_write_port(struct adapter *adapter, u32 addr, u32 cnt, u8 *pmem);
+-u32 _rtw_write_port_and_wait(struct adapter *adapter, u32 addr, u32 cnt,
++u32 rtw_write_port_and_wait(struct adapter *adapter, u32 addr, u32 cnt,
+ 			     u8 *pmem, int timeout_ms);
+-void _rtw_write_port_cancel(struct adapter *adapter);
+-
+-#define rtw_read8(adapter, addr) _rtw_read8((adapter), (addr))
+-#define rtw_read16(adapter, addr) _rtw_read16((adapter), (addr))
+-#define rtw_read32(adapter, addr) _rtw_read32((adapter), (addr))
+-#define rtw_read_mem(adapter, addr, cnt, mem)				\
+-	_rtw_read_mem((adapter), (addr), (cnt), (mem))
+-#define rtw_read_port(adapter, addr, cnt, mem)				\
+-	_rtw_read_port((adapter), (addr), (cnt), (mem))
+-#define rtw_read_port_cancel(adapter) _rtw_read_port_cancel((adapter))
+-
+-#define  rtw_write8(adapter, addr, val)					\
+-	_rtw_write8((adapter), (addr), (val))
+-#define  rtw_write16(adapter, addr, val)				\
+-	_rtw_write16((adapter), (addr), (val))
+-#define  rtw_write32(adapter, addr, val)				\
+-	_rtw_write32((adapter), (addr), (val))
+-#define  rtw_writeN(adapter, addr, length, data)			\
+-	_rtw_writeN((adapter), (addr), (length), (data))
+-#define rtw_write8_async(adapter, addr, val)				\
+-	_rtw_write8_async((adapter), (addr), (val))
+-#define rtw_write16_async(adapter, addr, val)				\
+-	_rtw_write16_async((adapter), (addr), (val))
+-#define rtw_write32_async(adapter, addr, val)				\
+-	_rtw_write32_async((adapter), (addr), (val))
+-#define rtw_write_mem(adapter, addr, cnt, mem)				\
+-	_rtw_write_mem((adapter), (addr), (cnt), (mem))
+-#define rtw_write_port(adapter, addr, cnt, mem)				\
+-	_rtw_write_port((adapter), (addr), (cnt), (mem))
+-#define rtw_write_port_and_wait(adapter, addr, cnt, mem, timeout_ms)	\
+-	_rtw_write_port_and_wait((adapter), (addr), (cnt), (mem), (timeout_ms))
+-#define rtw_write_port_cancel(adapter) _rtw_write_port_cancel((adapter))
++void rtw_write_port_cancel(struct adapter *adapter);
+ 
+ void rtw_write_scsi(struct adapter *adapter, u32 cnt, u8 *pmem);
+ 
+@@ -315,7 +284,7 @@ void async_write32(struct adapter *adapter, u32 addr, u32 val,
+ void async_write_mem(struct adapter *adapter, u32 addr, u32 cnt, u8 *pmem);
+ void async_write_port(struct adapter *adapter, u32 addr, u32 cnt, u8 *pmem);
+ 
+-int rtw_init_io_priv(struct adapter *padapter);
++void rtw_init_io_priv(struct adapter *padapter);
+ 
+ uint alloc_io_queue(struct adapter *adapter);
+ void free_io_queue(struct adapter *adapter);
+diff --git a/drivers/staging/r8188eu/include/usb_ops_linux.h b/drivers/staging/r8188eu/include/usb_ops_linux.h
+index c357a3b1560e..a10898f13d2e 100644
+--- a/drivers/staging/r8188eu/include/usb_ops_linux.h
++++ b/drivers/staging/r8188eu/include/usb_ops_linux.h
+@@ -28,12 +28,9 @@
+ 
+ unsigned int ffaddr2pipehdl(struct dvobj_priv *pdvobj, u32 addr);
+ 
+-void usb_read_mem(struct intf_hdl *pintfhdl, u32 addr, u32 cnt, u8 *rmem);
+-void usb_write_mem(struct intf_hdl *pintfhdl, u32 addr, u32 cnt, u8 *wmem);
++void rtw_read_port_cancel(struct adapter *adapter);
+ 
+-void usb_read_port_cancel(struct intf_hdl *pintfhdl);
+-
+-u32 usb_write_port(struct intf_hdl *pintfhdl, u32 addr, u32 cnt, u8 *wmem);
+-void usb_write_port_cancel(struct intf_hdl *pintfhdl);
++u32 rtw_write_port(struct adapter *adapter, u32 addr, u32 cnt, u8 *wmem);
++void rtw_write_port_cancel(struct adapter *adapter);
+ 
+ #endif
+diff --git a/drivers/staging/r8188eu/os_dep/usb_intf.c b/drivers/staging/r8188eu/os_dep/usb_intf.c
+index bb85ab77fd26..78c91b14e637 100644
+--- a/drivers/staging/r8188eu/os_dep/usb_intf.c
++++ b/drivers/staging/r8188eu/os_dep/usb_intf.c
+@@ -596,7 +596,7 @@ static struct adapter *rtw_usb_if1_init(struct dvobj_priv *dvobj,
+ 	padapter->intf_stop = &usb_intf_stop;
+ 
+ 	/* step init_io_priv */
+-	rtw_init_io_priv(padapter, usb_set_intf_ops);
++	rtw_init_io_priv(padapter);
+ 
+ 	/* step read_chip_version */
+ 	rtw_hal_read_chip_version(padapter);
+diff --git a/drivers/staging/r8188eu/os_dep/usb_ops_linux.c b/drivers/staging/r8188eu/os_dep/usb_ops_linux.c
+index 62dd4a131534..6f571701ba25 100644
+--- a/drivers/staging/r8188eu/os_dep/usb_ops_linux.c
++++ b/drivers/staging/r8188eu/os_dep/usb_ops_linux.c
+@@ -31,17 +31,11 @@ struct zero_bulkout_context {
+ 	void *padapter;
+ };
+ 
+-void usb_read_mem(struct intf_hdl *pintfhdl, u32 addr, u32 cnt, u8 *rmem)
+-{
+-}
+-
+-void usb_write_mem(struct intf_hdl *pintfhdl, u32 addr, u32 cnt, u8 *wmem)
+-{
+-}
+-
+-void usb_read_port_cancel(struct intf_hdl *pintfhdl)
++void rtw_read_port_cancel(struct adapter *adapter)
+ {
+ 	int i;
++	struct io_priv *pio_priv = &adapter->iopriv;
++	struct intf_hdl *pintfhdl = &pio_priv->intf;
+ 	struct recv_buf *precvbuf;
+ 	struct adapter	*padapter = pintfhdl->padapter;
+ 	precvbuf = (struct recv_buf *)padapter->recvpriv.precv_buf;
+@@ -134,15 +128,17 @@ static void usb_write_port_complete(struct urb *purb, struct pt_regs *regs)
+ 
+ }
+ 
+-u32 usb_write_port(struct intf_hdl *pintfhdl, u32 addr, u32 cnt, u8 *wmem)
++u32 rtw_write_port(struct adapter *adapter, u32 addr, u32 cnt, u8 *wmem)
+ {
+ 	unsigned long irqL;
+ 	unsigned int pipe;
+ 	int status;
+ 	u32 ret = _FAIL;
+ 	struct urb *purb = NULL;
++	struct io_priv *pio_priv = &adapter->iopriv;
++	struct intf_hdl *pintfhdl = &pio_priv->intf;
++	struct dvobj_priv *pdvobj = adapter_to_dvobj(adapter);
+ 	struct adapter *padapter = (struct adapter *)pintfhdl->padapter;
+-	struct dvobj_priv	*pdvobj = adapter_to_dvobj(padapter);
+ 	struct xmit_priv	*pxmitpriv = &padapter->xmitpriv;
+ 	struct xmit_buf *pxmitbuf = (struct xmit_buf *)wmem;
+ 	struct xmit_frame *pxmitframe = (struct xmit_frame *)pxmitbuf->priv_data;
+@@ -224,9 +220,11 @@ u32 usb_write_port(struct intf_hdl *pintfhdl, u32 addr, u32 cnt, u8 *wmem)
+ 	return ret;
+ }
+ 
+-void usb_write_port_cancel(struct intf_hdl *pintfhdl)
++void rtw_write_port_cancel(struct adapter *adapter)
+ {
+ 	int i, j;
++	struct io_priv *pio_priv = &adapter->iopriv;
++	struct intf_hdl *pintfhdl = &pio_priv->intf;
+ 	struct adapter	*padapter = pintfhdl->padapter;
+ 	struct xmit_buf *pxmitbuf = (struct xmit_buf *)padapter->xmitpriv.pxmitbuf;
+ 
+-- 
+2.33.0
+
