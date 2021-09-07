@@ -1,0 +1,95 @@
+From b8f35278531b07c771fb3a3a233788825f69348e Mon Sep 17 00:00:00 2001
+From: Pavel Skripkin <paskripkin@gmail.com>
+Date: Tue, 7 Sep 2021 19:59:32 +0300
+Subject: [PATCH v4 04/14] staging: r8188eu: remove usb_read32
+
+This patch is preparation for _io_ops structure removal.
+
+usb_read32 was the only functions assigned to (*_usb_read32) pointer, so
+we can simply remove the wrapper and make a direct call. To not break
+the API usb_read32 was renamed to rtw_read32 + changed prototype to
+old _rtw_read32() one
+
+Co-developed-by: Fabio M. De Francesco <fmdefrancesco@gmail.com>
+Signed-off-by: Fabio M. De Francesco <fmdefrancesco@gmail.com>
+
+Signed-off-by: Pavel Skripkin <paskripkin@gmail.com>
+---
+ drivers/staging/r8188eu/core/rtw_io.c       | 14 --------------
+ drivers/staging/r8188eu/hal/usb_ops_linux.c |  5 +++--
+ drivers/staging/r8188eu/include/rtw_io.h    |  3 +--
+ 3 files changed, 4 insertions(+), 18 deletions(-)
+
+diff --git a/drivers/staging/r8188eu/core/rtw_io.c b/drivers/staging/r8188eu/core/rtw_io.c
+index b5d1c8e52b22..cb24500cbc6e 100644
+--- a/drivers/staging/r8188eu/core/rtw_io.c
++++ b/drivers/staging/r8188eu/core/rtw_io.c
+@@ -34,20 +34,6 @@ jackson@realtek.com.tw
+ #define rtw_cpu_to_le16(val)		cpu_to_le16(val)
+ #define rtw_cpu_to_le32(val)		cpu_to_le32(val)
+ 
+-u32 _rtw_read32(struct adapter *adapter, u32 addr)
+-{
+-	u32 r_val;
+-	struct io_priv *pio_priv = &adapter->iopriv;
+-	struct	intf_hdl		*pintfhdl = &pio_priv->intf;
+-	u32	(*_read32)(struct intf_hdl *pintfhdl, u32 addr);
+-
+-	_read32 = pintfhdl->io_ops._read32;
+-
+-	r_val = _read32(pintfhdl, addr);
+-
+-	return r_val;
+-}
+-
+ int _rtw_write8(struct adapter *adapter, u32 addr, u8 val)
+ {
+ 	struct io_priv *pio_priv = &adapter->iopriv;
+diff --git a/drivers/staging/r8188eu/hal/usb_ops_linux.c b/drivers/staging/r8188eu/hal/usb_ops_linux.c
+index 5d36c5d81dbe..98aec0160bb3 100644
+--- a/drivers/staging/r8188eu/hal/usb_ops_linux.c
++++ b/drivers/staging/r8188eu/hal/usb_ops_linux.c
+@@ -121,8 +121,10 @@ u16 rtw_read16(struct adapter *adapter, u32 addr)
+ 	return (u16)(le32_to_cpu(data) & 0xffff);
+ }
+ 
+-static u32 usb_read32(struct intf_hdl *pintfhdl, u32 addr)
++u32 rtw_read32(struct adapter *adapter, u32 addr)
+ {
++	struct io_priv *pio_priv = &adapter->iopriv;
++	struct intf_hdl *pintfhdl = &pio_priv->intf;
+ 	u16 wvalue = (u16)(addr & 0x0000ffff);
+ 	__le32 data;
+ 
+@@ -542,7 +544,6 @@ void rtl8188eu_set_intf_ops(struct _io_ops	*pops)
+ {
+ 
+ 	memset((u8 *)pops, 0, sizeof(struct _io_ops));
+-	pops->_read32 = &usb_read32;
+ 	pops->_read_port = &usb_read_port;
+ 	pops->_write8 = &usb_write8;
+ 	pops->_write16 = &usb_write16;
+diff --git a/drivers/staging/r8188eu/include/rtw_io.h b/drivers/staging/r8188eu/include/rtw_io.h
+index 840811c33cfd..232705176032 100644
+--- a/drivers/staging/r8188eu/include/rtw_io.h
++++ b/drivers/staging/r8188eu/include/rtw_io.h
+@@ -247,7 +247,7 @@ void _rtw_attrib_write(struct adapter *adapter, u32 addr, u32 cnt, u8 *pmem);
+ 
+ u8 rtw_read8(struct adapter *adapter, u32 addr);
+ u16 rtw_read16(struct adapter *adapter, u32 addr);
+-u32 _rtw_read32(struct adapter *adapter, u32 addr);
++u32 rtw_read32(struct adapter *adapter, u32 addr);
+ void _rtw_read_mem(struct adapter *adapter, u32 addr, u32 cnt, u8 *pmem);
+ void _rtw_read_port(struct adapter *adapter, u32 addr, u32 cnt, u8 *pmem);
+ void _rtw_read_port_cancel(struct adapter *adapter);
+@@ -267,7 +267,6 @@ u32 _rtw_write_port_and_wait(struct adapter *adapter, u32 addr, u32 cnt,
+ 			     u8 *pmem, int timeout_ms);
+ void _rtw_write_port_cancel(struct adapter *adapter);
+ 
+-#define rtw_read32(adapter, addr) _rtw_read32((adapter), (addr))
+ #define rtw_read_port(adapter, addr, cnt, mem)				\
+ 	_rtw_read_port((adapter), (addr), (cnt), (mem))
+ #define rtw_read_port_cancel(adapter) _rtw_read_port_cancel((adapter))
+-- 
+2.33.0
+
