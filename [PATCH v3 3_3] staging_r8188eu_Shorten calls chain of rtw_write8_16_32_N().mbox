@@ -1,8 +1,25 @@
-From 160643d6df22d97e1e0ea3c7af679f3cf61bc56d Mon Sep 17 00:00:00 2001
+From fmdefrancesco@gmail.com Sat Sep 04 22:00:48 2021
+Return-Path: <fmdefrancesco@gmail.com>
+Received: from localhost.localdomain (host-79-23-101-208.retail.telecomitalia.it. [79.23.101.208])
+        by smtp.gmail.com with ESMTPSA id i4sm1940258edq.34.2021.09.04.15.00.59
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Sat, 04 Sep 2021 15:00:59 -0700 (PDT)
 From: "Fabio M. De Francesco" <fmdefrancesco@gmail.com>
-Date: Sat, 4 Sep 2021 10:48:30 +0200
-Subject: [PATCH v5] staging: r8188eu: Shorten calls chain of
- rtw_write8/16/32/N()
+To: Larry Finger <Larry.Finger@lwfinger.net>,
+	Phillip Potter <phil@philpotter.co.uk>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	Pavel Skripkin <paskripkin@gmail.com>,
+	linux-staging@lists.linux.dev,
+	linux-kernel@vger.kernel.org
+Cc: "Fabio M. De Francesco" <fmdefrancesco@gmail.com>
+Subject: [PATCH v3 3/3] staging: r8188eu: Shorten calls chain of rtw_write8/16/32/N()
+Date: Sun,  5 Sep 2021 00:00:48 +0200
+Message-Id: <20210904220048.12822-4-fmdefrancesco@gmail.com>
+X-Mailer: git-send-email 2.33.0
+In-Reply-To: <20210904220048.12822-1-fmdefrancesco@gmail.com>
+References: <20210904220048.12822-1-fmdefrancesco@gmail.com>
+MIME-Version: 1.0
+Content-Transfer-Encoding: 8bit
 
 Shorten the calls chain of rtw_write8/16/32() down to the actual writes.
 For this purpose unify the four usb_write8/16/32/N() into the new
@@ -15,14 +32,21 @@ Co-developed-by: Pavel Skripkin <paskripkin@gmail.com>
 Signed-off-by: Pavel Skripkin <paskripkin@gmail.com>
 Signed-off-by: Fabio M. De Francesco <fmdefrancesco@gmail.com>
 ---
- drivers/staging/r8188eu/hal/usb_ops_linux.c | 132 ++++++++------------
- 1 file changed, 54 insertions(+), 78 deletions(-)
+
+v2->v3: Fix the version number of the patch.
+ 
+v1->v2: Replace parameter REALTEK_USB_VENQT_READ with REALTEK_USB_VENQT_WRITE
+in usb_control_msg_send(). More in-depth explanation at
+https://lore.kernel.org/lkml/2791328.7pjKATJfGa@localhost.localdomain/T/#m1fc1ab2f7c1f463049ad88d5df5bb1b107b37260
+
+ drivers/staging/r8188eu/hal/usb_ops_linux.c | 130 ++++++++------------
+ 1 file changed, 53 insertions(+), 77 deletions(-)
 
 diff --git a/drivers/staging/r8188eu/hal/usb_ops_linux.c b/drivers/staging/r8188eu/hal/usb_ops_linux.c
-index 75305b07d88e..63015f4d859a 100644
+index f9c4fd5a2c53..e31d1b1fdb12 100644
 --- a/drivers/staging/r8188eu/hal/usb_ops_linux.c
 +++ b/drivers/staging/r8188eu/hal/usb_ops_linux.c
-@@ -8,96 +8,71 @@
+@@ -8,76 +8,51 @@
  #include "../include/recv_osdep.h"
  #include "../include/rtl8188e_hal.h"
  
@@ -126,10 +150,8 @@ index 75305b07d88e..63015f4d859a 100644
  			}
  
  			if (rtw_inc_and_chk_continual_urb_error(dvobjpriv)) {
- 				adapt->bSurpriseRemoved = true;
- 				break;
- 			}
--
+@@ -87,17 +62,18 @@ static int usbctrl_vendorreq(struct intf_hdl *pintfhdl, u16 value, void *pdata,
+ 
  		}
  
 -		/*  firmware download is checksumed, don't retry */
@@ -151,15 +173,16 @@ index 75305b07d88e..63015f4d859a 100644
  {
  	u16 value = (u16)(addr & 0x0000ffff);
  	struct adapter *adapt = intfhdl->padapter;
-@@ -123,15 +98,15 @@ static int usb_read(struct intf_hdl *intfhdl, u32 addr, void *data, u8 size)
+@@ -123,15 +99,15 @@ static int usb_read(struct intf_hdl *intfhdl, u32 addr, void *data, u8 size)
  		goto release_mutex;
  	}
  
 +	memcpy(io_buf, data, size);
  	while (++vendorreq_times <= MAX_USBCTRL_VENDORREQ_TIMES) {
 -		status = usb_control_msg_recv(udev, 0, REALTEK_USB_VENQT_CMD_REQ,
+-					      REALTEK_USB_VENQT_READ, value,
 +		status = usb_control_msg_send(udev, 0, REALTEK_USB_VENQT_CMD_REQ,
- 					      REALTEK_USB_VENQT_READ, value,
++					      REALTEK_USB_VENQT_WRITE, value,
  					      REALTEK_USB_VENQT_CMD_IDX, io_buf,
  					      size, RTW_USB_CONTROL_MSG_TIMEOUT,
  					      GFP_KERNEL);
@@ -169,7 +192,7 @@ index 75305b07d88e..63015f4d859a 100644
  		} else { /*  error cases */
  			DBG_88E("reg 0x%x, usb %s %u fail, status:%d vendorreq_times:%d\n",
  				value, "read", size, status, vendorreq_times);
-@@ -199,46 +174,47 @@ u32 rtw_read32(struct adapter *adapter, u32 addr)
+@@ -199,55 +175,55 @@ u32 rtw_read32(struct adapter *adapter, u32 addr)
  
  int rtw_write8(struct adapter *adapter, u32 addr, u8 val)
  {
@@ -179,10 +202,12 @@ index 75305b07d88e..63015f4d859a 100644
 +	struct io_priv *io_priv = &adapter->iopriv;
 +	struct intf_hdl *intfhdl = &io_priv->intf;
 +	u16 value = (u16)(addr & 0x0000ffff);
-+	u8 data = val;
+ 	int ret;
  
--	return usbctrl_vendorreq(pintfhdl, wvalue, &val, 1, REALTEK_USB_VENQT_WRITE);
-+	return usb_write(intfhdl, value, &data, 1);
+-	ret = usbctrl_vendorreq(pintfhdl, wvalue, &val, 1, REALTEK_USB_VENQT_WRITE);
++	ret = usb_write(intfhdl, value, &val, 1);
+ 
+ 	return RTW_STATUS_CODE(ret);
  }
  
  int rtw_write16(struct adapter *adapter, u32 addr, u16 val)
@@ -190,14 +215,16 @@ index 75305b07d88e..63015f4d859a 100644
 -	struct io_priv *pio_priv = &adapter->iopriv;
 -	struct intf_hdl *pintfhdl = &pio_priv->intf;
 -	u16 wvalue = (u16)(addr & 0x0000ffff);
--	__le32 data = cpu_to_le32(val & 0x0000ffff);
 +	struct io_priv *io_priv = &adapter->iopriv;
 +	struct intf_hdl *intfhdl = &io_priv->intf;
 +	u16 value = (u16)(addr & 0x0000ffff);
-+	__le16 data = cpu_to_le16(val);
+ 	__le32 data = cpu_to_le32(val & 0x0000ffff);
+ 	int ret;
  
--	return usbctrl_vendorreq(pintfhdl, wvalue, &data, 2, REALTEK_USB_VENQT_WRITE);
-+	return usb_write(intfhdl, value, &data, 2);
+-	ret = usbctrl_vendorreq(pintfhdl, wvalue, &data, 2, REALTEK_USB_VENQT_WRITE);
++	ret = usb_write(intfhdl, value, &data, 2);
+ 
+ 	return RTW_STATUS_CODE(ret);
  }
  
  int rtw_write32(struct adapter *adapter, u32 addr, u32 val)
@@ -209,9 +236,12 @@ index 75305b07d88e..63015f4d859a 100644
 +	struct intf_hdl *intfhdl = &io_priv->intf;
 +	u16 value = (u16)(addr & 0x0000ffff);
  	__le32 data = cpu_to_le32(val);
+ 	int ret;
  
--	return usbctrl_vendorreq(pintfhdl, wvalue, &data, 4, REALTEK_USB_VENQT_WRITE);
-+	return usb_write(intfhdl, value, &data, 4);
+-	ret = usbctrl_vendorreq(pintfhdl, wvalue, &data, 4, REALTEK_USB_VENQT_WRITE);
++	ret = usb_write(intfhdl, value, &data, 4);
+ 
+ 	return RTW_STATUS_CODE(ret);
  }
  
 -int rtw_writeN(struct adapter *adapter, u32 addr, u32 length, u8 *pdata)
@@ -224,18 +254,19 @@ index 75305b07d88e..63015f4d859a 100644
 +	struct intf_hdl *intfhdl = &io_priv->intf;
 +	u16 value = (u16)(addr & 0x0000ffff);
  	u8 buf[VENDOR_CMD_MAX_DATA_LEN] = {0};
+ 	int ret;
  
  	if (length > VENDOR_CMD_MAX_DATA_LEN)
  		return -EINVAL;
  
 -	memcpy(buf, pdata, length);
+-	ret = usbctrl_vendorreq(pintfhdl, wvalue, buf, (length & 0xffff), REALTEK_USB_VENQT_WRITE);
 +	memcpy(buf, data, length);
++	ret = usb_write(intfhdl, value, buf, (length & 0xffff));
  
--	return usbctrl_vendorreq(pintfhdl, wvalue, buf, (length & 0xffff), REALTEK_USB_VENQT_WRITE);
-+	return usb_write(intfhdl, value, &data, length);
+ 	return RTW_STATUS_CODE(ret);
  }
- 
- static void interrupt_handler_8188eu(struct adapter *adapt, u16 pkt_len, u8 *pbuf)
 -- 
 2.33.0
+
 
