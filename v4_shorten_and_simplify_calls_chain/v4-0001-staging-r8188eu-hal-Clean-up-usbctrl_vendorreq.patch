@@ -1,0 +1,52 @@
+From 3b860671fad693024e194933f532502d7fc35bee Mon Sep 17 00:00:00 2001
+From: "Fabio M. De Francesco" <fmdefrancesco@gmail.com>
+Date: Sat, 11 Sep 2021 15:32:08 +0200
+Subject: [PATCH v4] staging: r8188eu: hal: Clean up usbctrl_vendorreq()
+
+Clean up usbctrl_vendorreq() in usb_ops_linux.c because some parts
+of its code will be reused in the following two patches of this series.
+This clean-ups are in preparation for shortening the call chains of
+rtw_read{8,16,32}() and rtw_write{8,16,32,N}().
+
+Co-developed-by: Pavel Skripkin <paskripkin@gmail.com>
+Signed-off-by: Pavel Skripkin <paskripkin@gmail.com>
+Signed-off-by: Fabio M. De Francesco <fmdefrancesco@gmail.com>
+---
+ drivers/staging/r8188eu/hal/usb_ops_linux.c | 6 ++----
+ 1 file changed, 2 insertions(+), 4 deletions(-)
+
+diff --git a/drivers/staging/r8188eu/hal/usb_ops_linux.c b/drivers/staging/r8188eu/hal/usb_ops_linux.c
+index b7c46bb3e14b..62afc9c2cbdb 100644
+--- a/drivers/staging/r8188eu/hal/usb_ops_linux.c
++++ b/drivers/staging/r8188eu/hal/usb_ops_linux.c
+@@ -56,7 +56,7 @@ static int usbctrl_vendorreq(struct intf_hdl *intfhdl, u16 value, void *data, u1
+ 			rtw_reset_continual_urb_error(dvobjpriv);
+ 			if (requesttype == REALTEK_USB_VENQT_READ)
+ 				memcpy(data, io_buf,  len);
+-		} else { 
++		} else {
+ 			/* errors */
+ 			if (status < 0) {
+ 				if (status == (-ESHUTDOWN || -ENODEV)) {
+@@ -68,9 +68,8 @@ static int usbctrl_vendorreq(struct intf_hdl *intfhdl, u16 value, void *data, u1
+ 			} else { 
+ 				/*  status != len && status >= 0 */
+ 				if (status > 0) {
+-					if (requesttype == REALTEK_USB_VENQT_READ) {
++					if (requesttype == REALTEK_USB_VENQT_READ)
+ 						memcpy(data, io_buf,  len);
+-					}
+ 				}
+ 			}
+ 
+@@ -80,7 +79,6 @@ static int usbctrl_vendorreq(struct intf_hdl *intfhdl, u16 value, void *data, u1
+ 			}
+ 
+ 		}
+-
+ 		/*  firmware download is checksummed, don't retry */
+ 		if ((value >= FW_8188E_START_ADDRESS && value <= FW_8188E_END_ADDRESS) || status == len)
+ 			break;
+-- 
+2.33.0
+
