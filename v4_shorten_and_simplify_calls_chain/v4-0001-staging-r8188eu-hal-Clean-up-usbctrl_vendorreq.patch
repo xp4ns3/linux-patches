@@ -1,12 +1,12 @@
-From 454009f44d091a048fd00c65bfea1c46b259440b Mon Sep 17 00:00:00 2001
+From b036b301a04ebc1071b686052a5523eda8900d47 Mon Sep 17 00:00:00 2001
 From: "Fabio M. De Francesco" <fmdefrancesco@gmail.com>
 Date: Sat, 11 Sep 2021 15:53:08 +0200
 Subject: [PATCH v4] staging: r8188eu: hal: Clean up usbctrl_vendorreq()
 
-Do some cleaning of usbctrl_vendorreq () in usb_ops_linux.c because
-some of its code will be reused in the following two patches of this
-series. This cleanup is in preparation for shortening the call chains
-of rtw_read{8,16,32}() and rtw_write{8,16,32,N}().
+Clean up usbctrl_vendorreq () in usb_ops_linux.c because some
+of its code will be reused in this series. This cleanup is in
+preparation for shortening the call chains of rtw_read{8,16,32}()
+and rtw_write{8,16,32,N}().
 
 Co-developed-by: Pavel Skripkin <paskripkin@gmail.com>
 Signed-off-by: Pavel Skripkin <paskripkin@gmail.com>
