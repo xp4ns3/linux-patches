@@ -1,14 +1,17 @@
-From 9647098c6d9aaaf25b44b9b5d34018c327d87360 Mon Sep 17 00:00:00 2001
+From 670ca15a7b58369f1be0081b7c1d15e8713101b8 Mon Sep 17 00:00:00 2001
 From: Pavel Skripkin <paskripkin@gmail.com>
 Date: Tue, 7 Sep 2021 20:20:23 +0300
 Subject: [PATCH v5 11/14] staging: r8188eu: remove usb_read_port_cancel
 
-This patch is preparation for _io_ops structure removal.
+Remove the unnecessary _rtw_read_port_cancel() and usb_read_port_cancel()
+and embed their code into the caller (i.e., rtw_read_port_cancel()).
 
-usb_read8 was the only functions assigned to (*_usb_read_port_cancel)
-pointer, so we can simply remove the wrapper and make a direct
-call. To not break the API usb_read8 was renamed to usb_read_port_cancel
-+ changed prototype to old _usb_read_port_cancel() one
+_rtw_read_port_cancel() is a mere redefinition of rtw_read_port_cancel()
+and it is unneeded. usb_read_port_cancel() was the only functions assigned
+to the (*_usb_read_port_cancel) pointer, so we can simply remove it and
+make a direct call.
+
+This patch is in preparation for the _io_ops structure removal.
 
 Co-developed-by: Fabio M. De Francesco <fmdefrancesco@gmail.com>
 Signed-off-by: Fabio M. De Francesco <fmdefrancesco@gmail.com>

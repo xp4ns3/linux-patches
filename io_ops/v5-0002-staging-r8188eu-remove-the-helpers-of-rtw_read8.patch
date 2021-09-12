@@ -1,4 +1,4 @@
-From 68a27d30a0cdd775b4fe5ee87c7f7a20e03d2575 Mon Sep 17 00:00:00 2001
+From 21226989cd40944a8ee3e995547e48da04870093 Mon Sep 17 00:00:00 2001
 From: Pavel Skripkin <paskripkin@gmail.com>
 Date: Tue, 7 Sep 2021 19:48:33 +0300
 Subject: [PATCH v5 02/14] staging: r8188eu: remove the helpers of rtw_read8()

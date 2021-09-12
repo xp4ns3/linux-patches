@@ -1,4 +1,4 @@
-From b7eaf8fe3d470e51d6497beb51f8a0caaefce8ed Mon Sep 17 00:00:00 2001
+From 4d740cf15f52ee19a402e00db05e43ca39090039 Mon Sep 17 00:00:00 2001
 From: Pavel Skripkin <paskripkin@gmail.com>
 Date: Tue, 7 Sep 2021 19:59:32 +0300
 Subject: [PATCH v5 04/14] staging: r8188eu: remove the helpers of rtw_read32()
