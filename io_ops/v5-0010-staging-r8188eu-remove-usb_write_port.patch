@@ -1,14 +1,17 @@
-From b3efb08c2ff4993d2365741ce588413b17c0f1e5 Mon Sep 17 00:00:00 2001
+From 9e0a5a0666e3cc202b837e4152ea08aa3e0b432f Mon Sep 17 00:00:00 2001
 From: Pavel Skripkin <paskripkin@gmail.com>
 Date: Tue, 7 Sep 2021 20:17:17 +0300
 Subject: [PATCH v5 10/14] staging: r8188eu: remove usb_write_port
 
-This patch is preparation for _io_ops structure removal.
+Remove the unnecessary _rtw_write_port() and usb_write_port() and embed
+their code into the caller (i.e., rtw_write_port()).
 
-usb_read8 was the only functions assigned to (*_usb_write_port) pointer, so
-we can simply remove the wrapper and make a direct call. To not break
-the API usb_write_port was renamed to rtw_read8 + changed prototype to
-old _rtw_write_port() one
+_rtw_write_port() is a mere redefinition of rtw_write_port() and it is
+unneeded. usb_write_port() was the only functions assigned to the
+(*_usb_write_port) pointer, so we can simply remove it and make a direct
+call.
+
+This patch is in preparation for the _io_ops structure removal.
 
 Co-developed-by: Fabio M. De Francesco <fmdefrancesco@gmail.com>
 Signed-off-by: Fabio M. De Francesco <fmdefrancesco@gmail.com>

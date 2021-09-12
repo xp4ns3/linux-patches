@@ -1,15 +1,17 @@
-From 1eaedec008eb8ef744a4eae080f4c9b5f587d1a8 Mon Sep 17 00:00:00 2001
+From beab7cc6be748f62f0071900305d312a488c68ce Mon Sep 17 00:00:00 2001
 From: Pavel Skripkin <paskripkin@gmail.com>
 Date: Tue, 7 Sep 2021 20:12:20 +0300
 Subject: [PATCH v5 09/14] staging: r8188eu: remove usb_read_port
 
-This patch is preparation for _io_ops structure removal.
+Remove the unnecessary _rtw_read_port() and usb_read_port() and embed their
+code into the caller (i.e., rtw_read_port()).
 
-usb_read8 was the only functions assigned to (*_usb_read_port) pointer, so
-we can simply remove the wrapper and make a direct call. To not break
-the API usb_read_port was renamed to rtw_read8 + changed return type to
-u32, since usb_read_port return errors, but previous wrapper didn't
-transmit errors to callers
+_rtw_read_port() is a mere redefinition of rtw_read_port() and it is
+unneeded. usb_read_port() was the only functions assigned to the
+(*_usb_read_port) pointer, so we can simply remove it and make a direct
+call.
+
+This patch is in preparation for the _io_ops structure removal.
 
 Co-developed-by: Fabio M. De Francesco <fmdefrancesco@gmail.com>
 Signed-off-by: Fabio M. De Francesco <fmdefrancesco@gmail.com>
@@ -51,7 +53,7 @@ index b2e41fa48d81..ac72f894da75 100644
  {
  	void (*_read_port_cancel)(struct intf_hdl *pintfhdl);
 diff --git a/drivers/staging/r8188eu/hal/usb_halinit.c b/drivers/staging/r8188eu/hal/usb_halinit.c
-index c5347c5459d6..66a7c3e03930 100644
+index 0c317a8723ef..59a7af696121 100644
 --- a/drivers/staging/r8188eu/hal/usb_halinit.c
 +++ b/drivers/staging/r8188eu/hal/usb_halinit.c
 @@ -1047,11 +1047,7 @@ static unsigned int rtl8188eu_inirp_init(struct adapter *Adapter)

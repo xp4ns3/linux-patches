@@ -1,18 +1,19 @@
-From f93771385d106edc9bba20be28719fdd59c9e4f9 Mon Sep 17 00:00:00 2001
+From 5239db6c6fbf272c50cb53b55eac997b25608c27 Mon Sep 17 00:00:00 2001
 From: Pavel Skripkin <paskripkin@gmail.com>
 Date: Tue, 7 Sep 2021 20:09:05 +0300
 Subject: [PATCH v5 08/14] staging: r8188eu: remove usb_writeN
 
-This patch is preparation for _io_ops structure removal.
+Remove the unnecessary _rtw_writeN() and usb_writeN() and embed their
+code into the caller (i.e., rtw_writeN()).
 
-usb_read8 was the only functions assigned to (*_usb_writeN) pointer, so
-we can simply remove the wrapper and make a direct call. To not break
-the API usb_read8 was renamed to rtw_writeN + changed prototype to
-old _rtw_writeN() one
+_rtw_writeN() is a mere redefinition of rtw_writeN() and it is unneeded.
+usb_writeN() was the only functions assigned to the (*_usb_writeN) pointer,
+so we can simply remove it and make a direct call.
+
+This patch is in preparation for the _io_ops structure removal.
 
 Co-developed-by: Fabio M. De Francesco <fmdefrancesco@gmail.com>
 Signed-off-by: Fabio M. De Francesco <fmdefrancesco@gmail.com>
-
 Signed-off-by: Pavel Skripkin <paskripkin@gmail.com>
 ---
  drivers/staging/r8188eu/core/rtw_io.c       | 14 --------------

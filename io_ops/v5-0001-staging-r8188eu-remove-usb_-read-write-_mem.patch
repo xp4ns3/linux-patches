@@ -1,4 +1,4 @@
-From 30adda79db47f0b7c0bd5ea51b670fa9ca746584 Mon Sep 17 00:00:00 2001
+From de088d7fd6a1321a77732e2e239b6545288c3fa1 Mon Sep 17 00:00:00 2001
 From: Pavel Skripkin <paskripkin@gmail.com>
 Date: Mon, 6 Sep 2021 20:10:54 +0300
 Subject: [PATCH v5 01/14] staging: r8188eu: remove usb_{read,write}_mem
