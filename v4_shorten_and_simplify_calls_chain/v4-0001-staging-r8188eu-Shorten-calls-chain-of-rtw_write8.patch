@@ -1,6 +1,6 @@
-From 7ee57af848ed9431f565c977e059ed7b100cecd4 Mon Sep 17 00:00:00 2001
+From eb03853ce35e84808fb734d7ef9289f780769191 Mon Sep 17 00:00:00 2001
 From: "Fabio M. De Francesco" <fmdefrancesco@gmail.com>
-Date: Sun, 12 Sep 2021 21:45:01 +0200
+Date: Mon, 13 Sep 2021 09:29:54 +0200
 Subject: [PATCH v4] staging: r8188eu: Shorten calls chain of
  rtw_write8/16/32/N()
 
@@ -15,11 +15,11 @@ Co-developed-by: Pavel Skripkin <paskripkin@gmail.com>
 Signed-off-by: Pavel Skripkin <paskripkin@gmail.com>
 Signed-off-by: Fabio M. De Francesco <fmdefrancesco@gmail.com>
 ---
- drivers/staging/r8188eu/hal/usb_ops_linux.c | 102 +++++++-------------
- 1 file changed, 37 insertions(+), 65 deletions(-)
+ drivers/staging/r8188eu/hal/usb_ops_linux.c | 104 +++++++-------------
+ 1 file changed, 38 insertions(+), 66 deletions(-)
 
 diff --git a/drivers/staging/r8188eu/hal/usb_ops_linux.c b/drivers/staging/r8188eu/hal/usb_ops_linux.c
-index 9f7217f76af8..3e8a51b0636b 100644
+index 9f7217f76af8..9f114db242e3 100644
 --- a/drivers/staging/r8188eu/hal/usb_ops_linux.c
 +++ b/drivers/staging/r8188eu/hal/usb_ops_linux.c
 @@ -8,88 +8,62 @@
@@ -148,8 +148,9 @@ index 9f7217f76af8..3e8a51b0636b 100644
  
 +	memcpy(io_buf, data, size);
  	while (++vendorreq_times <= MAX_USBCTRL_VENDORREQ_TIMES) {
- 		status = usb_control_msg_recv(udev, 0, REALTEK_USB_VENQT_CMD_REQ,
+-		status = usb_control_msg_recv(udev, 0, REALTEK_USB_VENQT_CMD_REQ,
 -					      REALTEK_USB_VENQT_READ, addr,
++		status = usb_control_msg_send(udev, 0, REALTEK_USB_VENQT_CMD_REQ,
 +					      REALTEK_USB_VENQT_WRITE, addr,
  					      REALTEK_USB_VENQT_CMD_IDX, io_buf,
  					      size, RTW_USB_CONTROL_MSG_TIMEOUT,
