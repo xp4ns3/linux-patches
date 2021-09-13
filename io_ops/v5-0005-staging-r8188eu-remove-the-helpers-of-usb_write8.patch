@@ -1,7 +1,7 @@
-From cb7592df515484dc0d2f1035100e53c5c100c60a Mon Sep 17 00:00:00 2001
+From c0cbcadf9cc73ea0c2bad4987f2b374525270737 Mon Sep 17 00:00:00 2001
 From: Pavel Skripkin <paskripkin@gmail.com>
 Date: Tue, 7 Sep 2021 20:01:37 +0300
-Subject: [PATCH v5 05/14] staging: r8188eu: remove usb_write8
+Subject: [PATCH v5 05/14] staging: r8188eu: remove the helpers of usb_write8
 
 Remove the unnecessary _rtw_write8() and usb_write8() and embed their
 code into the caller (i.e., rtw_write8()).

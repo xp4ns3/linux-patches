@@ -1,4 +1,4 @@
-From 2387ec612db6d4bc6c3cd1104dbd15fcfcc4d7f0 Mon Sep 17 00:00:00 2001
+From e7fb121da8bded40ef3f8ecac09093d0d05a1709 Mon Sep 17 00:00:00 2001
 From: Pavel Skripkin <paskripkin@gmail.com>
 Date: Tue, 7 Sep 2021 20:40:49 +0300
 Subject: [PATCH v5 14/14] staging: remove struct _io_ops
