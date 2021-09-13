@@ -1,7 +1,7 @@
-From eb03853ce35e84808fb734d7ef9289f780769191 Mon Sep 17 00:00:00 2001
+From f566833c4aa3f6f776c9274406ac575e90a9a85e Mon Sep 17 00:00:00 2001
 From: "Fabio M. De Francesco" <fmdefrancesco@gmail.com>
-Date: Mon, 13 Sep 2021 09:29:54 +0200
-Subject: [PATCH v4] staging: r8188eu: Shorten calls chain of
+Date: Mon, 13 Sep 2021 13:46:55 +0200
+Subject: [PATCH v4 2/2] staging: r8188eu: Shorten calls chain of
  rtw_write8/16/32/N()
 
 Shorten the calls chain of rtw_write8/16/32() down to the actual writes.
@@ -15,14 +15,14 @@ Co-developed-by: Pavel Skripkin <paskripkin@gmail.com>
 Signed-off-by: Pavel Skripkin <paskripkin@gmail.com>
 Signed-off-by: Fabio M. De Francesco <fmdefrancesco@gmail.com>
 ---
- drivers/staging/r8188eu/hal/usb_ops_linux.c | 104 +++++++-------------
- 1 file changed, 38 insertions(+), 66 deletions(-)
+ drivers/staging/r8188eu/hal/usb_ops_linux.c | 104 ++++++++------------
+ 1 file changed, 39 insertions(+), 65 deletions(-)
 
 diff --git a/drivers/staging/r8188eu/hal/usb_ops_linux.c b/drivers/staging/r8188eu/hal/usb_ops_linux.c
-index 9f7217f76af8..9f114db242e3 100644
+index 1859ab61ded2..a775983f581c 100644
 --- a/drivers/staging/r8188eu/hal/usb_ops_linux.c
 +++ b/drivers/staging/r8188eu/hal/usb_ops_linux.c
-@@ -8,88 +8,62 @@
+@@ -8,88 +8,64 @@
  #include "../include/recv_osdep.h"
  #include "../include/rtl8188e_hal.h"
  
@@ -40,17 +40,20 @@ index 9f7217f76af8..9f114db242e3 100644
  	struct usb_device *udev = dvobjpriv->pusbdev;
  
 -	if ((adapt->bSurpriseRemoved) || (adapt->pwrctrlpriv.pnp_bstop_trx)) {
-+	if (adapt->bSurpriseRemoved || adapt->pwrctrlpriv.pnp_bstop_trx) {
- 		status = -EPERM;
+-		status = -EPERM;
++	if (addr < FW_8188E_START_ADDRESS || addr <= FW_8188E_END_ADDRESS) {
++		status = -EINVAL;
  		goto exit;
  	}
  
 -	if (len > MAX_VENDOR_REQ_CMD_SIZE) {
 -		DBG_88E("[%s] Buffer len error ,vendor request failed\n", __func__);
 -		status = -EINVAL;
--		goto exit;
--	}
--
++	if (adapt->bSurpriseRemoved || adapt->pwrctrlpriv.pnp_bstop_trx) {
++		status = -EPERM;
+ 		goto exit;
+ 	}
+ 
  	mutex_lock(&dvobjpriv->usb_vendor_req_mutex);
  
 -	/*  Acquire IO memory for vendorreq */
@@ -120,16 +123,14 @@ index 9f7217f76af8..9f114db242e3 100644
 +			 */
 +			adapt->bSurpriseRemoved = true;
 +			break;
-+		}
+ 		}
+-		/*  firmware download is checksummed, don't retry */
+-		if ((value >= FW_8188E_START_ADDRESS && value <= FW_8188E_END_ADDRESS) || status == len)
 +		GET_HAL_DATA(adapt)->srestpriv.wifi_error_status = USB_VEN_REQ_CMD_FAIL;
 +		if (rtw_inc_and_chk_continual_urb_error(dvobjpriv)) {
 +			adapt->bSurpriseRemoved = true;
-+			break;
- 		}
- 		/*  firmware download is checksummed, don't retry */
--		if ((value >= FW_8188E_START_ADDRESS && value <= FW_8188E_END_ADDRESS) || status == len)
-+		if (addr >= FW_8188E_START_ADDRESS && addr <= FW_8188E_END_ADDRESS)
  			break;
++		}
  	}
 -
  	mutex_unlock(&dvobjpriv->usb_vendor_req_mutex);
@@ -142,7 +143,7 @@ index 9f7217f76af8..9f114db242e3 100644
  {
  	int status;
  	u8 *io_buf; /* pointer to I/O buffer */
-@@ -107,16 +81,16 @@ static int usb_read(struct intf_hdl *intfhdl, u16 addr, void *data, u8 size)
+@@ -112,16 +88,16 @@ static int usb_read(struct intf_hdl *intfhdl, u16 addr, void *data, u8 size)
  
  	io_buf = dvobjpriv->usb_vendor_req_buf;
  
@@ -162,7 +163,7 @@ index 9f7217f76af8..9f114db242e3 100644
  			break;
  		}
  		/*  error cases */
-@@ -187,7 +161,7 @@ int rtw_write8(struct adapter *adapter, u32 addr, u8 val)
+@@ -189,7 +165,7 @@ int rtw_write8(struct adapter *adapter, u32 addr, u8 val)
  	struct io_priv *io_priv = &adapter->iopriv;
  	struct intf_hdl *intfhdl = &io_priv->intf;
  
@@ -171,7 +172,7 @@ index 9f7217f76af8..9f114db242e3 100644
  
  	return RTW_STATUS_CODE(ret);
  }
-@@ -200,7 +174,7 @@ int rtw_write16(struct adapter *adapter, u32 addr, u16 val)
+@@ -202,7 +178,7 @@ int rtw_write16(struct adapter *adapter, u32 addr, u16 val)
  	struct io_priv *io_priv = &adapter->iopriv;
  	struct intf_hdl *intfhdl = &io_priv->intf;
  
@@ -180,7 +181,7 @@ index 9f7217f76af8..9f114db242e3 100644
  
  	return RTW_STATUS_CODE(ret);
  }
-@@ -213,7 +187,7 @@ int rtw_write32(struct adapter *adapter, u32 addr, u32 val)
+@@ -215,7 +191,7 @@ int rtw_write32(struct adapter *adapter, u32 addr, u32 val)
  	struct io_priv *io_priv = &adapter->iopriv;
  	struct intf_hdl *intfhdl = &io_priv->intf;
  
@@ -189,7 +190,7 @@ index 9f7217f76af8..9f114db242e3 100644
  
  	return RTW_STATUS_CODE(ret);
  }
-@@ -223,15 +197,13 @@ int rtw_writeN(struct adapter *adapter, u32 addr, u32 len, u8 *data)
+@@ -225,15 +201,13 @@ int rtw_writeN(struct adapter *adapter, u32 addr, u32 len, u8 *data)
  	int ret;
  	u16 address = (u16)(addr & 0xffff);
  	u16 length = (u16)(len & 0xffff);
