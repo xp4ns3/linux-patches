@@ -1,7 +1,8 @@
-From 670ca15a7b58369f1be0081b7c1d15e8713101b8 Mon Sep 17 00:00:00 2001
+From 9fc09f7781537aac919b8abca883ec96ec801d99 Mon Sep 17 00:00:00 2001
 From: Pavel Skripkin <paskripkin@gmail.com>
 Date: Tue, 7 Sep 2021 20:20:23 +0300
-Subject: [PATCH v5 11/14] staging: r8188eu: remove usb_read_port_cancel
+Subject: [PATCH v5 11/14] staging: r8188eu: remove the helpers of
+ usb_read_port_cancel
 
 Remove the unnecessary _rtw_read_port_cancel() and usb_read_port_cancel()
 and embed their code into the caller (i.e., rtw_read_port_cancel()).

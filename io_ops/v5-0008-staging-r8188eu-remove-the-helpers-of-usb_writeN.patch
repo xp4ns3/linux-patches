@@ -1,7 +1,7 @@
-From 5239db6c6fbf272c50cb53b55eac997b25608c27 Mon Sep 17 00:00:00 2001
+From 12bed85d3193d349459594b1d227c0a758b804df Mon Sep 17 00:00:00 2001
 From: Pavel Skripkin <paskripkin@gmail.com>
 Date: Tue, 7 Sep 2021 20:09:05 +0300
-Subject: [PATCH v5 08/14] staging: r8188eu: remove usb_writeN
+Subject: [PATCH v5 08/14] staging: r8188eu: remove the helpers of usb_writeN
 
 Remove the unnecessary _rtw_writeN() and usb_writeN() and embed their
 code into the caller (i.e., rtw_writeN()).

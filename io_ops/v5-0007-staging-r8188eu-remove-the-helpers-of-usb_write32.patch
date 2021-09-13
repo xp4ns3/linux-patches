@@ -1,7 +1,7 @@
-From 2128406451ce6e518aa8a83093c64483bf83328f Mon Sep 17 00:00:00 2001
+From aedfccaadd767f6a4601a1b1514d0023ad1318f9 Mon Sep 17 00:00:00 2001
 From: Pavel Skripkin <paskripkin@gmail.com>
 Date: Tue, 7 Sep 2021 20:07:00 +0300
-Subject: [PATCH v5 07/14] staging: r8188eu: remove usb_write32
+Subject: [PATCH v5 07/14] staging: r8188eu: remove the helpers of usb_write32
 
 Remove the unnecessary _rtw_write32() and usb_write32() and embed their
 code into the caller (i.e., rtw_write32()).
