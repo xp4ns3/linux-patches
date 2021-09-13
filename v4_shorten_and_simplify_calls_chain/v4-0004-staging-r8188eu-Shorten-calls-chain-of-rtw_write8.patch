@@ -1,7 +1,7 @@
-From f566833c4aa3f6f776c9274406ac575e90a9a85e Mon Sep 17 00:00:00 2001
+From c13fe6795c795e9b554185e4d7d5e7dacf59c2c7 Mon Sep 17 00:00:00 2001
 From: "Fabio M. De Francesco" <fmdefrancesco@gmail.com>
-Date: Mon, 13 Sep 2021 13:46:55 +0200
-Subject: [PATCH v4 2/2] staging: r8188eu: Shorten calls chain of
+Date: Mon, 13 Sep 2021 17:59:01 +0200
+Subject: [PATCH v4 4/4] staging: r8188eu: Shorten calls chain of
  rtw_write8/16/32/N()
 
 Shorten the calls chain of rtw_write8/16/32() down to the actual writes.
@@ -15,14 +15,14 @@ Co-developed-by: Pavel Skripkin <paskripkin@gmail.com>
 Signed-off-by: Pavel Skripkin <paskripkin@gmail.com>
 Signed-off-by: Fabio M. De Francesco <fmdefrancesco@gmail.com>
 ---
- drivers/staging/r8188eu/hal/usb_ops_linux.c | 104 ++++++++------------
- 1 file changed, 39 insertions(+), 65 deletions(-)
+ drivers/staging/r8188eu/hal/usb_ops_linux.c | 111 +++++++-------------
+ 1 file changed, 39 insertions(+), 72 deletions(-)
 
 diff --git a/drivers/staging/r8188eu/hal/usb_ops_linux.c b/drivers/staging/r8188eu/hal/usb_ops_linux.c
-index 1859ab61ded2..a775983f581c 100644
+index 75475b0083db..cf27c84c3c90 100644
 --- a/drivers/staging/r8188eu/hal/usb_ops_linux.c
 +++ b/drivers/staging/r8188eu/hal/usb_ops_linux.c
-@@ -8,88 +8,64 @@
+@@ -8,88 +8,57 @@
  #include "../include/recv_osdep.h"
  #include "../include/rtl8188e_hal.h"
  
@@ -32,28 +32,25 @@ index 1859ab61ded2..a775983f581c 100644
 -	int status = 0;
 -	u8 *io_buf;
 -	unsigned int pipe;
+-	int vendorreq_times = 0;
 +	int status;
 +	u8 *io_buf; /* pointer to I/O buffer */
- 	int vendorreq_times = 0;
  	struct adapter *adapt = intfhdl->padapter;
  	struct dvobj_priv *dvobjpriv = adapter_to_dvobj(adapt);
  	struct usb_device *udev = dvobjpriv->pusbdev;
  
 -	if ((adapt->bSurpriseRemoved) || (adapt->pwrctrlpriv.pnp_bstop_trx)) {
--		status = -EPERM;
-+	if (addr < FW_8188E_START_ADDRESS || addr <= FW_8188E_END_ADDRESS) {
-+		status = -EINVAL;
++	if (adapt->bSurpriseRemoved || adapt->pwrctrlpriv.pnp_bstop_trx) {
+ 		status = -EPERM;
  		goto exit;
  	}
  
 -	if (len > MAX_VENDOR_REQ_CMD_SIZE) {
 -		DBG_88E("[%s] Buffer len error ,vendor request failed\n", __func__);
 -		status = -EINVAL;
-+	if (adapt->bSurpriseRemoved || adapt->pwrctrlpriv.pnp_bstop_trx) {
-+		status = -EPERM;
- 		goto exit;
- 	}
- 
+-		goto exit;
+-	}
+-
  	mutex_lock(&dvobjpriv->usb_vendor_req_mutex);
  
 -	/*  Acquire IO memory for vendorreq */
@@ -66,7 +63,7 @@ index 1859ab61ded2..a775983f581c 100644
 -		/* write out */
 -		pipe = usb_sndctrlpipe(udev, 0);
 -
- 	while (++vendorreq_times <= MAX_USBCTRL_VENDORREQ_TIMES) {
+-	while (++vendorreq_times <= MAX_USBCTRL_VENDORREQ_TIMES) {
 -		if (requesttype == REALTEK_USB_VENQT_READ)
 -			memset(io_buf, 0, len);
 -		else
@@ -78,14 +75,7 @@ index 1859ab61ded2..a775983f581c 100644
 -
 -		if (status == len) {
 -			/*  success */
-+		status = usb_control_msg_recv(udev, 0, REALTEK_USB_VENQT_CMD_REQ,
-+					      REALTEK_USB_VENQT_READ, addr,
-+					      REALTEK_USB_VENQT_CMD_IDX, io_buf,
-+					      size, RTW_USB_CONTROL_MSG_TIMEOUT,
-+					      GFP_KERNEL);
-+		if (!status) {
-+			/*  Success this control transfer. */
- 			rtw_reset_continual_urb_error(dvobjpriv);
+-			rtw_reset_continual_urb_error(dvobjpriv);
 -			if (requesttype == REALTEK_USB_VENQT_READ)
 -				memcpy(data, io_buf,  len);
 -		} else {
@@ -110,29 +100,39 @@ index 1859ab61ded2..a775983f581c 100644
 -				break;
 -			}
 -
-+			memcpy(data, io_buf, size);
-+			break;
-+		}
-+		/*  error cases */
-+		if (status == (-ESHUTDOWN || -ENODEV || -ENOENT)) {
-+			/*
-+			 * device or controller has been disabled due to
-+			 * some problem that could not be worked around,
-+			 * device or bus doesn’t exist, endpoint does not
-+			 * exist or is not enabled.
-+			 */
-+			adapt->bSurpriseRemoved = true;
-+			break;
- 		}
+-		}
 -		/*  firmware download is checksummed, don't retry */
 -		if ((value >= FW_8188E_START_ADDRESS && value <= FW_8188E_END_ADDRESS) || status == len)
-+		GET_HAL_DATA(adapt)->srestpriv.wifi_error_status = USB_VEN_REQ_CMD_FAIL;
-+		if (rtw_inc_and_chk_continual_urb_error(dvobjpriv)) {
-+			adapt->bSurpriseRemoved = true;
- 			break;
-+		}
+-			break;
++	status = usb_control_msg_recv(udev, 0, REALTEK_USB_VENQT_CMD_REQ,
++				      REALTEK_USB_VENQT_READ, addr,
++				      REALTEK_USB_VENQT_CMD_IDX, io_buf,
++				      size, RTW_USB_CONTROL_MSG_TIMEOUT,
++				      GFP_KERNEL);
++	if (!status) {
++		/*  Success this control transfer. */
++		rtw_reset_continual_urb_error(dvobjpriv);
++		memcpy(data, io_buf, size);
++		goto mutex_unlock;
  	}
 -
++	/*  error cases */
++	if (status == (-ESHUTDOWN || -ENODEV || -ENOENT)) {
++		/*
++		 * device or controller has been disabled due to
++		 * some problem that could not be worked around,
++		 * device or bus doesn’t exist, endpoint does not
++		 * exist or is not enabled.
++		 */
++		adapt->bSurpriseRemoved = true;
++			goto mutex_unlock;
++	}
++	GET_HAL_DATA(adapt)->srestpriv.wifi_error_status = USB_VEN_REQ_CMD_FAIL;
++	if (rtw_inc_and_chk_continual_urb_error(dvobjpriv)) {
++		adapt->bSurpriseRemoved = true;
++		goto mutex_unlock;
++	}
++mutex_unlock:
  	mutex_unlock(&dvobjpriv->usb_vendor_req_mutex);
  exit:
  	return status;
@@ -143,27 +143,27 @@ index 1859ab61ded2..a775983f581c 100644
  {
  	int status;
  	u8 *io_buf; /* pointer to I/O buffer */
-@@ -112,16 +88,16 @@ static int usb_read(struct intf_hdl *intfhdl, u16 addr, void *data, u8 size)
+@@ -105,16 +74,16 @@ static int usb_read(struct intf_hdl *intfhdl, u16 addr, void *data, u8 size)
+ 	mutex_lock(&dvobjpriv->usb_vendor_req_mutex);
  
  	io_buf = dvobjpriv->usb_vendor_req_buf;
- 
 +	memcpy(io_buf, data, size);
- 	while (++vendorreq_times <= MAX_USBCTRL_VENDORREQ_TIMES) {
--		status = usb_control_msg_recv(udev, 0, REALTEK_USB_VENQT_CMD_REQ,
--					      REALTEK_USB_VENQT_READ, addr,
-+		status = usb_control_msg_send(udev, 0, REALTEK_USB_VENQT_CMD_REQ,
-+					      REALTEK_USB_VENQT_WRITE, addr,
- 					      REALTEK_USB_VENQT_CMD_IDX, io_buf,
- 					      size, RTW_USB_CONTROL_MSG_TIMEOUT,
- 					      GFP_KERNEL);
- 		if (!status) {
- 			/*  Success this control transfer. */
- 			rtw_reset_continual_urb_error(dvobjpriv);
--			memcpy(data, io_buf, size);
- 			break;
- 		}
- 		/*  error cases */
-@@ -189,7 +165,7 @@ int rtw_write8(struct adapter *adapter, u32 addr, u8 val)
+ 
+-	status = usb_control_msg_recv(udev, 0, REALTEK_USB_VENQT_CMD_REQ,
+-				      REALTEK_USB_VENQT_READ, addr,
++	status = usb_control_msg_send(udev, 0, REALTEK_USB_VENQT_CMD_REQ,
++				      REALTEK_USB_VENQT_WRITE, addr,
+ 				      REALTEK_USB_VENQT_CMD_IDX, io_buf,
+ 				      size, RTW_USB_CONTROL_MSG_TIMEOUT,
+ 				      GFP_KERNEL);
+ 	if (!status) {
+ 		/*  Success this control transfer. */
+ 		rtw_reset_continual_urb_error(dvobjpriv);
+-		memcpy(data, io_buf, size);
+ 		goto mutex_unlock;
+ 	}
+ 	/*  error cases */
+@@ -182,7 +151,7 @@ int rtw_write8(struct adapter *adapter, u32 addr, u8 val)
  	struct io_priv *io_priv = &adapter->iopriv;
  	struct intf_hdl *intfhdl = &io_priv->intf;
  
@@ -172,7 +172,7 @@ index 1859ab61ded2..a775983f581c 100644
  
  	return RTW_STATUS_CODE(ret);
  }
-@@ -202,7 +178,7 @@ int rtw_write16(struct adapter *adapter, u32 addr, u16 val)
+@@ -195,7 +164,7 @@ int rtw_write16(struct adapter *adapter, u32 addr, u16 val)
  	struct io_priv *io_priv = &adapter->iopriv;
  	struct intf_hdl *intfhdl = &io_priv->intf;
  
@@ -181,7 +181,7 @@ index 1859ab61ded2..a775983f581c 100644
  
  	return RTW_STATUS_CODE(ret);
  }
-@@ -215,7 +191,7 @@ int rtw_write32(struct adapter *adapter, u32 addr, u32 val)
+@@ -208,7 +177,7 @@ int rtw_write32(struct adapter *adapter, u32 addr, u32 val)
  	struct io_priv *io_priv = &adapter->iopriv;
  	struct intf_hdl *intfhdl = &io_priv->intf;
  
@@ -190,7 +190,7 @@ index 1859ab61ded2..a775983f581c 100644
  
  	return RTW_STATUS_CODE(ret);
  }
-@@ -225,15 +201,13 @@ int rtw_writeN(struct adapter *adapter, u32 addr, u32 len, u8 *data)
+@@ -218,15 +187,13 @@ int rtw_writeN(struct adapter *adapter, u32 addr, u32 len, u8 *data)
  	int ret;
  	u16 address = (u16)(addr & 0xffff);
  	u16 length = (u16)(len & 0xffff);

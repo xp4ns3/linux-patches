@@ -1,0 +1,44 @@
+From e12eece758bc7d692bed1c50f22a0cd9c744d11e Mon Sep 17 00:00:00 2001
+From: "Fabio M. De Francesco" <fmdefrancesco@gmail.com>
+Date: Mon, 13 Sep 2021 18:13:33 +0200
+Subject: [PATCH v4 00/18] *** SUBJECT HERE ***
+
+*** BLURB HERE ***
+
+Fabio M. De Francesco (4):
+  staging: r8188eu: hal: Clean up usbctrl_vendorreq()
+  staging: r8188eu: hal: Clean up rtw_read*() and rtw_write*()
+  staging: r8188eu: Shorten calls chain of rtw_read8/16/32()
+  staging: r8188eu: Shorten calls chain of rtw_write8/16/32/N()
+
+Pavel Skripkin (14):
+  staging: r8188eu: remove usb_{read,write}_mem
+  staging: r8188eu: remove the helpers of rtw_read8()
+  staging: r8188eu: remove the helpers of rtw_read16()
+  staging: r8188eu: remove the helpers of rtw_read32()
+  staging: r8188eu: remove the helpers of usb_write8
+  staging: r8188eu: remove the helpers of usb_write16
+  staging: r8188eu: remove the helpers of usb_write32
+  staging: r8188eu: remove the helpers of usb_writeN
+  staging: r8188eu: remove the helpers of usb_read_port
+  staging: r8188eu: remove the helpers of usb_write_port
+  staging: r8188eu: remove the helpers of usb_read_port_cancel
+  staging: r8188eu: remove the helpers of usb_write_port_cancel
+  staging: r8188eu: remove core/rtw_io.c
+  staging: remove struct _io_ops
+
+ drivers/staging/r8188eu/Makefile              |   1 -
+ drivers/staging/r8188eu/core/rtw_io.c         | 299 ------------------
+ drivers/staging/r8188eu/hal/usb_halinit.c     |   6 +-
+ drivers/staging/r8188eu/hal/usb_ops_linux.c   | 250 ++++++++-------
+ drivers/staging/r8188eu/include/rtw_io.h      |  89 +-----
+ drivers/staging/r8188eu/include/usb_ops.h     |   2 -
+ .../staging/r8188eu/include/usb_ops_linux.h   |   8 -
+ drivers/staging/r8188eu/os_dep/usb_intf.c     |   8 +-
+ .../staging/r8188eu/os_dep/usb_ops_linux.c    |  20 +-
+ 9 files changed, 157 insertions(+), 526 deletions(-)
+ delete mode 100644 drivers/staging/r8188eu/core/rtw_io.c
+
+-- 
+2.33.0
+

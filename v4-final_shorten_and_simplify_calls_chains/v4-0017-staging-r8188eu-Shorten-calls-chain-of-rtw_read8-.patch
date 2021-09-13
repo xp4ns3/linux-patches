@@ -1,7 +1,7 @@
-From 81a06c606c86fcd28b98db13339cede6aaade79f Mon Sep 17 00:00:00 2001
+From 0031e93394af778a462ba54c3d5706f9ad1b9444 Mon Sep 17 00:00:00 2001
 From: "Fabio M. De Francesco" <fmdefrancesco@gmail.com>
-Date: Mon, 13 Sep 2021 13:41:00 +0200
-Subject: [PATCH v4 1/2] staging: r8188eu: Shorten calls chain of
+Date: Mon, 13 Sep 2021 17:38:39 +0200
+Subject: [PATCH v4 17/18] staging: r8188eu: Shorten calls chain of
  rtw_read8/16/32()
 
 Shorten the calls chain of rtw_read8/16/32() down to the actual reads.
@@ -15,14 +15,14 @@ Co-developed-by: Pavel Skripkin <paskripkin@gmail.com>
 Signed-off-by: Pavel Skripkin <paskripkin@gmail.com>
 Signed-off-by: Fabio M. De Francesco <fmdefrancesco@gmail.com>
 ---
- drivers/staging/r8188eu/hal/usb_ops_linux.c | 63 ++++++++++++++++++++-
- 1 file changed, 60 insertions(+), 3 deletions(-)
+ drivers/staging/r8188eu/hal/usb_ops_linux.c | 56 +++++++++++++++++++--
+ 1 file changed, 53 insertions(+), 3 deletions(-)
 
 diff --git a/drivers/staging/r8188eu/hal/usb_ops_linux.c b/drivers/staging/r8188eu/hal/usb_ops_linux.c
-index 04402bab805e..1859ab61ded2 100644
+index 04402bab805e..75475b0083db 100644
 --- a/drivers/staging/r8188eu/hal/usb_ops_linux.c
 +++ b/drivers/staging/r8188eu/hal/usb_ops_linux.c
-@@ -89,6 +89,63 @@ static int usbctrl_vendorreq(struct intf_hdl *intfhdl, u16 value, void *data, u1
+@@ -89,6 +89,56 @@ static int usbctrl_vendorreq(struct intf_hdl *intfhdl, u16 value, void *data, u1
  	return status;
  }
  
@@ -30,15 +30,9 @@ index 04402bab805e..1859ab61ded2 100644
 +{
 +	int status;
 +	u8 *io_buf; /* pointer to I/O buffer */
-+	int vendorreq_times = 0;
 +	struct adapter *adapt = intfhdl->padapter;
 +	struct dvobj_priv *dvobjpriv = adapter_to_dvobj(adapt);
 +	struct usb_device *udev = dvobjpriv->pusbdev;
-+
-+	if (addr < FW_8188E_START_ADDRESS || addr > FW_8188E_END_ADDRESS) {
-+		status = -EINVAL;
-+		goto exit;
-+	}
 +
 +	if (adapt->bSurpriseRemoved || adapt->pwrctrlpriv.pnp_bstop_trx) {
 +		status = -EPERM;
@@ -49,35 +43,34 @@ index 04402bab805e..1859ab61ded2 100644
 +
 +	io_buf = dvobjpriv->usb_vendor_req_buf;
 +
-+	while (++vendorreq_times <= MAX_USBCTRL_VENDORREQ_TIMES) {
-+		status = usb_control_msg_recv(udev, 0, REALTEK_USB_VENQT_CMD_REQ,
-+					      REALTEK_USB_VENQT_READ, addr,
-+					      REALTEK_USB_VENQT_CMD_IDX, io_buf,
-+					      size, RTW_USB_CONTROL_MSG_TIMEOUT,
-+					      GFP_KERNEL);
-+		if (!status) {
-+			/*  Success this control transfer. */
-+			rtw_reset_continual_urb_error(dvobjpriv);
-+			memcpy(data, io_buf, size);
-+			break;
-+		}
-+		/*  error cases */
-+		if (status == (-ESHUTDOWN || -ENODEV || -ENOENT)) {
-+			/*
-+			 * device or controller has been disabled due to
-+			 * some problem that could not be worked around,
-+			 * device or bus doesn’t exist, endpoint does not
-+			 * exist or is not enabled.
-+			 */
-+			adapt->bSurpriseRemoved = true;
-+			break;
-+		}
-+		GET_HAL_DATA(adapt)->srestpriv.wifi_error_status = USB_VEN_REQ_CMD_FAIL;
-+		if (rtw_inc_and_chk_continual_urb_error(dvobjpriv)) {
-+			adapt->bSurpriseRemoved = true;
-+			break;
-+		}
++	status = usb_control_msg_recv(udev, 0, REALTEK_USB_VENQT_CMD_REQ,
++				      REALTEK_USB_VENQT_READ, addr,
++				      REALTEK_USB_VENQT_CMD_IDX, io_buf,
++				      size, RTW_USB_CONTROL_MSG_TIMEOUT,
++				      GFP_KERNEL);
++	if (!status) {
++		/*  Success this control transfer. */
++		rtw_reset_continual_urb_error(dvobjpriv);
++		memcpy(data, io_buf, size);
++		goto mutex_unlock;
 +	}
++	/*  error cases */
++	if (status == (-ESHUTDOWN || -ENODEV || -ENOENT)) {
++		/*
++		 * device or controller has been disabled due to
++		 * some problem that could not be worked around,
++		 * device or bus doesn’t exist, endpoint does not
++		 * exist or is not enabled.
++		 */
++		adapt->bSurpriseRemoved = true;
++			goto mutex_unlock;
++	}
++	GET_HAL_DATA(adapt)->srestpriv.wifi_error_status = USB_VEN_REQ_CMD_FAIL;
++	if (rtw_inc_and_chk_continual_urb_error(dvobjpriv)) {
++		adapt->bSurpriseRemoved = true;
++		goto mutex_unlock;
++	}
++mutex_unlock:
 +	mutex_unlock(&dvobjpriv->usb_vendor_req_mutex);
 +exit:
 +	return status;
@@ -86,7 +79,7 @@ index 04402bab805e..1859ab61ded2 100644
  u8 rtw_read8(struct adapter *adapter, u32 addr)
  {
  	u8 data;
-@@ -96,7 +153,7 @@ u8 rtw_read8(struct adapter *adapter, u32 addr)
+@@ -96,7 +146,7 @@ u8 rtw_read8(struct adapter *adapter, u32 addr)
  	struct intf_hdl *intfhdl = &io_priv->intf;
  	u16 address = (u16)(addr & 0xffff);
  
@@ -95,7 +88,7 @@ index 04402bab805e..1859ab61ded2 100644
  
  	return data;
  }
-@@ -108,7 +165,7 @@ u16 rtw_read16(struct adapter *adapter, u32 addr)
+@@ -108,7 +158,7 @@ u16 rtw_read16(struct adapter *adapter, u32 addr)
  	struct io_priv *io_priv = &adapter->iopriv;
  	struct intf_hdl *intfhdl = &io_priv->intf;
  
@@ -104,7 +97,7 @@ index 04402bab805e..1859ab61ded2 100644
  
  	return le16_to_cpu(data);
  }
-@@ -120,7 +177,7 @@ u32 rtw_read32(struct adapter *adapter, u32 addr)
+@@ -120,7 +170,7 @@ u32 rtw_read32(struct adapter *adapter, u32 addr)
  	struct io_priv *io_priv = &adapter->iopriv;
  	struct intf_hdl *intfhdl = &io_priv->intf;
  
