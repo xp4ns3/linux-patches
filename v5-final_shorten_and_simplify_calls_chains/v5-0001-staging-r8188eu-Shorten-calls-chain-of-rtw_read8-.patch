@@ -1,4 +1,4 @@
-From 9a6d22b2e80bbdfc4192e1645e30ac6b152a5b8c Mon Sep 17 00:00:00 2001
+From 2f3ad420a1a2700af941796a459abcf847f8233e Mon Sep 17 00:00:00 2001
 From: "Fabio M. De Francesco" <fmdefrancesco@gmail.com>
 Date: Tue, 14 Sep 2021 19:10:59 +0200
 Subject: [PATCH v5] staging: r8188eu: Shorten calls chain of rtw_read8/16/32()
@@ -14,14 +14,14 @@ Co-developed-by: Pavel Skripkin <paskripkin@gmail.com>
 Signed-off-by: Pavel Skripkin <paskripkin@gmail.com>
 Signed-off-by: Fabio M. De Francesco <fmdefrancesco@gmail.com>
 ---
- drivers/staging/r8188eu/hal/usb_ops_linux.c | 55 +++++++++++++++++++--
- 1 file changed, 52 insertions(+), 3 deletions(-)
+ drivers/staging/r8188eu/hal/usb_ops_linux.c | 61 +++++++++++++++++++--
+ 1 file changed, 57 insertions(+), 4 deletions(-)
 
 diff --git a/drivers/staging/r8188eu/hal/usb_ops_linux.c b/drivers/staging/r8188eu/hal/usb_ops_linux.c
-index 336bd0c16a66..aef2cc132dfa 100644
+index a41d167391f5..9b348a3b9387 100644
 --- a/drivers/staging/r8188eu/hal/usb_ops_linux.c
 +++ b/drivers/staging/r8188eu/hal/usb_ops_linux.c
-@@ -89,6 +89,55 @@ static int usbctrl_vendorreq(struct intf_hdl *intfhdl, u16 value, void *data, u1
+@@ -89,14 +89,67 @@ static int usbctrl_vendorreq(struct intf_hdl *intfhdl, u16 value, void *data, u1
  	return status;
  }
  
@@ -57,36 +57,41 @@ index 336bd0c16a66..aef2cc132dfa 100644
 +		 */
 +		adapt->bSurpriseRemoved = true;
 +		goto mutex_unlock;
-+	} 
++	}
++
 +	if (status < 0) {
 +		GET_HAL_DATA(adapt)->srestpriv.wifi_error_status =
-+		       	USB_VEN_REQ_CMD_FAIL;
++			USB_VEN_REQ_CMD_FAIL;
++
 +		if (rtw_inc_and_chk_continual_urb_error(dvobjpriv))
 +			adapt->bSurpriseRemoved = true;
++
 +		goto mutex_unlock;
 +	}
++
 +	rtw_reset_continual_urb_error(dvobjpriv);
 +	memcpy(data, io_buf, size);
 +
-+mutex_unlock:			
++mutex_unlock:
 +	mutex_unlock(&dvobjpriv->usb_vendor_req_mutex);
-+	
++
 +	return status;
 +}
 +
  u8 rtw_read8(struct adapter *adapter, u32 addr)
  {
  	struct io_priv *io_priv = &adapter->iopriv;
-@@ -96,7 +145,7 @@ u8 rtw_read8(struct adapter *adapter, u32 addr)
+ 	struct intf_hdl *intfhdl = &io_priv->intf;
  	u16 address = addr & 0xffff;
  	u8 data;
- 	
+-	
 -	usbctrl_vendorreq(intfhdl, address, &data, 1, REALTEK_USB_VENQT_READ);
++
 +	usb_read(intfhdl, address, &data, 1);
  
  	return data;
  }
-@@ -108,7 +157,7 @@ u16 rtw_read16(struct adapter *adapter, u32 addr)
+@@ -108,7 +161,7 @@ u16 rtw_read16(struct adapter *adapter, u32 addr)
  	u16 address = addr & 0xffff;
  	__le16 data;
  
@@ -95,7 +100,7 @@ index 336bd0c16a66..aef2cc132dfa 100644
  
  	return le16_to_cpu(data);
  }
-@@ -120,7 +169,7 @@ u32 rtw_read32(struct adapter *adapter, u32 addr)
+@@ -120,7 +173,7 @@ u32 rtw_read32(struct adapter *adapter, u32 addr)
  	u16 address = addr & 0xffff;
  	__le32 data;
  
