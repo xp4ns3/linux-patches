@@ -1,20 +1,20 @@
-From 2e59420c0ce46ac3be7b0ac2d7b0e4714810b646 Mon Sep 17 00:00:00 2001
+From ccd126a80a76f40edf0d695f664a2e1cca69a2b0 Mon Sep 17 00:00:00 2001
 From: "Fabio M. De Francesco" <fmdefrancesco@gmail.com>
-Date: Tue, 14 Sep 2021 16:53:34 +0200
-Subject: [PATCH v5] staging: r8188eu: hal: Clean up rtw_read*() and
+Date: Tue, 14 Sep 2021 20:22:28 +0200
+Subject: [PATCH v4] staging: r8188eu: hal: Clean up rtw_read*() and
  rtw_write*()
 
-Clean up rtw_read{8,16,32}() and rtw_write{8,16,32,N}() in usb_ops_linux.c.
+Clean up rtw_read{8,16,32}() and rtw_write{8,16,32,N}() in usb_ops_linux.c
 
 Co-developed-by: Pavel Skripkin <paskripkin@gmail.com>
 Signed-off-by: Pavel Skripkin <paskripkin@gmail.com>
 Signed-off-by: Fabio M. De Francesco <fmdefrancesco@gmail.com>
 ---
- drivers/staging/r8188eu/hal/usb_ops_linux.c | 69 +++++++++++----------
- 1 file changed, 35 insertions(+), 34 deletions(-)
+ drivers/staging/r8188eu/hal/usb_ops_linux.c | 67 +++++++++++----------
+ 1 file changed, 34 insertions(+), 33 deletions(-)
 
 diff --git a/drivers/staging/r8188eu/hal/usb_ops_linux.c b/drivers/staging/r8188eu/hal/usb_ops_linux.c
-index 4385260185b2..336bd0c16a66 100644
+index 4385260185b2..7bb13319542e 100644
 --- a/drivers/staging/r8188eu/hal/usb_ops_linux.c
 +++ b/drivers/staging/r8188eu/hal/usb_ops_linux.c
 @@ -91,91 +91,92 @@ static int usbctrl_vendorreq(struct intf_hdl *intfhdl, u16 value, void *data, u1
@@ -28,9 +28,8 @@ index 4385260185b2..336bd0c16a66 100644
 +	struct intf_hdl *intfhdl = &io_priv->intf;
 +	u16 address = addr & 0xffff;
  	u8 data;
--
+ 
 -	usbctrl_vendorreq(pintfhdl, wvalue, &data, 1, REALTEK_USB_VENQT_READ);
-+	
 +	usbctrl_vendorreq(intfhdl, address, &data, 1, REALTEK_USB_VENQT_READ);
  
  	return data;
