@@ -1,7 +1,8 @@
-From 810bb28c0853c35706b8dee00c3a8ca5b0690538 Mon Sep 17 00:00:00 2001
+From 06e30a9e141698b2bb3295df97b5491687aa703a Mon Sep 17 00:00:00 2001
 From: Pavel Skripkin <paskripkin@gmail.com>
 Date: Tue, 7 Sep 2021 20:04:19 +0300
-Subject: [PATCH v4 06/18] staging: r8188eu: remove the helpers of usb_write16()
+Subject: [PATCH v5 05/16] staging: r8188eu: remove the helpers of
+ usb_write16()
 
 Remove the unnecessary _rtw_write16() and usb_write16() and embed their
 code into the caller (i.e., rtw_write16()).
@@ -16,14 +17,6 @@ Co-developed-by: Fabio M. De Francesco <fmdefrancesco@gmail.com>
 Signed-off-by: Fabio M. De Francesco <fmdefrancesco@gmail.com>
 Signed-off-by: Pavel Skripkin <paskripkin@gmail.com>
 ---
-
-v3->v4:
-        Split a patch into fourteen.
-v2->v3:
-        No changes.
-v1->v2:
-        No changes.
-
  drivers/staging/r8188eu/core/rtw_io.c       | 14 --------------
  drivers/staging/r8188eu/hal/usb_ops_linux.c | 10 +++++++---
  drivers/staging/r8188eu/include/rtw_io.h    |  4 +---

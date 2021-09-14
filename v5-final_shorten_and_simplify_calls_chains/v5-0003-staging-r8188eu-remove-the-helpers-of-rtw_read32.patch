@@ -1,7 +1,7 @@
-From 2924463a51668fe5cf1b8150e5f5df12e2e8e696 Mon Sep 17 00:00:00 2001
+From f8fd1981ad35c16d6dca61b4d8bf423fca756da7 Mon Sep 17 00:00:00 2001
 From: Pavel Skripkin <paskripkin@gmail.com>
 Date: Tue, 7 Sep 2021 19:59:32 +0300
-Subject: [PATCH v4 04/18] staging: r8188eu: remove the helpers of rtw_read32()
+Subject: [PATCH v5 03/16] staging: r8188eu: remove the helpers of rtw_read32()
 
 Remove the unnecessary _rtw_readr32() and usb_read32() and embed their
 code into the caller (i.e., rtw_read32()).
@@ -16,14 +16,6 @@ Co-developed-by: Fabio M. De Francesco <fmdefrancesco@gmail.com>
 Signed-off-by: Fabio M. De Francesco <fmdefrancesco@gmail.com>
 Signed-off-by: Pavel Skripkin <paskripkin@gmail.com>
 ---
-
-v3->v4:
-        Split a patch into fourteen.
-v2->v3:
-        No changes.
-v1->v2:
-        No changes.
-
  drivers/staging/r8188eu/core/rtw_io.c       | 14 --------------
  drivers/staging/r8188eu/hal/usb_ops_linux.c |  5 +++--
  drivers/staging/r8188eu/include/rtw_io.h    |  3 +--

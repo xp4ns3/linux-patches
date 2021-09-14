@@ -1,7 +1,7 @@
-From dcd1658d4eebf74971530d2b2f40875517f02dd1 Mon Sep 17 00:00:00 2001
+From 44cbbd544d4733ecea28f94b21e872fe416b4840 Mon Sep 17 00:00:00 2001
 From: Pavel Skripkin <paskripkin@gmail.com>
 Date: Tue, 7 Sep 2021 20:40:49 +0300
-Subject: [PATCH v5 14/18] staging: remove struct _io_ops
+Subject: [PATCH v5 13/16] staging: remove struct _io_ops
 
 Finally struct _io_ops is unused, so remove it.
 
@@ -9,16 +9,6 @@ Co-developed-by: Fabio M. De Francesco <fmdefrancesco@gmail.com>
 Signed-off-by: Fabio M. De Francesco <fmdefrancesco@gmail.com>
 Signed-off-by: Pavel Skripkin <paskripkin@gmail.com>
 ---
-
-v4->v5:
-        No changes.
-v3->v4:
-        Split a patch into fourteen.
-v2->v3:
-        No changes.
-v1->v2:
-        No changes.
-
  drivers/staging/r8188eu/hal/usb_ops_linux.c |  6 -----
  drivers/staging/r8188eu/include/rtw_io.h    | 25 ---------------------
  drivers/staging/r8188eu/include/usb_ops.h   |  2 --
