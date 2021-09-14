@@ -1,0 +1,36 @@
+ Changelog:
+ 
+ v4->v5:
+         - 1-14:
+                 no changes
+
+  v3->v4: 
+          - 1-14: 
+                  Split a patch into fourteen.
+          
+          - 15-16:
+                  added
+          - 17-18:
+                  Make some changes according to a first review of Greg
+                  Kroah-Hartman; remove unnecessary while loop and a couple of
+                  'if' test; handle the errors returned by usb_control_msg_recv()
+
+  v2->v3: 
+          - 1:    
+                  no changes
+          - 3     
+                  Fix the version number of the patch.
+
+  v1->v2: 
+          - 1     
+                  no changes
+          - 3:    
+                  Replace parameter REALTEK_USB_VENQT_READ with REALTEK_USB_VENQT_WRITE
+                  in usb_control_msg_send(). More in-depth explanation at
+                  https://lore.kernel.org/lkml/2791328.7pjKATJfGa@localhost.localdomain/T/#m1fc1ab2f7c1f463049ad88d5df5bb1b107b37260
+  
+  
+  v1: https://lore.kernel.org/linux-staging/20210904150447.14659-1-fmdefrancesco@gmail.com/
+  v2: https://lore.kernel.org/linux-staging/20210904212719.11426-1-fmdefrancesco@gmail.com/
+  v3: https://lore.kernel.org/linux-staging/20210904220048.12822-1-fmdefrancesco@gmail.com/
+  v4: <did't find a link on lore>
