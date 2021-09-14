@@ -16,6 +16,14 @@ Co-developed-by: Fabio M. De Francesco <fmdefrancesco@gmail.com>
 Signed-off-by: Fabio M. De Francesco <fmdefrancesco@gmail.com>
 Signed-off-by: Pavel Skripkin <paskripkin@gmail.com>
 ---
+
+v3->v4:
+        Split a patch into fourteen.
+v2->v3:
+        No changes.
+v1->v2:
+        No changes.
+
  drivers/staging/r8188eu/core/rtw_io.c       | 14 --------------
  drivers/staging/r8188eu/hal/usb_ops_linux.c |  5 +++--
  drivers/staging/r8188eu/include/rtw_io.h    |  3 +--

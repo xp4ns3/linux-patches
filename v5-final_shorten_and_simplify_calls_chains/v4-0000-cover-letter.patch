@@ -1,7 +1,7 @@
 From e12eece758bc7d692bed1c50f22a0cd9c744d11e Mon Sep 17 00:00:00 2001
 From: "Fabio M. De Francesco" <fmdefrancesco@gmail.com>
 Date: Mon, 13 Sep 2021 18:13:33 +0200
-Subject: [PATCH v4 00/18] staging: r8188eu: Shorten and simplify calls chain
+Subject: [PATCH v5 00/18] staging: r8188eu: Shorten and simplify calls chain
 
 io_ops abstraction is useless in this driver, since there is only one ops
 registration. Without io_ops we can get rid of indirect calls mess and

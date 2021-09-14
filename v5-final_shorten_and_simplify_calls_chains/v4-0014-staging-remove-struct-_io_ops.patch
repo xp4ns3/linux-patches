@@ -1,7 +1,7 @@
 From dcd1658d4eebf74971530d2b2f40875517f02dd1 Mon Sep 17 00:00:00 2001
 From: Pavel Skripkin <paskripkin@gmail.com>
 Date: Tue, 7 Sep 2021 20:40:49 +0300
-Subject: [PATCH v4 14/18] staging: remove struct _io_ops
+Subject: [PATCH v5 14/18] staging: remove struct _io_ops
 
 Finally struct _io_ops is unused, so remove it.
 
@@ -10,6 +10,8 @@ Signed-off-by: Fabio M. De Francesco <fmdefrancesco@gmail.com>
 Signed-off-by: Pavel Skripkin <paskripkin@gmail.com>
 ---
 
+v4->v5:
+        No changes.
 v3->v4:
         Split a patch into fourteen.
 v2->v3:

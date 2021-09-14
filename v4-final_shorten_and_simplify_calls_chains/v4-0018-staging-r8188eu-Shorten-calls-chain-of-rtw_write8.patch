@@ -1,8 +1,7 @@
 From e12eece758bc7d692bed1c50f22a0cd9c744d11e Mon Sep 17 00:00:00 2001
 From: "Fabio M. De Francesco" <fmdefrancesco@gmail.com>
 Date: Mon, 13 Sep 2021 17:59:01 +0200
-Subject: [PATCH v4 18/18] staging: r8188eu: Shorten calls chain of
- rtw_write8/16/32/N()
+Subject: [PATCH v4 18/18] staging: r8188eu: Shorten calls chain of rtw_write8/16/32/N()
 
 Shorten the calls chain of rtw_write8/16/32() down to the actual writes.
 For this purpose unify the four usb_write8/16/32/N() into the new
@@ -15,6 +14,18 @@ Co-developed-by: Pavel Skripkin <paskripkin@gmail.com>
 Signed-off-by: Pavel Skripkin <paskripkin@gmail.com>
 Signed-off-by: Fabio M. De Francesco <fmdefrancesco@gmail.com>
 ---
+
+v3->v4:
+        Make some changes according to a first review of Greg
+        Kroah-Hartman; remove unnecessary 'while' loop and a couple of
+        'if' test; handle the errors returned by usb_control_msg_send().
+
+v2->v3: Fix the version number of the patch.
+ 
+v1->v2: Replace parameter REALTEK_USB_VENQT_READ with REALTEK_USB_VENQT_WRITE
+	in usb_control_msg_send(). More in-depth explanation at
+	https://lore.kernel.org/lkml/2791328.7pjKATJfGa@localhost.localdomain/T/#m1fc1ab2f7c1f463049ad88d5df5bb1b107b37260
+
  drivers/staging/r8188eu/hal/usb_ops_linux.c | 111 +++++++-------------
  1 file changed, 39 insertions(+), 72 deletions(-)
 

@@ -1,7 +1,7 @@
 From 3895f25cc83b386d87223d071c8d3fe27198c96b Mon Sep 17 00:00:00 2001
 From: "Fabio M. De Francesco" <fmdefrancesco@gmail.com>
 Date: Sun, 12 Sep 2021 10:04:21 +0200
-Subject: [PATCH v4 16/18] staging: r8188eu: hal: Clean up rtw_read*() and rtw_write*()
+Subject: [PATCH v5 16/18] staging: r8188eu: hal: Clean up rtw_read*() and rtw_write*()
 
 Clean up rtw_read{8,16,32}() and rtw_write{8,16,32,N}() in usb_ops_linux.c
 because some of their code will be reused in the following two patches of
@@ -15,6 +15,8 @@ Signed-off-by: Pavel Skripkin <paskripkin@gmail.com>
 Signed-off-by: Fabio M. De Francesco <fmdefrancesco@gmail.com>
 ---
 
+v4->v5:
+        No changes.
 v3->v4:
         Make this patch.
 v2->v3:

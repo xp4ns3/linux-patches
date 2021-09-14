@@ -1,7 +1,7 @@
 From ccf26bf8fbd17df8d2e3f657487bad0a779d6fe7 Mon Sep 17 00:00:00 2001
 From: Pavel Skripkin <paskripkin@gmail.com>
 Date: Mon, 6 Sep 2021 20:10:54 +0300
-Subject: [PATCH v4 01/18] staging: r8188eu: remove usb_{read,write}_mem()
+Subject: [PATCH v5 01/18] staging: r8188eu: remove usb_{read,write}_mem()
 
 Remove usb_{read,write}_mem() because they are unused.
 
@@ -10,6 +10,8 @@ Signed-off-by: Fabio M. De Francesco <fmdefrancesco@gmail.com>
 Signed-off-by: Pavel Skripkin <paskripkin@gmail.com>
 ---
 
+v4->v5:
+	No changes.
 v3->v4:
 	Split a patch into fourteen.
 v2->v3:
