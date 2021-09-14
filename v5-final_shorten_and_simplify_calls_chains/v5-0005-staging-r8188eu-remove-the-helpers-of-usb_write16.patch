@@ -1,7 +1,7 @@
 From 06e30a9e141698b2bb3295df97b5491687aa703a Mon Sep 17 00:00:00 2001
 From: Pavel Skripkin <paskripkin@gmail.com>
 Date: Tue, 7 Sep 2021 20:04:19 +0300
-Subject: [PATCH v5 05/16] staging: r8188eu: remove the helpers of
+Subject: [PATCH v5 05/17] staging: r8188eu: remove the helpers of
  usb_write16()
 
 Remove the unnecessary _rtw_write16() and usb_write16() and embed their

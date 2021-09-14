@@ -1,7 +1,7 @@
 From adef9ff77204a754ac53244a6be40560aeff33ad Mon Sep 17 00:00:00 2001
 From: Pavel Skripkin <paskripkin@gmail.com>
 Date: Tue, 7 Sep 2021 20:17:17 +0300
-Subject: [PATCH v5 09/16] staging: r8188eu: remove the helpers of
+Subject: [PATCH v5 09/17] staging: r8188eu: remove the helpers of
  rtw_write_port()
 
 Remove the unnecessary _rtw_write_port() and usb_write_port() and embed

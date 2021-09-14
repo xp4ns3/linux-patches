@@ -1,7 +1,7 @@
 From c6f6ab3db5de1093add7217ea2d4ccab698f8779 Mon Sep 17 00:00:00 2001
 From: Pavel Skripkin <paskripkin@gmail.com>
 Date: Tue, 7 Sep 2021 20:38:03 +0300
-Subject: [PATCH v5 12/16] staging: r8188eu: remove core/rtw_io.c
+Subject: [PATCH v5 12/17] staging: r8188eu: remove core/rtw_io.c
 
 There are only unused functions and macros and one function which can be
 open-coded.

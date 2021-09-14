@@ -1,7 +1,7 @@
 From d86b4716bf32812652e5ce2e7fedc84bd1720416 Mon Sep 17 00:00:00 2001
 From: "Fabio M. De Francesco" <fmdefrancesco@gmail.com>
 Date: Tue, 14 Sep 2021 16:28:58 +0200
-Subject: [PATCH v5 14/16] staging: r8188eu: hal: Clean up usbctrl_vendorreq()
+Subject: [PATCH v5 14/17] staging: r8188eu: hal: Clean up usbctrl_vendorreq()
 
 Clean up usbctrl_vendoreq () in usb_ops_linux.c. Eventually this function
 will be deleted but some of the code will be reused later. This cleanup
