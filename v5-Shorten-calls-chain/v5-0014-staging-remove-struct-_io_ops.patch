@@ -1,7 +1,7 @@
-From 44cbbd544d4733ecea28f94b21e872fe416b4840 Mon Sep 17 00:00:00 2001
+From 203fbfd45ce22b7752f3024135194d4385728d2e Mon Sep 17 00:00:00 2001
 From: Pavel Skripkin <paskripkin@gmail.com>
 Date: Tue, 7 Sep 2021 20:40:49 +0300
-Subject: [PATCH v5 13/17] staging: remove struct _io_ops
+Subject: [PATCH v5 14/19] staging: remove struct _io_ops
 
 Finally struct _io_ops is unused, so remove it.
 

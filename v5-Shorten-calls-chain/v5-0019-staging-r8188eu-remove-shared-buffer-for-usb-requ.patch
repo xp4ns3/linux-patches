@@ -1,18 +1,17 @@
-From 7c74857d21f86da74aa9370d1f407779d93437f8 Mon Sep 17 00:00:00 2001
+From de82b5eec660ec6b2f9e2e12fdb4df64122e786c Mon Sep 17 00:00:00 2001
 From: Pavel Skripkin <paskripkin@gmail.com>
 Date: Wed, 15 Sep 2021 13:31:18 +0300
-Subject: [PATCH v5] staging: r8188eu: remove shared buffer for usb requests
+Subject: [PATCH v5 19/19] staging: r8188eu: remove shared buffer for usb
+ requests
 
 This driver used shared buffer for usb requests. It led to using
 mutexes, i.e no usb requests can be done in parallel.
 
-There is nothing that stops us from sending usb requests in parallel,
-since usb core allows it. To acieve it, removed usb_vendor_req_buf at
-all, since usb i/o is the only used of it and usb_vendor_req_mutex too,
-since there is nothing to protect, because shared buffer was completely
-removed.
+USB requests can be fired in parallel since USB Core allows it. In
+order to allow them, remove usb_vendor_req_buf from dvobj_priv (since
+USB I/O is the only user of it) and remove also usb_vendor_req_mutex
+(since there is nothing to protect).
 
-Tested-on: TP-Link TL-WN722N v2/v3 [Realtek RTL8188EUS]
 Co-developed-by: Fabio M. De Francesco <fmdefrancesco@gmail.com>
 Signed-off-by: Fabio M. De Francesco <fmdefrancesco@gmail.com>
 Signed-off-by: Pavel Skripkin <paskripkin@gmail.com>

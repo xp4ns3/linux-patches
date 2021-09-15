@@ -1,13 +1,13 @@
-From c6f6ab3db5de1093add7217ea2d4ccab698f8779 Mon Sep 17 00:00:00 2001
+From 9eb835c5d79a09486474e590d6ab136c99771d2f Mon Sep 17 00:00:00 2001
 From: Pavel Skripkin <paskripkin@gmail.com>
 Date: Tue, 7 Sep 2021 20:38:03 +0300
-Subject: [PATCH v5 12/17] staging: r8188eu: remove core/rtw_io.c
+Subject: [PATCH v5 13/19] staging: r8188eu: remove core/rtw_io.c
 
 There are only unused functions and macros and one function which can be
 open-coded.
 
-So, remove core/rtw_io.c at all, remove core/rtw_io.c from Makefile
-and open-code rtw_init_io_priv() in rtw_usb_if1_init().
+So, removed core/rtw_io.c at all, removed core/rtw_io.c from Makefile
+and open-coded rtw_init_io_priv
 
 Co-developed-by: Fabio M. De Francesco <fmdefrancesco@gmail.com>
 Signed-off-by: Fabio M. De Francesco <fmdefrancesco@gmail.com>

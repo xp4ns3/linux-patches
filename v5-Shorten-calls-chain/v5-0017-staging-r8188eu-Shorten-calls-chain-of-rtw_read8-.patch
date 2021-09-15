@@ -1,7 +1,7 @@
-From 125d4601a443689a0ab759a92257d5d246959899 Mon Sep 17 00:00:00 2001
+From c404e8f14ee13d2028a771c86bcf079b276dacb9 Mon Sep 17 00:00:00 2001
 From: "Fabio M. De Francesco" <fmdefrancesco@gmail.com>
 Date: Tue, 14 Sep 2021 19:10:59 +0200
-Subject: [PATCH v5 16/17] staging: r8188eu: Shorten calls chain of
+Subject: [PATCH v5 17/19] staging: r8188eu: Shorten calls chain of
  rtw_read8/16/32()
 
 Shorten the calls chain of rtw_read8/16/32() down to the actual reads.

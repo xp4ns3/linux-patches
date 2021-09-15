@@ -1,7 +1,7 @@
-From f8fd1981ad35c16d6dca61b4d8bf423fca756da7 Mon Sep 17 00:00:00 2001
+From e5a54028aa9f5cff664b973409a08482d279dabf Mon Sep 17 00:00:00 2001
 From: Pavel Skripkin <paskripkin@gmail.com>
 Date: Tue, 7 Sep 2021 19:59:32 +0300
-Subject: [PATCH v5 03/17] staging: r8188eu: remove the helpers of rtw_read32()
+Subject: [PATCH v5 04/19] staging: r8188eu: remove the helpers of rtw_read32()
 
 Remove the unnecessary _rtw_readr32() and usb_read32() and embed their
 code into the caller (i.e., rtw_read32()).

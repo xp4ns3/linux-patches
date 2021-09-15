@@ -1,7 +1,7 @@
-From 6aebcd3223eb7f56d09effd16960552961383483 Mon Sep 17 00:00:00 2001
+From 6fed26cfa7ece09803a0113da47b7ca014eb4d68 Mon Sep 17 00:00:00 2001
 From: "Fabio M. De Francesco" <fmdefrancesco@gmail.com>
-Date: Tue, 14 Sep 2021 21:27:00 +0200
-Subject: [PATCH v5] staging: r8188eu: Shorten calls chain of
+Date: Wed, 15 Sep 2021 12:58:55 +0200
+Subject: [PATCH v5 18/19] staging: r8188eu: Shorten calls chain of
  rtw_write8/16/32/N()
 
 Shorten the calls chain of rtw_write8/16/32() down to the actual writes.
@@ -15,11 +15,11 @@ Co-developed-by: Pavel Skripkin <paskripkin@gmail.com>
 Signed-off-by: Pavel Skripkin <paskripkin@gmail.com>
 Signed-off-by: Fabio M. De Francesco <fmdefrancesco@gmail.com>
 ---
- drivers/staging/r8188eu/hal/usb_ops_linux.c | 115 ++++++++------------
- 1 file changed, 44 insertions(+), 71 deletions(-)
+ drivers/staging/r8188eu/hal/usb_ops_linux.c | 112 +++++++-------------
+ 1 file changed, 41 insertions(+), 71 deletions(-)
 
 diff --git a/drivers/staging/r8188eu/hal/usb_ops_linux.c b/drivers/staging/r8188eu/hal/usb_ops_linux.c
-index 28d639ba8e4e..da5b29fddc36 100644
+index 28d639ba8e4e..656f3a774e48 100644
 --- a/drivers/staging/r8188eu/hal/usb_ops_linux.c
 +++ b/drivers/staging/r8188eu/hal/usb_ops_linux.c
 @@ -8,88 +8,60 @@
@@ -145,13 +145,7 @@ index 28d639ba8e4e..da5b29fddc36 100644
  {
  	struct adapter *adapt = intfhdl->padapter;
  	struct dvobj_priv *dvobjpriv = adapter_to_dvobj(adapt);
-@@ -100,12 +72,16 @@ static int usb_read(struct intf_hdl *intfhdl, u16 addr, void *data, u8 size)
- 	if (adapt->bSurpriseRemoved || adapt->pwrctrlpriv.pnp_bstop_trx)
- 		return -EPERM;
- 
-+	if (size > MAX_VENDOR_REQ_CMD_SIZE)
-+		status = -EINVAL;
-+
+@@ -103,9 +75,10 @@ static int usb_read(struct intf_hdl *intfhdl, u16 addr, void *data, u8 size)
  	mutex_lock(&dvobjpriv->usb_vendor_req_mutex);
  
  	io_buf = dvobjpriv->usb_vendor_req_buf;
@@ -164,7 +158,7 @@ index 28d639ba8e4e..da5b29fddc36 100644
  				      REALTEK_USB_VENQT_CMD_IDX, io_buf,
  				      size, RTW_USB_CONTROL_MSG_TIMEOUT,
  				      GFP_KERNEL);
-@@ -134,7 +110,6 @@ static int usb_read(struct intf_hdl *intfhdl, u16 addr, void *data, u8 size)
+@@ -134,7 +107,6 @@ static int usb_read(struct intf_hdl *intfhdl, u16 addr, void *data, u8 size)
  	}
  
  	rtw_reset_continual_urb_error(dvobjpriv);
@@ -172,7 +166,7 @@ index 28d639ba8e4e..da5b29fddc36 100644
  
  mutex_unlock:
  	mutex_unlock(&dvobjpriv->usb_vendor_req_mutex);
-@@ -185,7 +160,7 @@ int rtw_write8(struct adapter *adapter, u32 addr, u8 val)
+@@ -185,7 +157,7 @@ int rtw_write8(struct adapter *adapter, u32 addr, u8 val)
  	u16 address = addr & 0xffff;
  	int ret;
  
@@ -181,7 +175,7 @@ index 28d639ba8e4e..da5b29fddc36 100644
  
  	return RTW_STATUS_CODE(ret);
  }
-@@ -198,7 +173,7 @@ int rtw_write16(struct adapter *adapter, u32 addr, u16 val)
+@@ -198,7 +170,7 @@ int rtw_write16(struct adapter *adapter, u32 addr, u16 val)
  	u16 address = addr & 0xffff;
  	int ret;
  
@@ -190,7 +184,7 @@ index 28d639ba8e4e..da5b29fddc36 100644
  
  	return RTW_STATUS_CODE(ret);
  }
-@@ -211,7 +186,7 @@ int rtw_write32(struct adapter *adapter, u32 addr, u32 val)
+@@ -211,7 +183,7 @@ int rtw_write32(struct adapter *adapter, u32 addr, u32 val)
  	u16 address = addr & 0xffff;
  	int ret;
  
@@ -199,7 +193,7 @@ index 28d639ba8e4e..da5b29fddc36 100644
  
  	return RTW_STATUS_CODE(ret);
  }
-@@ -220,7 +195,6 @@ int rtw_writeN(struct adapter *adapter, u32 addr, u32 len, u8 *data)
+@@ -220,7 +192,6 @@ int rtw_writeN(struct adapter *adapter, u32 addr, u32 len, u8 *data)
  {
  	struct io_priv *io_priv = &adapter->iopriv;
  	struct intf_hdl *intfhdl = &io_priv->intf;
@@ -207,7 +201,7 @@ index 28d639ba8e4e..da5b29fddc36 100644
  	u16 address = addr & 0xffff;
  	u16 length = len & 0xffff;
  	int ret;
-@@ -228,8 +202,7 @@ int rtw_writeN(struct adapter *adapter, u32 addr, u32 len, u8 *data)
+@@ -228,8 +199,7 @@ int rtw_writeN(struct adapter *adapter, u32 addr, u32 len, u8 *data)
  	if (length > VENDOR_CMD_MAX_DATA_LEN)
  		return _FAIL;
  
