@@ -1,8 +1,7 @@
 From a5d5d41771c8eae2d12611a1d74c2dc5c843e559 Mon Sep 17 00:00:00 2001
 From: Pavel Skripkin <paskripkin@gmail.com>
 Date: Wed, 15 Sep 2021 13:31:18 +0300
-Subject: [PATCH v6 19/19] staging: r8188eu: remove shared buffer for usb
- requests
+Subject: [PATCH v6 19/19] staging: r8188eu: remove shared buffer for USB requests
 
 This driver used shared buffer for usb requests. It led to using
 mutexes, i.e no usb requests can be done in parallel.

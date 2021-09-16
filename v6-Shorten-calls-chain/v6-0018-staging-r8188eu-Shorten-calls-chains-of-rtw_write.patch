@@ -1,8 +1,7 @@
 From 11ffb5ca52c84b1b394b232a6bbaadbc150fc46c Mon Sep 17 00:00:00 2001
 From: "Fabio M. De Francesco" <fmdefrancesco@gmail.com>
 Date: Wed, 15 Sep 2021 12:58:55 +0200
-Subject: [PATCH v6 18/19] staging: r8188eu: Shorten calls chains of
- rtw_write8/16/32/N()
+Subject: [PATCH v6 18/19] staging: r8188eu: Shorten calls chains of rtw_write*()
 
 Shorten the calls chains of rtw_write8/16/32() down to the actual writes.
 For this purpose unify the four usb_write8/16/32/N() into the new

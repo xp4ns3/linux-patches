@@ -1,8 +1,7 @@
 From b576bcc2b0eeafd37003ab53c53c87f6b6511019 Mon Sep 17 00:00:00 2001
 From: "Fabio M. De Francesco" <fmdefrancesco@gmail.com>
 Date: Tue, 14 Sep 2021 19:10:59 +0200
-Subject: [PATCH v6 17/19] staging: r8188eu: Shorten calls chains of
- rtw_read8/16/32()
+Subject: [PATCH v6 17/19] staging: r8188eu: Shorten calls chains of rtw_read*()
 
 Shorten the calls chains of rtw_read8/16/32() down to the actual reads.
 For this purpose unify the three usb_read8/16/32() into the new

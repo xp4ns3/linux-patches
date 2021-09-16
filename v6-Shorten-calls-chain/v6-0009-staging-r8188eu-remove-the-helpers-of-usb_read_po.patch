@@ -1,8 +1,7 @@
 From c01333112de4912152868cef5a15b61d45a7594b Mon Sep 17 00:00:00 2001
 From: Pavel Skripkin <paskripkin@gmail.com>
 Date: Tue, 7 Sep 2021 20:12:20 +0300
-Subject: [PATCH v6 09/19] staging: r8188eu: remove the helpers of
- usb_read_port()
+Subject: [PATCH v6 09/19] staging: r8188eu: remove the helpers of usb_read_port()
 
 Remove the unnecessary _rtw_read_port() and usb_read_port() and embed their
 code into the caller (i.e., rtw_read_port()).
