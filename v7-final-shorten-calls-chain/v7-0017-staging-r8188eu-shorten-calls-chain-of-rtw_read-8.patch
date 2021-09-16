@@ -1,0 +1,114 @@
+From d75d49942bcb17141d700781439bbf595b873d21 Mon Sep 17 00:00:00 2001
+From: "Fabio M. De Francesco" <fmdefrancesco@gmail.com>
+Date: Tue, 14 Sep 2021 19:10:59 +0200
+Subject: [PATCH v7 17/19] staging: r8188eu: shorten calls chain of
+ rtw_read{8,16,32}()
+
+Shorten the calls chain of rtw_read8/16/32() down to the actual reads.
+For this purpose unify the three usb_read8/16/32 into the new
+usb_read(); make the latter parameterizable with 'size'; embed most of
+the code of usbctrl_vendorreq() into usb_read() and use in it the new
+usb_control_msg_recv() API of USB Core.
+
+Suggested-by: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+Co-developed-by: Pavel Skripkin <paskripkin@gmail.com>
+Signed-off-by: Pavel Skripkin <paskripkin@gmail.com>
+Signed-off-by: Fabio M. De Francesco <fmdefrancesco@gmail.com>
+---
+ drivers/staging/r8188eu/hal/usb_ops_linux.c | 59 +++++++++++++++++++--
+ 1 file changed, 56 insertions(+), 3 deletions(-)
+
+diff --git a/drivers/staging/r8188eu/hal/usb_ops_linux.c b/drivers/staging/r8188eu/hal/usb_ops_linux.c
+index 2d5e9b3ba538..ef35358cf2d3 100644
+--- a/drivers/staging/r8188eu/hal/usb_ops_linux.c
++++ b/drivers/staging/r8188eu/hal/usb_ops_linux.c
+@@ -89,6 +89,59 @@ static int usbctrl_vendorreq(struct intf_hdl *intfhdl, u16 value, void *data, u1
+ 	return status;
+ }
+ 
++static int usb_read(struct intf_hdl *intfhdl, u16 addr, void *data, u8 size)
++{
++	struct adapter *adapt = intfhdl->padapter;
++	struct dvobj_priv *dvobjpriv = adapter_to_dvobj(adapt);
++	struct usb_device *udev = dvobjpriv->pusbdev;
++	int status;
++	u8 *io_buf; /* Pointer to I/O buffer */
++
++	if (adapt->bSurpriseRemoved || adapt->pwrctrlpriv.pnp_bstop_trx)
++		return -EPERM;
++
++	mutex_lock(&dvobjpriv->usb_vendor_req_mutex);
++
++	io_buf = dvobjpriv->usb_vendor_req_buf;
++
++	status = usb_control_msg_recv(udev, 0, REALTEK_USB_VENQT_CMD_REQ,
++				      REALTEK_USB_VENQT_READ, addr,
++				      REALTEK_USB_VENQT_CMD_IDX, io_buf,
++				      size, RTW_USB_CONTROL_MSG_TIMEOUT,
++				      GFP_KERNEL);
++
++	if (status == -ESHUTDOWN ||
++	    status == -ENODEV ||
++	    status == -ENOENT) {
++		/*
++		 * device or controller has been disabled due to
++		 * some problem that could not be worked around,
++		 * device or bus doesn’t exist, endpoint does not
++		 * exist or is not enabled.
++		 */
++		adapt->bSurpriseRemoved = true;
++		goto mutex_unlock;
++	}
++
++	if (status < 0) {
++		GET_HAL_DATA(adapt)->srestpriv.wifi_error_status =
++			USB_VEN_REQ_CMD_FAIL;
++
++		if (rtw_inc_and_chk_continual_urb_error(dvobjpriv))
++			adapt->bSurpriseRemoved = true;
++
++		goto mutex_unlock;
++	}
++
++	rtw_reset_continual_urb_error(dvobjpriv);
++	memcpy(data, io_buf, size);
++
++mutex_unlock:
++	mutex_unlock(&dvobjpriv->usb_vendor_req_mutex);
++
++	return status;
++}
++
+ u8 rtw_read8(struct adapter *adapter, u32 addr)
+ {
+ 	struct io_priv *io_priv = &adapter->iopriv;
+@@ -96,7 +149,7 @@ u8 rtw_read8(struct adapter *adapter, u32 addr)
+ 	u16 address = addr & 0xffff;
+ 	u8 data;
+ 
+-	usbctrl_vendorreq(intfhdl, address, &data, 1, REALTEK_USB_VENQT_READ);
++	usb_read(intfhdl, address, &data, 1);
+ 
+ 	return data;
+ }
+@@ -108,7 +161,7 @@ u16 rtw_read16(struct adapter *adapter, u32 addr)
+ 	u16 address = addr & 0xffff;
+ 	__le16 data;
+ 
+-	usbctrl_vendorreq(intfhdl, address, &data, 2, REALTEK_USB_VENQT_READ);
++	usb_read(intfhdl, address, &data, 2);
+ 
+ 	return le16_to_cpu(data);
+ }
+@@ -120,7 +173,7 @@ u32 rtw_read32(struct adapter *adapter, u32 addr)
+ 	u16 address = addr & 0xffff;
+ 	__le32 data;
+ 
+-	usbctrl_vendorreq(intfhdl, address, &data, 4, REALTEK_USB_VENQT_READ);
++	usb_read(intfhdl, address, &data, 4);
+ 
+ 	return le32_to_cpu(data);
+ }
+-- 
+2.33.0
+
