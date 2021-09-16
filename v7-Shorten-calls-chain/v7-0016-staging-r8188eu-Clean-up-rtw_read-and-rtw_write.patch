@@ -1,7 +1,8 @@
-From 6be636090f8b4116d8708ae1293655feb6dada2f Mon Sep 17 00:00:00 2001
+From 7787f09ef73238ab1730b56105fe996b97ecb2d6 Mon Sep 17 00:00:00 2001
 From: "Fabio M. De Francesco" <fmdefrancesco@gmail.com>
 Date: Thu, 16 Sep 2021 21:09:04 +0200
-Subject: [PATCH v7] staging: r8188eu: Clean up rtw_read*() and rtw_write*()
+Subject: [PATCH v7 16/19] staging: r8188eu: Clean up rtw_read*() and
+ rtw_write*()
 
 Clean up rtw_read{8,16,32}() and rtw_write{8,16,32,N}() in usb_ops_linux.c.
 

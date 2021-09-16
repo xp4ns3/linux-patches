@@ -1,7 +1,7 @@
-From 7abe502e0d178fea0f0f186c1360e082cef2e74a Mon Sep 17 00:00:00 2001
+From ba29a652eaf09ac0434ffbd695ddc4be2cea445e Mon Sep 17 00:00:00 2001
 From: "Fabio M. De Francesco" <fmdefrancesco@gmail.com>
 Date: Tue, 14 Sep 2021 16:28:58 +0200
-Subject: [PATCH v7 1/2] staging: r8188eu: Clean up usbctrl_vendorreq()
+Subject: [PATCH v7 15/19] staging: r8188eu: Clean up usbctrl_vendorreq()
 
 Clean up usbctrl_vendoreq() in usb_ops_linux.c.
 
