@@ -1,8 +1,7 @@
 From 80f15603ebd72b0bd43eaecdc0a3d82152314b08 Mon Sep 17 00:00:00 2001
 From: Pavel Skripkin <paskripkin@gmail.com>
 Date: Tue, 7 Sep 2021 20:22:53 +0300
-Subject: [PATCH v7 12/19] staging: r8188eu: remove the helpers of
- usb_write_port_cancel()
+Subject: [PATCH v7 12/19] staging: r8188eu: remove the helpers of usb_write_port_cancel()
 
 Remove the unnecessary _rtw_write_port_cancel() and usb_write_port_cancel()
 and embed their code into the caller (i.e., rtw_write_port_cancel()).
