@@ -1,0 +1,32 @@
+From 6bdd237cfbfc75eaf5481716cbaae8b23913f66d Mon Sep 17 00:00:00 2001
+From: "Fabio M. De Francesco" <fmdefrancesco@gmail.com>
+Date: Sat, 18 Sep 2021 22:53:14 +0200
+Subject: [PATCH v8 05/14] staging: r8188eu: remove unnedeed parentheses in
+ usbctrl_vendorreq()
+
+Remove unneeded parentheses around a test for -ESHUTDOWN in
+usbctrl_vendorreq().
+
+Co-developed-by: Pavel Skripkin <paskripkin@gmail.com>
+Signed-off-by: Pavel Skripkin <paskripkin@gmail.com>
+Signed-off-by: Fabio M. De Francesco <fmdefrancesco@gmail.com>
+---
+ drivers/staging/r8188eu/hal/usb_ops_linux.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/drivers/staging/r8188eu/hal/usb_ops_linux.c b/drivers/staging/r8188eu/hal/usb_ops_linux.c
+index 9138b730490f..0b48dde5657f 100644
+--- a/drivers/staging/r8188eu/hal/usb_ops_linux.c
++++ b/drivers/staging/r8188eu/hal/usb_ops_linux.c
+@@ -63,7 +63,7 @@ static int usbctrl_vendorreq(struct intf_hdl *intfhdl, u16 value, void *data, u1
+ 				len, status, *(u32 *)data, vendorreq_times);
+ 
+ 			if (status < 0) {
+-				if (status == (-ESHUTDOWN) || status == -ENODEV) {
++				if (status == -ESHUTDOWN || status == -ENODEV) {
+ 					adapt->bSurpriseRemoved = true;
+ 				} else {
+ 					struct hal_data_8188e	*haldata = GET_HAL_DATA(adapt);
+-- 
+2.33.0
+
