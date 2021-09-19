@@ -1,7 +1,7 @@
-From 15fb18dcc98c2cc10629c744ce1329524cefc388 Mon Sep 17 00:00:00 2001
+From a7c4d7f33a45ca9a0dca3df5861eea1bb288174b Mon Sep 17 00:00:00 2001
 From: "Fabio M. De Francesco" <fmdefrancesco@gmail.com>
 Date: Sun, 19 Sep 2021 02:00:23 +0200
-Subject: [PATCH v8 13/14] staging: r8188eu: remove an unneeded buffer from
+Subject: [PATCH v8 13/15] staging: r8188eu: remove an unneeded buffer from
  rtw_writeN()
 
 Remove the unnecessary buffer "u8 buf[VENDOR_CMD_MAX_DATA_LEN]" and

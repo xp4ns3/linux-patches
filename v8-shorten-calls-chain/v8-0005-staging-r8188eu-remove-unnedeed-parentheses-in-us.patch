@@ -1,7 +1,7 @@
 From 6bdd237cfbfc75eaf5481716cbaae8b23913f66d Mon Sep 17 00:00:00 2001
 From: "Fabio M. De Francesco" <fmdefrancesco@gmail.com>
 Date: Sat, 18 Sep 2021 22:53:14 +0200
-Subject: [PATCH v8 05/14] staging: r8188eu: remove unnedeed parentheses in
+Subject: [PATCH v8 05/15] staging: r8188eu: remove unnedeed parentheses in
  usbctrl_vendorreq()
 
 Remove unneeded parentheses around a test for -ESHUTDOWN in

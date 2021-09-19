@@ -1,7 +1,7 @@
 From ba1d895a7b310f4703f507f8494e247d822c2e4b Mon Sep 17 00:00:00 2001
 From: "Fabio M. De Francesco" <fmdefrancesco@gmail.com>
 Date: Sat, 18 Sep 2021 22:45:35 +0200
-Subject: [PATCH v8 04/14] staging: r8188eu: reorder comments in
+Subject: [PATCH v8 04/15] staging: r8188eu: reorder comments in
  usbctrl_vendorreq()
 
 Reorder comments in usbctrl_vendorreq() to follow the Linux style.
