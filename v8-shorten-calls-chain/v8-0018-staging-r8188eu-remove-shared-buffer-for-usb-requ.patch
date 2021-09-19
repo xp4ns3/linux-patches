@@ -1,4 +1,4 @@
-From e945f3184b6d0e5adea9a01b3eea86ff68181596 Mon Sep 17 00:00:00 2001
+From 0532aeec0a51835acb2fd9999b71cfa1646c90a0 Mon Sep 17 00:00:00 2001
 From: Pavel Skripkin <paskripkin@gmail.com>
 Date: Sun, 19 Sep 2021 12:05:25 +0300
 Subject: [PATCH v8 18/19] staging: r8188eu: remove shared buffer for usb
