@@ -1,13 +1,11 @@
 From 0532aeec0a51835acb2fd9999b71cfa1646c90a0 Mon Sep 17 00:00:00 2001
 From: Pavel Skripkin <paskripkin@gmail.com>
 Date: Sun, 19 Sep 2021 12:05:25 +0300
-Subject: [PATCH v8 18/19] staging: r8188eu: remove shared buffer for usb
- requests
+Subject: [PATCH v8 18/19] staging: r8188eu: remove shared buffer for USB requests
 
-Using shared buffer for USB requests looks completely unreasonable.
-Also new USB API allows stack buffers to be passed, that's why
-usb_vendor_req_buf was removed and usb_{read,write} now use stack buffer
-for USB requests
+Remove the shared buffer for USB requests because it is not necessary
+and use a local on stack variable since the new Core USB API does not 
+have the constraints of usb_control_msg().
 
 Co-developed-by: Fabio M. De Francesco <fmdefrancesco@gmail.com>
 Signed-off-by: Fabio M. De Francesco <fmdefrancesco@gmail.com>

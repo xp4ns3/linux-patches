@@ -1,8 +1,7 @@
 From d5c8d11187b25b2b3517f421efe160dfcdf8491e Mon Sep 17 00:00:00 2001
 From: "Fabio M. De Francesco" <fmdefrancesco@gmail.com>
 Date: Sat, 18 Sep 2021 23:41:38 +0200
-Subject: [PATCH v8 03/19] staging: r8188eu: remove unnecessary test in
- usbctrl_vendorreq()
+Subject: [PATCH v8 03/19] staging: r8188eu: remove unnecessary test in usbctrl_vendorreq()
 
 Remove unnecessary test for "!io_buf" in usbctrl_vendorreq(). Remove the
 no more used "release_mutex:" label.

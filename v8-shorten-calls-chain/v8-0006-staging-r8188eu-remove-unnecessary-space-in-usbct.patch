@@ -1,8 +1,7 @@
 From d8978b7b810a70cdf7ed88b8c6ab243c8f7a8df4 Mon Sep 17 00:00:00 2001
 From: "Fabio M. De Francesco" <fmdefrancesco@gmail.com>
 Date: Sat, 18 Sep 2021 23:01:33 +0200
-Subject: [PATCH v8 06/19] staging: r8188eu: remove unnecessary space in
- usbctrl_vendorreq()
+Subject: [PATCH v8 06/19] staging: r8188eu: remove unnecessary space in usbctrl_vendorreq()
 
 Remove unnecessary extra space in usbctrl_vendorreq().
 
