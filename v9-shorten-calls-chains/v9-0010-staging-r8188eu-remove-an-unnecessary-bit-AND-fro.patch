@@ -1,0 +1,32 @@
+From 47147c4e73cd382fdd58bb6bef506c66174f45ec Mon Sep 17 00:00:00 2001
+From: "Fabio M. De Francesco" <fmdefrancesco@gmail.com>
+Date: Sun, 19 Sep 2021 02:04:58 +0200
+Subject: [PATCH v9 10/16] staging: r8188eu: remove an unnecessary bit AND from
+ rtw_writeN()
+
+Remove an unnecessary bitwise AND because "length" can never be greater
+than 0xffff since VENDOR_CMD_MAX_DATA_LEN is defined as (a weird) '254'.
+
+Co-developed-by: Pavel Skripkin <paskripkin@gmail.com>
+Signed-off-by: Pavel Skripkin <paskripkin@gmail.com>
+Signed-off-by: Fabio M. De Francesco <fmdefrancesco@gmail.com>
+---
+ drivers/staging/r8188eu/hal/usb_ops_linux.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/drivers/staging/r8188eu/hal/usb_ops_linux.c b/drivers/staging/r8188eu/hal/usb_ops_linux.c
+index 8e4e578ed60b..3b50d2b5c0e3 100644
+--- a/drivers/staging/r8188eu/hal/usb_ops_linux.c
++++ b/drivers/staging/r8188eu/hal/usb_ops_linux.c
+@@ -176,7 +176,7 @@ int rtw_writeN(struct adapter *adapter, u32 addr, u32 length, u8 *data)
+ 	if (length > VENDOR_CMD_MAX_DATA_LEN)
+ 		return _FAIL;
+ 
+-	ret = usbctrl_vendorreq(intf, value, data, (length & 0xffff), REALTEK_USB_VENQT_WRITE);
++	ret = usbctrl_vendorreq(intf, value, data, length, REALTEK_USB_VENQT_WRITE);
+ 
+ 	return RTW_STATUS_CODE(ret);
+ }
+-- 
+2.33.0
+
