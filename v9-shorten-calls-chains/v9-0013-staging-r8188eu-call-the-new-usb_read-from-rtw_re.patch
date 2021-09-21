@@ -1,4 +1,4 @@
-From 9e5ae78f4d72b4a940bf4e5cd8e6b5d1856b2a03 Mon Sep 17 00:00:00 2001
+From a2f79c13b119c964d1011cf2ead23c761b1a46df Mon Sep 17 00:00:00 2001
 From: "Fabio M. De Francesco" <fmdefrancesco@gmail.com>
 Date: Sun, 19 Sep 2021 08:36:33 +0200
 Subject: [PATCH v9 13/16] staging: r8188eu: call the new usb_read() from

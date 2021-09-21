@@ -1,4 +1,4 @@
-From 21c708fadba9ebfdb18ee33b24617f7e7fce8bdc Mon Sep 17 00:00:00 2001
+From 5096ffaab1fa501c355815911ab1bb051c7fd2a2 Mon Sep 17 00:00:00 2001
 From: "Fabio M. De Francesco" <fmdefrancesco@gmail.com>
 Date: Sat, 18 Sep 2021 23:41:38 +0200
 Subject: [PATCH v9 03/16] staging: r8188eu: remove unnecessary test in

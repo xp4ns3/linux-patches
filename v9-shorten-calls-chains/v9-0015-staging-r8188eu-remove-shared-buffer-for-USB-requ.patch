@@ -1,4 +1,4 @@
-From d2f0a2fc017fc86f78ef56b5f64ec6239c34a6fe Mon Sep 17 00:00:00 2001
+From 206726df090a82972a8d20045558f916671698ea Mon Sep 17 00:00:00 2001
 From: Pavel Skripkin <paskripkin@gmail.com>
 Date: Sun, 19 Sep 2021 12:05:25 +0300
 Subject: [PATCH v9 15/16] staging: r8188eu: remove shared buffer for USB
@@ -61,10 +61,10 @@ index 88db7488b3a2..3ede93cd68d6 100644
  	memcpy(io_buf, data, size);
  	status = usb_control_msg_send(udev, 0, REALTEK_USB_VENQT_CMD_REQ,
 diff --git a/drivers/staging/r8188eu/include/drv_types.h b/drivers/staging/r8188eu/include/drv_types.h
-index 626c6273be6f..7907dd7b5bf0 100644
+index c96a33c8c621..6d63429d06c6 100644
 --- a/drivers/staging/r8188eu/include/drv_types.h
 +++ b/drivers/staging/r8188eu/include/drv_types.h
-@@ -170,9 +170,6 @@ struct dvobj_priv {
+@@ -168,9 +168,6 @@ struct dvobj_priv {
  	struct semaphore usb_suspend_sema;
  	struct mutex  usb_vendor_req_mutex;
  

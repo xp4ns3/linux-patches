@@ -1,4 +1,4 @@
-From d0f6a69c4a22712bf46f2c2f46d6c5defa10293d Mon Sep 17 00:00:00 2001
+From 85f3f0b0a870bf4808ee51946fc9868233187086 Mon Sep 17 00:00:00 2001
 From: "Fabio M. De Francesco" <fmdefrancesco@gmail.com>
 Date: Tue, 21 Sep 2021 05:11:12 +0200
 Subject: [PATCH v9 12/16] staging: r8188eu: Remove a test from

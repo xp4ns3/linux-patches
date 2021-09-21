@@ -1,4 +1,4 @@
-From b173c78838f6a7dfdf340d188c1b15b37bba6e63 Mon Sep 17 00:00:00 2001
+From b206b13168e127e16ddd4725bf003c40855f61de Mon Sep 17 00:00:00 2001
 From: "Fabio M. De Francesco" <fmdefrancesco@gmail.com>
 Date: Mon, 20 Sep 2021 23:12:54 +0200
 Subject: [PATCH v9 14/16] staging: r8188eu: call the new usb_write() from

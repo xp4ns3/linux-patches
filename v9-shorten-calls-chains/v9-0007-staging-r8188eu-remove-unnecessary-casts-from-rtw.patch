@@ -1,4 +1,4 @@
-From 06b9e10e398f3d049b02928b7bb33b55669580f9 Mon Sep 17 00:00:00 2001
+From 3e85f2a21b45c7625945ed16cfddfcf9f3284ef8 Mon Sep 17 00:00:00 2001
 From: "Fabio M. De Francesco" <fmdefrancesco@gmail.com>
 Date: Sun, 19 Sep 2021 01:22:22 +0200
 Subject: [PATCH v9 07/16] staging: r8188eu: remove unnecessary casts from

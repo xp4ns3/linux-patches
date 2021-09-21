@@ -1,4 +1,4 @@
-From 41096fb5af6bbfbde276cb664adea4ae9bd75a3d Mon Sep 17 00:00:00 2001
+From b9016183f599035328da4ef9a8c51ea75ee72b8c Mon Sep 17 00:00:00 2001
 From: "Fabio M. De Francesco" <fmdefrancesco@gmail.com>
 Date: Mon, 20 Sep 2021 23:03:00 +0200
 Subject: [PATCH v9 04/16] staging: r8188eu: reorder comments in
