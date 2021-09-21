@@ -1,8 +1,7 @@
 From 61d6b63b812cd1cac028c6150359f8e26eb30b78 Mon Sep 17 00:00:00 2001
 From: "Fabio M. De Francesco" <fmdefrancesco@gmail.com>
 Date: Sun, 19 Sep 2021 01:00:11 +0200
-Subject: [PATCH v9 06/16] staging: r8188eu: rename symbols in rtw_read*() and
- rtw_write*()
+Subject: [PATCH v9 06/16] staging: r8188eu: rename symbols in rtw_read*() and rtw_write*()
 
 Rename names of variables in rtw_read{8.16.32}() and in
 rtw_write{8,16,32,N}() because of unnecessary 'p' (that probably stand

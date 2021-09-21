@@ -6,6 +6,10 @@ Subject: [PATCH v9 16/16] staging: r8188eu: remove usb_vendor_req_mutex
 This mutex was used to protect shared buffer for USB requests. Since
 buffer was removed in previous patch we can remove this mutex as well.
 
+Furthermore, because it was used to serialize the calls to the Core USB 
+API, we thoroughly tested the enabling of concurrent firing of USB requests
+without the mutex and found no problems of any kind in common use cases.
+
 Co-developed-by: Fabio M. De Francesco <fmdefrancesco@gmail.com>
 Signed-off-by: Fabio M. De Francesco <fmdefrancesco@gmail.com>
 Signed-off-by: Pavel Skripkin <paskripkin@gmail.com>

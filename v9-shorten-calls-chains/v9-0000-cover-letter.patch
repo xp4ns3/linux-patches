@@ -171,16 +171,16 @@ Fabio M. De Francesco (14):
   staging: r8188eu: reorder declarations in usbctrl_vendorreq()
   staging: r8188eu: remove unnecessary test in usbctrl_vendorreq()
   staging: r8188eu: reorder comments in usbctrl_vendorreq()
-  staging: r8188eu: remove unnecessary comment in usbctrl_vendorreq()
+  staging: r8188eu: remove a comment from usbctrl_vendorreq()
   staging: r8188eu: rename symbols in rtw_read*() and rtw_write*()
-  staging: r8188eu: remove unnecessary casts from rtw_{read,write}*()
+  staging: r8188eu: remove casts from rtw_{read,write}*()
   staging: r8188eu: change the type of a variable in rtw_write16()
-  staging: r8188eu: remove an unneeded buffer from rtw_writeN()
-  staging: r8188eu: remove an unnecessary bit AND from rtw_writeN()
+  staging: r8188eu: remove an buffer from rtw_writeN()
+  staging: r8188eu: remove a bitwise AND from rtw_writeN()
   staging: r8188eu: change the type of a variable in rtw_read16()
   staging: r8188eu: Remove a test from usbctrl_vendorreq()
-  staging: r8188eu: call the new usb_read() from rtw_read{8,16,32}()
-  staging: r8188eu: call the new usb_write() from rtw_write{8,16,32,N}()
+  staging: r8188eu: call new usb_read() from rtw_read{8,16,32}()
+  staging: r8188eu: call new usb_write() from rtw_write{8,16,32,N}()
 
 Pavel Skripkin (2):
   staging: r8188eu: remove shared buffer for USB requests

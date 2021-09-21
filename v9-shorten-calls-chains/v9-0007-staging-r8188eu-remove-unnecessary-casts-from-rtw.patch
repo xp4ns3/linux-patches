@@ -1,8 +1,7 @@
 From 3e85f2a21b45c7625945ed16cfddfcf9f3284ef8 Mon Sep 17 00:00:00 2001
 From: "Fabio M. De Francesco" <fmdefrancesco@gmail.com>
 Date: Sun, 19 Sep 2021 01:22:22 +0200
-Subject: [PATCH v9 07/16] staging: r8188eu: remove unnecessary casts from
- rtw_{read,write}*()
+Subject: [PATCH v9 07/16] staging: r8188eu: remove casts from rtw_{read,write}*()
 
 Remove unnecessary casts from rtw_read{8,16,32}() and from
 rtw_write{8,16,32,N}().

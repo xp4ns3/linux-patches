@@ -1,10 +1,9 @@
 From 9080eef1cf9705537768e30a0735208548a35dc5 Mon Sep 17 00:00:00 2001
 From: "Fabio M. De Francesco" <fmdefrancesco@gmail.com>
 Date: Mon, 20 Sep 2021 23:49:14 +0200
-Subject: [PATCH v9 05/16] staging: r8188eu: remove unnecessary comment in
- usbctrl_vendorreq()
+Subject: [PATCH v9 05/16] staging: r8188eu: remove a comment from usbctrl_vendorreq()
 
-Remove an unnecessary comment in usbctrl_vendorreq().
+Remove an unnecessary comment from usbctrl_vendorreq().
 
 Co-developed-by: Pavel Skripkin <paskripkin@gmail.com>
 Signed-off-by: Pavel Skripkin <paskripkin@gmail.com>
