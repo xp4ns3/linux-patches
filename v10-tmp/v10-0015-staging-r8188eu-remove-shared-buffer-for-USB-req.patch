@@ -1,0 +1,109 @@
+From 0d89d172256b03ae3fa101a19ae2f19da9f6377e Mon Sep 17 00:00:00 2001
+From: Pavel Skripkin <paskripkin@gmail.com>
+Date: Sun, 19 Sep 2021 12:05:25 +0300
+Subject: [PATCH v10 15/16] staging: r8188eu: remove shared buffer for USB
+ requests
+
+Remove the shared buffer for USB requests because it is not necessary
+and use a local on stack variable since the new Core USB API does not
+have the constraints of usb_control_msg().
+
+Co-developed-by: Fabio M. De Francesco <fmdefrancesco@gmail.com>
+Signed-off-by: Fabio M. De Francesco <fmdefrancesco@gmail.com>
+Signed-off-by: Pavel Skripkin <paskripkin@gmail.com>
+---
+ drivers/staging/r8188eu/hal/usb_ops_linux.c | 15 ++++++---------
+ drivers/staging/r8188eu/include/drv_types.h |  3 ---
+ drivers/staging/r8188eu/os_dep/usb_intf.c   | 14 +-------------
+ 3 files changed, 7 insertions(+), 25 deletions(-)
+
+diff --git a/drivers/staging/r8188eu/hal/usb_ops_linux.c b/drivers/staging/r8188eu/hal/usb_ops_linux.c
+index 88db7488b3a2..3ede93cd68d6 100644
+--- a/drivers/staging/r8188eu/hal/usb_ops_linux.c
++++ b/drivers/staging/r8188eu/hal/usb_ops_linux.c
+@@ -14,7 +14,7 @@ static int usb_read(struct intf_hdl *intf, u16 value, void *data, u8 size)
+ 	struct dvobj_priv *dvobjpriv = adapter_to_dvobj(adapt);
+ 	struct usb_device *udev = dvobjpriv->pusbdev;
+ 	int status;
+-	u8 *io_buf; /* Pointer to I/O buffer */
++	u8 io_buf[4];
+ 
+ 	mutex_lock(&dvobjpriv->usb_vendor_req_mutex);
+ 
+@@ -23,9 +23,6 @@ static int usb_read(struct intf_hdl *intf, u16 value, void *data, u8 size)
+ 		goto mutex_unlock;
+ 	}
+ 
+-	/*  Acquire IO memory for vendorreq */
+-	io_buf = dvobjpriv->usb_vendor_req_buf;
+-
+ 	status = usb_control_msg_recv(udev, 0, REALTEK_USB_VENQT_CMD_REQ,
+ 				      REALTEK_USB_VENQT_READ, value,
+ 				      REALTEK_USB_VENQT_CMD_IDX, io_buf,
+@@ -70,14 +67,14 @@ static int usb_write(struct intf_hdl *intf, u16 value, void *data, u8 size)
+ 	struct dvobj_priv *dvobjpriv = adapter_to_dvobj(adapt);
+ 	struct usb_device *udev = dvobjpriv->pusbdev;
+ 	int status;
+-	u8 *io_buf; /* Pointer to I/O buffer */
++	u8 io_buf[VENDOR_CMD_MAX_DATA_LEN];
+ 
+ 	mutex_lock(&dvobjpriv->usb_vendor_req_mutex);
+ 
+-	if (adapt->bSurpriseRemoved || adapt->pwrctrlpriv.pnp_bstop_trx)
+-		return -EPERM;
+-
+-	io_buf = dvobjpriv->usb_vendor_req_buf;
++	if (adapt->bSurpriseRemoved || adapt->pwrctrlpriv.pnp_bstop_trx) {
++		status = -EPERM;
++		goto mutex_unlock;
++	}
+ 
+ 	memcpy(io_buf, data, size);
+ 	status = usb_control_msg_send(udev, 0, REALTEK_USB_VENQT_CMD_REQ,
+diff --git a/drivers/staging/r8188eu/include/drv_types.h b/drivers/staging/r8188eu/include/drv_types.h
+index c96a33c8c621..6d63429d06c6 100644
+--- a/drivers/staging/r8188eu/include/drv_types.h
++++ b/drivers/staging/r8188eu/include/drv_types.h
+@@ -168,9 +168,6 @@ struct dvobj_priv {
+ 	struct semaphore usb_suspend_sema;
+ 	struct mutex  usb_vendor_req_mutex;
+ 
+-	u8 *usb_alloc_vendor_req_buf;
+-	u8 *usb_vendor_req_buf;
+-
+ 	struct usb_interface *pusbintf;
+ 	struct usb_device *pusbdev;
+ 
+diff --git a/drivers/staging/r8188eu/os_dep/usb_intf.c b/drivers/staging/r8188eu/os_dep/usb_intf.c
+index 11a584cbe9d8..5ab42d55207f 100644
+--- a/drivers/staging/r8188eu/os_dep/usb_intf.c
++++ b/drivers/staging/r8188eu/os_dep/usb_intf.c
+@@ -75,24 +75,12 @@ static struct rtw_usb_drv *usb_drv = &rtl8188e_usb_drv;
+ 
+ static u8 rtw_init_intf_priv(struct dvobj_priv *dvobj)
+ {
+-	u8 rst = _SUCCESS;
+-
+ 	mutex_init(&dvobj->usb_vendor_req_mutex);
+-
+-	dvobj->usb_alloc_vendor_req_buf = kzalloc(MAX_USB_IO_CTL_SIZE, GFP_KERNEL);
+-	if (!dvobj->usb_alloc_vendor_req_buf) {
+-		DBG_88E("alloc usb_vendor_req_buf failed... /n");
+-		rst = _FAIL;
+-		goto exit;
+-	}
+-	dvobj->usb_vendor_req_buf = (u8 *)N_BYTE_ALIGMENT((size_t)(dvobj->usb_alloc_vendor_req_buf), ALIGNMENT_UNIT);
+-exit:
+-	return rst;
++	return _SUCCESS;
+ }
+ 
+ static void rtw_deinit_intf_priv(struct dvobj_priv *dvobj)
+ {
+-	kfree(dvobj->usb_alloc_vendor_req_buf);
+ 	mutex_destroy(&dvobj->usb_vendor_req_mutex);
+ }
+ 
+-- 
+2.33.0
+
