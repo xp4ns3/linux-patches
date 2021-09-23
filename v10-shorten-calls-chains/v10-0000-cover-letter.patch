@@ -171,6 +171,7 @@ v5: https://lore.kernel.org/lkml/20210915124149.27543-1-fmdefrancesco@gmail.com/
 v6: https://lore.kernel.org/lkml/20210915211103.18001-1-fmdefrancesco@gmail.com/
 v7: https://lore.kernel.org/lkml/20210917071837.10926-1-fmdefrancesco@gmail.com/
 v8: https://lore.kernel.org/lkml/20210919235356.4151-1-fmdefrancesco@gmail.com/
+v9: https://lore.kernel.org/lkml/20210921181834.29677-1-fmdefrancesco@gmail.com/
 
 --- List of patches not yet applied, authorship, diff stats ---
 
@@ -196,8 +197,8 @@ Pavel Skripkin (2):
 
  drivers/staging/r8188eu/hal/usb_ops_linux.c | 213 ++++++++++----------
  drivers/staging/r8188eu/include/drv_types.h |   3 -
- drivers/staging/r8188eu/os_dep/usb_intf.c   |  34 +---
- 3 files changed, 109 insertions(+), 141 deletions(-)
+ drivers/staging/r8188eu/os_dep/usb_intf.c   |  36 ----
+ 3 files changed, 107 insertions(+), 145 deletions(-)
 
 --
 2.33.0
