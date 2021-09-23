@@ -1,8 +1,7 @@
 From 2e8173d94d10ed5487ac105752203d3d530f26b3 Mon Sep 17 00:00:00 2001
 From: "Fabio M. De Francesco" <fmdefrancesco@gmail.com>
 Date: Mon, 20 Sep 2021 23:03:00 +0200
-Subject: [PATCH v10 04/16] staging: r8188eu: reorder comments in
- usbctrl_vendorreq()
+Subject: [PATCH v10 04/16] staging: r8188eu: reorder comments in usbctrl_vendorreq()
 
 Reorder comments in usbctrl_vendorreq() to follow Linux coding style.
 Delete two of them because they are "obvious".

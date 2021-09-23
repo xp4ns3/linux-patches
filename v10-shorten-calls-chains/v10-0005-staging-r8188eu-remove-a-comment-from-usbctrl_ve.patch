@@ -1,8 +1,7 @@
 From 47ff0ff0ea3ce412f24b455ba49136eab4aa4cdb Mon Sep 17 00:00:00 2001
 From: "Fabio M. De Francesco" <fmdefrancesco@gmail.com>
 Date: Mon, 20 Sep 2021 23:49:14 +0200
-Subject: [PATCH v10 05/16] staging: r8188eu: remove a comment from
- usbctrl_vendorreq()
+Subject: [PATCH v10 05/16] staging: r8188eu: remove a comment from usbctrl_vendorreq()
 
 Remove an unnecessary comment from usbctrl_vendorreq().
 

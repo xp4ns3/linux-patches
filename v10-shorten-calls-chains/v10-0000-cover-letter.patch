@@ -5,7 +5,7 @@ Subject: [PATCH v9 10/16] staging: r8188eu: shorten and simplify calls chains
 
 --- Preface ---
 
-This is v9 of "shorten and simplify calls chain". The 14 + 2 patches
+This is v10 of "shorten and simplify calls chain". The 14 + 2 patches
 have already been applied to staging-testing, so we have been requested
 to reset the numbering of the remaining patches to 01/16, while discarding
 from this new submission the above-mentioned 16 patches (otherwise we would

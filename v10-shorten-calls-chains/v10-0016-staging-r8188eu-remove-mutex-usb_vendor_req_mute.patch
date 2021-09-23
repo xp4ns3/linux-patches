@@ -1,8 +1,7 @@
 From f3b0d94cac4a110816a6cf43182db8b5fd52437d Mon Sep 17 00:00:00 2001
 From: Pavel Skripkin <paskripkin@gmail.com>
 Date: Thu, 23 Sep 2021 19:31:36 +0200
-Subject: [PATCH v10 16/16] staging: r8188eu: remove mutex
- 'usb_vendor_req_mutex'
+Subject: [PATCH v10 16/16] staging: r8188eu: remove mutex 'usb_vendor_req_mutex'
 
 Remove mutex 'usb_vendor_req_mutex'.
 

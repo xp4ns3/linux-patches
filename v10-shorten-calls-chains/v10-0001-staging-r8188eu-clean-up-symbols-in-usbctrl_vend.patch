@@ -1,8 +1,7 @@
 From 834c9a733132e5bfab694b0ff958333a5fe916ff Mon Sep 17 00:00:00 2001
 From: "Fabio M. De Francesco" <fmdefrancesco@gmail.com>
 Date: Mon, 20 Sep 2021 20:11:13 +0200
-Subject: [PATCH v10 01/16] staging: r8188eu: clean up symbols in
- usbctrl_vendorreq()
+Subject: [PATCH v10 01/16] staging: r8188eu: clean up symbols in usbctrl_vendorreq()
 
 Clean up symbol names in usbctrl_vendorreq():
 

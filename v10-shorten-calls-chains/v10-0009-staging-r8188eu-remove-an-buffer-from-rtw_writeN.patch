@@ -1,8 +1,7 @@
 From 1e591a0d0f3b03de5d505bcf9fbe528b5d1cd4fb Mon Sep 17 00:00:00 2001
 From: "Fabio M. De Francesco" <fmdefrancesco@gmail.com>
 Date: Sun, 19 Sep 2021 02:00:23 +0200
-Subject: [PATCH v10 09/16] staging: r8188eu: remove an buffer from
- rtw_writeN()
+Subject: [PATCH v10 09/16] staging: r8188eu: remove a buffer from rtw_writeN()
 
 Remove the unnecessary buffer "u8 buf[VENDOR_CMD_MAX_DATA_LEN]" and
 pass directly "data" to usbctrl_vendorreq().

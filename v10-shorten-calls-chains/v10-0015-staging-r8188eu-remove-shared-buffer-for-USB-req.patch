@@ -1,8 +1,7 @@
 From 0d89d172256b03ae3fa101a19ae2f19da9f6377e Mon Sep 17 00:00:00 2001
 From: Pavel Skripkin <paskripkin@gmail.com>
 Date: Sun, 19 Sep 2021 12:05:25 +0300
-Subject: [PATCH v10 15/16] staging: r8188eu: remove shared buffer for USB
- requests
+Subject: [PATCH v10 15/16] staging: r8188eu: remove shared buffer for USB requests
 
 Remove the shared buffer for USB requests because it is not necessary
 and use a local on stack variable since the new Core USB API does not

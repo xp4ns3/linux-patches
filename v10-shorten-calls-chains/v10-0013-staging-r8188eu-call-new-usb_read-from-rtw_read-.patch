@@ -1,8 +1,7 @@
 From 238fb0823f00783a13b86c40c209afaa0548ec91 Mon Sep 17 00:00:00 2001
 From: "Fabio M. De Francesco" <fmdefrancesco@gmail.com>
 Date: Sun, 19 Sep 2021 08:36:33 +0200
-Subject: [PATCH v10 13/16] staging: r8188eu: call new usb_read() from
- rtw_read{8,16,32}()
+Subject: [PATCH v10 13/16] staging: r8188eu: call new usb_read() from rtw_read{8,16,32}()
 
 Create and call new usb_read() instead of usbctrl_vendorreq() from
 inside rtw_read{8,16,32}().
