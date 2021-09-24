@@ -1,7 +1,7 @@
 From 0e3c4daa5a478add1e217aa5ffc37a8820338664 Mon Sep 17 00:00:00 2001
 From: "Fabio M. De Francesco" <fmdefrancesco@gmail.com>
 Date: Tue, 21 Sep 2021 15:21:57 +0200
-Subject: [PATCH v9 10/16] staging: r8188eu: shorten and simplify calls chains
+Subject: [PATCH v10 00/16] staging: r8188eu: shorten and simplify calls chains
 
 --- Preface ---
 
