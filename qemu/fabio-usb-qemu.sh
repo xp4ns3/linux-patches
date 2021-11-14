@@ -15,7 +15,7 @@ qemu-system-x86_64 \
 	-net user,host=10.0.2.10,hostfwd=tcp:127.0.0.1:10021-:22 \
 	-enable-kvm \
 	-nographic \
-	-pidfile ./vm.pid \
+	-pidfile ./qemu.pid \
 	-device qemu-xhci \
 	-usb -device usb-host,hostbus=$BUS,hostaddr=$DEVICE,guest-reset=false,id=tp \
 	-virtfs local,path=./share,mount_tag=host0,security_model=passthrough,id=host0 \
