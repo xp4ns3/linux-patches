@@ -1,0 +1,430 @@
+----- Cut here -----
+
+[   91.621269] ============================================
+[   91.621415] WARNING: possible recursive locking detected
+[   91.621554] 5.15.0-staging+ #3 Tainted: G            E    
+[   91.621703] --------------------------------------------
+[   91.621848] systemd-udevd/1303 is trying to acquire lock:
+[   91.621992] ffff8881017d3118 (&disk->open_mutex){+.+.}-{3:3}, at: blkdev_get_by_dev.part.0+0x15d/0x550
+[   91.622249] 
+               but task is already holding lock:
+[   91.622421] ffff888133126118 (&disk->open_mutex){+.+.}-{3:3}, at: blkdev_get_by_dev.part.0+0x69/0x550
+[   91.622675] 
+               other info that might help us debug this:
+[   91.622864]  Possible unsafe locking scenario:
+
+[   91.623041]        CPU0
+[   91.623122]        ----
+[   91.623203]   lock(&disk->open_mutex);
+[   91.623317]   lock(&disk->open_mutex);
+[   91.623423] 
+                *** DEADLOCK ***
+
+[   91.623590]  May be due to missing lock nesting notation
+
+[   91.623762] 3 locks held by systemd-udevd/1303:
+[   91.623882]  #0: ffff888133126118 (&disk->open_mutex){+.+.}-{3:3}, at: blkdev_get_by_dev.part.0+0x69/0x550
+[   91.624145]  #1: ffffffffc27df108 (pktcdvd_mutex){+.+.}-{3:3}, at: pkt_open+0x8d/0x80f [pktcdvd]
+[   91.624403]  #2: ffffffffc27e36e8 (&ctl_mutex#2){+.+.}-{3:3}, at: pkt_open+0x9b/0x80f [pktcdvd]
+[   91.624658] 
+               stack backtrace:
+[   91.624799] CPU: 5 PID: 1303 Comm: systemd-udevd Tainted: G            E     5.15.0-staging+ #3 d228a98602aa922492a86af10410fd6f82c809b4
+[   91.625108] Hardware name: ASUSTeK COMPUTER INC. N750JK/N750JK, BIOS N750JK.203 05/21/2014
+[   91.625315] Call Trace:
+[   91.625397]  <TASK>
+[   91.625472]  dump_stack_lvl+0x59/0x73
+[   91.625587]  __lock_acquire.cold+0x172/0x30c
+[   91.625727]  ? lockdep_hardirqs_on_prepare+0x230/0x230
+[   91.625875]  ? __flush_work+0x579/0x6d0
+[   91.626002]  ? lock_release+0x24e/0x450
+[   91.626131]  lock_acquire+0x172/0x410
+[   91.626249]  ? blkdev_get_by_dev.part.0+0x15d/0x550
+[   91.626396]  ? lock_release+0x450/0x450
+[   91.626517]  ? lock_is_held_type+0xe4/0x140
+[   91.626649]  ? find_held_lock+0x85/0xa0
+[   91.626772]  ? lock_release+0x24e/0x450
+[   91.626893]  ? blkdev_get_by_dev.part.0+0x153/0x550
+[   91.627045]  __mutex_lock+0x11f/0xc70
+[   91.627160]  ? blkdev_get_by_dev.part.0+0x15d/0x550
+[   91.627300]  ? blkdev_get_by_dev.part.0+0x15d/0x550
+[   91.627441]  ? mutex_lock_io_nested+0xbf0/0xbf0
+[   91.627574]  ? wait_for_completion+0x170/0x170
+[   91.627705]  ? lockdep_hardirqs_on_prepare+0x138/0x230
+[   91.627851]  ? _raw_spin_unlock_irqrestore+0x2d/0x60
+[   91.628007]  ? blkdev_get_by_dev.part.0+0x15d/0x550
+[   91.628152]  blkdev_get_by_dev.part.0+0x15d/0x550
+[   91.628301]  pkt_open+0x1d0/0x80f [pktcdvd f3943109626856c2bb755000f147f0304c6f73c4]
+[   91.628514]  ? blkdev_get_by_dev.part.0+0x69/0x550
+[   91.628656]  ? mutex_lock_io_nested+0xbf0/0xbf0
+[   91.628795]  ? pkt_set_write_settings+0x3d0/0x3d0 [pktcdvd f3943109626856c2bb755000f147f0304c6f73c4]
+[   91.629046]  ? wait_for_completion+0x170/0x170
+[   91.629178]  ? lockdep_hardirqs_on_prepare+0x138/0x230
+[   91.634921]  ? _raw_spin_unlock_irqrestore+0x2d/0x60
+[   91.638908]  blkdev_get_whole+0x54/0x130
+[   91.644381]  blkdev_get_by_dev.part.0+0x20a/0x550
+[   91.647812]  blkdev_open+0x98/0x120
+[   91.653148]  do_dentry_open+0x2b2/0x760
+[   91.658240]  ? blkdev_close+0x40/0x40
+[   91.663660]  path_openat+0x703/0x1120
+[   91.668288]  ? path_lookupat+0x2f0/0x2f0
+[   91.671566]  ? lock_is_held_type+0xe4/0x140
+[   91.674670]  ? lockdep_hardirqs_on_prepare+0x230/0x230
+[   91.679982]  do_filp_open+0x144/0x260
+[   91.683221]  ? may_open_dev+0x50/0x50
+[   91.686958]  ? lock_is_held_type+0xe4/0x140
+[   91.689834]  ? lock_downgrade+0x3c0/0x3c0
+[   91.693360]  ? do_raw_spin_lock+0x11a/0x1b0
+[   91.696298]  ? rwlock_bug.part.0+0x60/0x60
+[   91.699748]  ? do_raw_spin_unlock+0x86/0xf0
+[   91.702358]  ? preempt_count_sub+0x14/0xc0
+[   91.704970]  ? _raw_spin_unlock+0x29/0x40
+[   91.708564]  ? alloc_fd+0x184/0x320
+[   91.711163]  do_sys_openat2+0x114/0x280
+[   91.715028]  ? populate_seccomp_data+0x182/0x210
+[   91.719992]  ? preempt_count_sub+0x14/0xc0
+[   91.724896]  ? build_open_flags+0x240/0x240
+[   91.729792]  ? seccomp_notify_ioctl+0x6e0/0x6e0
+[   91.734675]  __x64_sys_openat+0xcd/0x140
+[   91.739700]  ? __ia32_compat_sys_open+0x120/0x120
+[   91.744699]  do_syscall_64+0x5c/0x80
+[   91.749783]  ? asm_exc_page_fault+0x1e/0x30
+[   91.754671]  ? asm_exc_page_fault+0x8/0x30
+[   91.759734]  ? lockdep_hardirqs_on+0x7e/0x100
+[   91.763312]  entry_SYSCALL_64_after_hwframe+0x44/0xae
+[   91.768197] RIP: 0033:0x7fc04b13458b
+[   91.773047] Code: 25 00 00 41 00 3d 00 00 41 00 74 4b 64 8b 04 25 18 00 00 00 85 c0 75 67 44 89 e2 48 89 ee bf 9c ff ff ff b8 01 01 00 00 0f 05 <48> 3d 00 f0 ff ff 0f 87 91 00 00 00 48 8b 54 24 28 64 48 2b 14 25
+[   91.778271] RSP: 002b:00007ffdfad065c0 EFLAGS: 00000246 ORIG_RAX: 0000000000000101
+[   91.782951] RAX: ffffffffffffffda RBX: 00007ffdfad06704 RCX: 00007fc04b13458b
+[   91.787528] RDX: 00000000000a0800 RSI: 00005613e3a20520 RDI: 00000000ffffff9c
+[   91.792417] RBP: 00005613e3a20520 R08: 00000000000fffff R09: a4ca8ebfbb954362
+[   91.797543] R10: 0000000000000000 R11: 0000000000000246 R12: 00000000000a0800
+[   91.801462] R13: 0000000000000000 R14: 0000000000000000 R15: 0000000000000001
+[   91.806530]  </TASK>
+
+----- [cut here] -----
+
+[ 1952.345304] BUG: unable to handle page fault for address: fffffffffffffff4
+[ 1952.345346] #PF: supervisor read access in kernel mode
+[ 1952.345372] #PF: error_code(0x0000) - not-present page
+[ 1952.345396] PGD 15922f067 P4D 15922f067 PUD 159231067 PMD 0 
+[ 1952.345457] Oops: 0000 [#1] PREEMPT SMP KASAN PTI
+[ 1952.345488] CPU: 0 PID: 8127 Comm: kwin_x11 Tainted: G         C  E     5.15.0-staging+ #3 d228a98602aa922492a86af10410fd6f82c809b4
+[ 1952.345527] Hardware name: ASUSTeK COMPUTER INC. N750JK/N750JK, BIOS N750JK.203 05/21/2014
+[ 1952.345551] RIP: 0010:shmem_read_mapping_page_gfp+0xcc/0x130
+[ 1952.345597] Code: 24 30 e8 f7 ed ff ff 5a 59 85 c0 74 66 48 63 d8 48 89 5c 24 20 be 08 00 00 00 48 89 df e8 5c 38 0c 00 48 89 df e8 f4 2d 0c 00 <48> 8b 13 48 c7 c0 fb ff ff ff f7 c2 00 00 80 00 74 30 48 ba 00 00
+[ 1952.345630] RSP: 0018:ffff88814171f9c0 EFLAGS: 00010246
+[ 1952.345662] RAX: 0000000000000000 RBX: fffffffffffffff4 RCX: ffffffffb2e74f5c
+[ 1952.345701] RDX: 0000000000000003 RSI: dffffc0000000000 RDI: fffffffffffffff4
+[ 1952.345725] RBP: 1ffff110282e3f38 R08: 1ffffffffffffffe R09: fffffffffffffffb
+[ 1952.345751] R10: fffffbffffffffff R11: 0000000000000001 R12: 00000000001120d2
+[ 1952.345772] R13: 0000000000000007 R14: ffff8881c46864a8 R15: ffff8881227227a0
+[ 1952.345797] FS:  00007f4eeab55600(0000) GS:ffff8883d1600000(0000) knlGS:0000000000000000
+[ 1952.345825] CS:  0010 DS: 0000 ES: 0000 CR0: 0000000080050033
+[ 1952.345851] CR2: fffffffffffffff4 CR3: 0000000110ee8004 CR4: 00000000001706f0
+[ 1952.345876] Call Trace:
+[ 1952.345897]  <TASK>
+[ 1952.345921]  ? shmem_fault+0x3d0/0x3d0
+[ 1952.345975]  ? sg_alloc_table+0x22/0xc0
+[ 1952.346027]  shmem_get_pages+0x35e/0x980 [i915 838f262dd3d024cb0ddd15a59d9497770fe94862]
+[ 1952.347314]  ? lock_acquire+0xce/0x410
+[ 1952.347368]  ? shmem_writeback+0x310/0x310 [i915 838f262dd3d024cb0ddd15a59d9497770fe94862]
+[ 1952.348634]  ? mutex_lock_interruptible_nested+0x20/0x20
+[ 1952.348683]  ? dma_resv_get_excl_unlocked+0x310/0x310 [i915 838f262dd3d024cb0ddd15a59d9497770fe94862]
+[ 1952.349964]  ? i915_gem_object_lookup+0x14b/0x270 [i915 838f262dd3d024cb0ddd15a59d9497770fe94862]
+[ 1952.351205]  ? flush_write_domain+0x210/0x210 [i915 838f262dd3d024cb0ddd15a59d9497770fe94862]
+[ 1952.352480]  __i915_gem_object_get_pages+0x126/0x130 [i915 838f262dd3d024cb0ddd15a59d9497770fe94862]
+[ 1952.353742]  i915_gem_set_domain_ioctl+0x303/0x450 [i915 838f262dd3d024cb0ddd15a59d9497770fe94862]
+[ 1952.355013]  drm_ioctl_kernel+0x165/0x250 [drm 5afef28e3d5bebb73092e9108b659e492fa84d31]
+[ 1952.355432]  ? i915_gem_object_set_to_cpu_domain+0x160/0x160 [i915 838f262dd3d024cb0ddd15a59d9497770fe94862]
+[ 1952.356696]  ? drm_setversion+0x350/0x350 [drm 5afef28e3d5bebb73092e9108b659e492fa84d31]
+[ 1952.357113]  ? _copy_to_user+0x4c/0x60
+[ 1952.357146]  ? check_stack_object+0x22/0x60
+[ 1952.357196]  drm_ioctl+0x337/0x5e0 [drm 5afef28e3d5bebb73092e9108b659e492fa84d31]
+[ 1952.357625]  ? i915_gem_object_set_to_cpu_domain+0x160/0x160 [i915 838f262dd3d024cb0ddd15a59d9497770fe94862]
+[ 1952.358879]  ? drm_version+0x150/0x150 [drm 5afef28e3d5bebb73092e9108b659e492fa84d31]
+[ 1952.359291]  ? lock_downgrade+0x3c0/0x3c0
+[ 1952.359328]  ? lock_release+0xb2/0x450
+[ 1952.359363]  ? ktime_get_coarse_real_ts64+0x19/0x80
+[ 1952.359403]  ? lock_downgrade+0x3c0/0x3c0
+[ 1952.359442]  ? __fget_files+0x137/0x250
+[ 1952.359487]  ? __fget_files+0x137/0x250
+[ 1952.359543]  __x64_sys_ioctl+0xb9/0xf0
+[ 1952.359585]  do_syscall_64+0x5c/0x80
+[ 1952.359626]  ? __audit_syscall_exit+0x10f/0x150
+[ 1952.359666]  ? rcu_read_lock_sched_held+0x12/0x70
+[ 1952.359698]  ? lockdep_hardirqs_on_prepare+0xe/0x230
+[ 1952.359739]  ? do_syscall_64+0x69/0x80
+[ 1952.359770]  ? rcu_read_lock_sched_held+0x12/0x70
+[ 1952.359800]  ? asm_exc_page_fault+0x8/0x30
+[ 1952.359830]  ? lockdep_hardirqs_on_prepare+0xe/0x230
+[ 1952.359871]  entry_SYSCALL_64_after_hwframe+0x44/0xae
+[ 1952.359905] RIP: 0033:0x7f4eee75831b
+[ 1952.359932] Code: ff ff ff 85 c0 79 9b 49 c7 c4 ff ff ff ff 5b 5d 4c 89 e0 41 5c c3 66 0f 1f 84 00 00 00 00 00 f3 0f 1e fa b8 10 00 00 00 0f 05 <48> 3d 01 f0 ff ff 73 01 c3 48 8b 0d cd 2a 0f 00 f7 d8 64 89 01 48
+[ 1952.359963] RSP: 002b:00007ffdb28598a8 EFLAGS: 00000246 ORIG_RAX: 0000000000000010
+[ 1952.359999] RAX: ffffffffffffffda RBX: 00007ffdb2859924 RCX: 00007f4eee75831b
+[ 1952.360025] RDX: 00007ffdb2859924 RSI: 00000000400c645f RDI: 0000000000000007
+[ 1952.360049] RBP: 00000000400c645f R08: 0000000000000008 R09: 000055bf94004010
+[ 1952.360074] R10: 00007f4eee84baa0 R11: 0000000000000246 R12: 000055bf94140850
+[ 1952.360097] R13: 0000000000000007 R14: 00000000c00c6466 R15: 000055bf94140850
+[ 1952.360160]  </TASK>
+[ 1952.360179] Modules linked in: nft_fib_inet(E) nft_fib_ipv4(E) nft_fib_ipv6(E) nft_fib(E) nft_reject_inet(E) nf_reject_ipv4(E) nf_reject_ipv6(E) nft_reject(E) nft_ct(E) nft_chain_nat(E) nf_tables(E) ebtable_nat(E) af_packet(E) ebtable_broute(E) ip6table_nat(E) ip6table_mangle(E) ip6table_raw(E) ip6table_security(E) iptable_nat(E) nf_nat(E) nf_conntrack(E) nf_defrag_ipv6(E) nf_defrag_ipv4(E) iptable_mangle(E) iptable_raw(E) iptable_security(E) ip_set(E) nfnetlink(E) ebtable_filter(E) ebtables(E) ip6table_filter(E) ip6_tables(E) iptable_filter(E) bpfilter(E) dmi_sysfs(E) r8188eu(CE) intel_rapl_msr(E) intel_rapl_common(E) pktcdvd(E) x86_pkg_temp_thermal(E) intel_powerclamp(E) iTCO_wdt(E) intel_pmc_bxt(E) iwlmvm(E) iTCO_vendor_support(E) coretemp(E) mei_hdcp(E) at24(E) snd_hda_codec_realtek(E) snd_hda_codec_generic(E) kvm_intel(E) mac80211(E) kvm(E) asus_nb_wmi(E) ledtrig_audio(E) snd_hda_codec_hdmi(E) libarc4(E) asus_wmi(E) irqbypass(E) sparse_keymap(E) platform_profile(E)
+[ 1952.360788]  r8169(E) snd_hda_intel(E) iwlwifi(E) snd_intel_dspcfg(E) snd_intel_sdw_acpi(E) snd_hda_codec(E) mei_me(E) joydev(E) snd_hda_core(E) pcspkr(E) mei(E) snd_hwdep(E) efi_pstore(E) thermal(E) snd_pcm(E) realtek(E) snd_timer(E) cfg80211(E) mdio_devres(E) i2c_i801(E) snd(E) libphy(E) lpc_ich(E) i2c_smbus(E) rfkill(E) soundcore(E) ac(E) tiny_power_button(E) asus_wireless(E) nls_iso8859_1(E) nls_cp437(E) vfat(E) fat(E) fuse(E) configfs(E) ip_tables(E) x_tables(E) dm_crypt(E) essiv(E) authenc(E) trusted(E) asn1_encoder(E) hid_generic(E) usbhid(E) crct10dif_pclmul(E) crc32_pclmul(E) ghash_clmulni_intel(E) rtsx_pci_sdmmc(E) mmc_core(E) aesni_intel(E) crypto_simd(E) cryptd(E) nouveau(E) drm_ttm_helper(E) i915(E) i2c_algo_bit(E) ttm(E) drm_kms_helper(E) syscopyarea(E) sysfillrect(E) sysimgblt(E) serio_raw(E) fb_sys_fops(E) xhci_pci(E) sr_mod(E) xhci_pci_renesas(E) cec(E) cdrom(E) rc_core(E) xhci_hcd(E) rtsx_pci(E) drm(E) usbcore(E) mxm_wmi(E) wmi(E) battery(E) video(E)
+[ 1952.361546]  button(E) btrfs(E) blake2b_generic(E) libcrc32c(E) crc32c_intel(E) xor(E) raid6_pq(E) sg(E) dm_multipath(E) dm_mod(E) scsi_dh_rdac(E) scsi_dh_emc(E) scsi_dh_alua(E) br_netfilter(E) bridge(E) stp(E) llc(E) msr(E) efivarfs(E)
+[ 1952.361775] CR2: fffffffffffffff4
+[ 1952.361800] ---[ end trace 4a2f23ab9816ab5d ]---
+[ 1952.674830] RIP: 0010:shmem_read_mapping_page_gfp+0xcc/0x130
+[ 1952.674876] Code: 24 30 e8 f7 ed ff ff 5a 59 85 c0 74 66 48 63 d8 48 89 5c 24 20 be 08 00 00 00 48 89 df e8 5c 38 0c 00 48 89 df e8 f4 2d 0c 00 <48> 8b 13 48 c7 c0 fb ff ff ff f7 c2 00 00 80 00 74 30 48 ba 00 00
+[ 1952.674903] RSP: 0018:ffff88814171f9c0 EFLAGS: 00010246
+[ 1952.674931] RAX: 0000000000000000 RBX: fffffffffffffff4 RCX: ffffffffb2e74f5c
+[ 1952.674952] RDX: 0000000000000003 RSI: dffffc0000000000 RDI: fffffffffffffff4
+[ 1952.674974] RBP: 1ffff110282e3f38 R08: 1ffffffffffffffe R09: fffffffffffffffb
+[ 1952.674996] R10: fffffbffffffffff R11: 0000000000000001 R12: 00000000001120d2
+[ 1952.675016] R13: 0000000000000007 R14: ffff8881c46864a8 R15: ffff8881227227a0
+[ 1952.675037] FS:  00007f4eeab55600(0000) GS:ffff8883d1600000(0000) knlGS:0000000000000000
+[ 1952.675061] CS:  0010 DS: 0000 ES: 0000 CR0: 0000000080050033
+[ 1952.675074] CR2: fffffffffffffff4 CR3: 0000000110ee8004 CR4: 00000000001706f0
+[ 1956.679899] BUG: unable to handle page fault for address: fffffffffffffff4
+[ 1956.679929] #PF: supervisor read access in kernel mode
+[ 1956.679948] #PF: error_code(0x0000) - not-present page
+[ 1956.679966] PGD 15922f067 P4D 15922f067 PUD 159231067 PMD 0 
+[ 1956.680014] Oops: 0000 [#2] PREEMPT SMP KASAN PTI
+[ 1956.680038] CPU: 1 PID: 8188 Comm: plasmashell Tainted: G      D  C  E     5.15.0-staging+ #3 d228a98602aa922492a86af10410fd6f82c809b4
+[ 1956.680067] Hardware name: ASUSTeK COMPUTER INC. N750JK/N750JK, BIOS N750JK.203 05/21/2014
+[ 1956.680086] RIP: 0010:shmem_read_mapping_page_gfp+0xcc/0x130
+[ 1956.680121] Code: 24 30 e8 f7 ed ff ff 5a 59 85 c0 74 66 48 63 d8 48 89 5c 24 20 be 08 00 00 00 48 89 df e8 5c 38 0c 00 48 89 df e8 f4 2d 0c 00 <48> 8b 13 48 c7 c0 fb ff ff ff f7 c2 00 00 80 00 74 30 48 ba 00 00
+[ 1956.680146] RSP: 0018:ffff88819efb7960 EFLAGS: 00010246
+[ 1956.680172] RAX: 0000000000000000 RBX: fffffffffffffff4 RCX: ffffffffb2e74f5c
+[ 1956.680193] RDX: 0000000000000003 RSI: dffffc0000000000 RDI: fffffffffffffff4
+[ 1956.680213] RBP: 1ffff11033df6f2c R08: 1ffffffffffffffe R09: fffffffffffffffb
+[ 1956.680234] R10: fffffbffffffffff R11: 0000000000000001 R12: 00000000001120d2
+[ 1956.680253] R13: 0000000000000000 R14: ffff88817d9df750 R15: ffff88810e60b7a0
+[ 1956.680274] FS:  00007f95af103980(0000) GS:ffff8883d1680000(0000) knlGS:0000000000000000
+[ 1956.680297] CS:  0010 DS: 0000 ES: 0000 CR0: 0000000080050033
+[ 1956.680317] CR2: fffffffffffffff4 CR3: 00000001390bc004 CR4: 00000000001706e0
+[ 1956.680338] Call Trace:
+[ 1956.680354]  <TASK>
+[ 1956.680372]  ? shmem_fault+0x3d0/0x3d0
+[ 1956.680411]  ? sg_alloc_table+0x22/0xc0
+[ 1956.680449]  shmem_get_pages+0x35e/0x980 [i915 838f262dd3d024cb0ddd15a59d9497770fe94862]
+[ 1956.681495]  ? lock_acquire+0xce/0x410
+[ 1956.681539]  ? shmem_writeback+0x310/0x310 [i915 838f262dd3d024cb0ddd15a59d9497770fe94862]
+[ 1956.682567]  ? mutex_lock_interruptible_nested+0x20/0x20
+[ 1956.682598]  ? rcu_read_lock_sched_held+0x12/0x70
+[ 1956.682630]  ? dma_resv_get_excl_unlocked+0x310/0x310 [i915 838f262dd3d024cb0ddd15a59d9497770fe94862]
+[ 1956.683675]  ? i915_gem_object_lookup+0x14b/0x270 [i915 838f262dd3d024cb0ddd15a59d9497770fe94862]
+[ 1956.684698]  ? flush_write_domain+0x210/0x210 [i915 838f262dd3d024cb0ddd15a59d9497770fe94862]
+[ 1956.685809]  __i915_gem_object_get_pages+0x126/0x130 [i915 838f262dd3d024cb0ddd15a59d9497770fe94862]
+[ 1956.686904]  i915_gem_set_domain_ioctl+0x303/0x450 [i915 838f262dd3d024cb0ddd15a59d9497770fe94862]
+[ 1956.687992]  drm_ioctl_kernel+0x165/0x250 [drm 5afef28e3d5bebb73092e9108b659e492fa84d31]
+[ 1956.688333]  ? i915_gem_object_set_to_cpu_domain+0x160/0x160 [i915 838f262dd3d024cb0ddd15a59d9497770fe94862]
+[ 1956.689400]  ? drm_setversion+0x350/0x350 [drm 5afef28e3d5bebb73092e9108b659e492fa84d31]
+[ 1956.689760]  ? check_stack_object+0x22/0x60
+[ 1956.689803]  drm_ioctl+0x337/0x5e0 [drm 5afef28e3d5bebb73092e9108b659e492fa84d31]
+[ 1956.690173]  ? i915_gem_object_set_to_cpu_domain+0x160/0x160 [i915 838f262dd3d024cb0ddd15a59d9497770fe94862]
+[ 1956.691255]  ? drm_version+0x150/0x150 [drm 5afef28e3d5bebb73092e9108b659e492fa84d31]
+[ 1956.691608]  ? lock_downgrade+0x3c0/0x3c0
+[ 1956.691640]  ? lock_release+0xb2/0x450
+[ 1956.691670]  ? ktime_get_coarse_real_ts64+0x19/0x80
+[ 1956.691702]  ? lock_downgrade+0x3c0/0x3c0
+[ 1956.691732]  ? i915_gem_dumb_create+0x1f0/0x1f0 [i915 838f262dd3d024cb0ddd15a59d9497770fe94862]
+[ 1956.692814]  ? drm_version+0x150/0x150 [drm 5afef28e3d5bebb73092e9108b659e492fa84d31]
+[ 1956.693181]  ? __fget_files+0x137/0x250
+[ 1956.693230]  __x64_sys_ioctl+0xb9/0xf0
+[ 1956.693268]  do_syscall_64+0x5c/0x80
+[ 1956.693298]  ? __audit_syscall_exit+0x10f/0x150
+[ 1956.693331]  ? rcu_read_lock_sched_held+0x12/0x70
+[ 1956.693358]  ? lockdep_hardirqs_on_prepare+0xe/0x230
+[ 1956.693392]  ? do_syscall_64+0x69/0x80
+[ 1956.693416]  ? __audit_syscall_exit+0x10f/0x150
+[ 1956.693446]  ? rcu_read_lock_sched_held+0x12/0x70
+[ 1956.693471]  ? lockdep_hardirqs_on_prepare+0xe/0x230
+[ 1956.693508]  ? do_syscall_64+0x69/0x80
+[ 1956.693539]  ? do_syscall_64+0x69/0x80
+[ 1956.693562]  ? lockdep_hardirqs_on_prepare+0xe/0x230
+[ 1956.693592]  entry_SYSCALL_64_after_hwframe+0x44/0xae
+[ 1956.693621] RIP: 0033:0x7f95b15f931b
+[ 1956.693645] Code: ff ff ff 85 c0 79 9b 49 c7 c4 ff ff ff ff 5b 5d 4c 89 e0 41 5c c3 66 0f 1f 84 00 00 00 00 00 f3 0f 1e fa b8 10 00 00 00 0f 05 <48> 3d 01 f0 ff ff 73 01 c3 48 8b 0d cd 2a 0f 00 f7 d8 64 89 01 48
+[ 1956.693672] RSP: 002b:00007ffeeb67ac08 EFLAGS: 00000246 ORIG_RAX: 0000000000000010
+[ 1956.693701] RAX: ffffffffffffffda RBX: 00007ffeeb67ac84 RCX: 00007f95b15f931b
+[ 1956.693724] RDX: 00007ffeeb67ac84 RSI: 00000000400c645f RDI: 000000000000000a
+[ 1956.693745] RBP: 00000000400c645f R08: 0000000000000001 R09: 0000000000000000
+[ 1956.693764] R10: 0000555ae3ca5840 R11: 0000000000000246 R12: 0000555ae0bb0bc8
+[ 1956.693785] R13: 000000000000000a R14: 00000000c00c6466 R15: 0000555ae0bb0bc8
+[ 1956.693840]  </TASK>
+[ 1956.693856] Modules linked in: nft_fib_inet(E) nft_fib_ipv4(E) nft_fib_ipv6(E) nft_fib(E) nft_reject_inet(E) nf_reject_ipv4(E) nf_reject_ipv6(E) nft_reject(E) nft_ct(E) nft_chain_nat(E) nf_tables(E) ebtable_nat(E) af_packet(E) ebtable_broute(E) ip6table_nat(E) ip6table_mangle(E) ip6table_raw(E) ip6table_security(E) iptable_nat(E) nf_nat(E) nf_conntrack(E) nf_defrag_ipv6(E) nf_defrag_ipv4(E) iptable_mangle(E) iptable_raw(E) iptable_security(E) ip_set(E) nfnetlink(E) ebtable_filter(E) ebtables(E) ip6table_filter(E) ip6_tables(E) iptable_filter(E) bpfilter(E) dmi_sysfs(E) r8188eu(CE) intel_rapl_msr(E) intel_rapl_common(E) pktcdvd(E) x86_pkg_temp_thermal(E) intel_powerclamp(E) iTCO_wdt(E) intel_pmc_bxt(E) iwlmvm(E) iTCO_vendor_support(E) coretemp(E) mei_hdcp(E) at24(E) snd_hda_codec_realtek(E) snd_hda_codec_generic(E) kvm_intel(E) mac80211(E) kvm(E) asus_nb_wmi(E) ledtrig_audio(E) snd_hda_codec_hdmi(E) libarc4(E) asus_wmi(E) irqbypass(E) sparse_keymap(E) platform_profile(E)
+[ 1956.694386]  r8169(E) snd_hda_intel(E) iwlwifi(E) snd_intel_dspcfg(E) snd_intel_sdw_acpi(E) snd_hda_codec(E) mei_me(E) joydev(E) snd_hda_core(E) pcspkr(E) mei(E) snd_hwdep(E) efi_pstore(E) thermal(E) snd_pcm(E) realtek(E) snd_timer(E) cfg80211(E) mdio_devres(E) i2c_i801(E) snd(E) libphy(E) lpc_ich(E) i2c_smbus(E) rfkill(E) soundcore(E) ac(E) tiny_power_button(E) asus_wireless(E) nls_iso8859_1(E) nls_cp437(E) vfat(E) fat(E) fuse(E) configfs(E) ip_tables(E) x_tables(E) dm_crypt(E) essiv(E) authenc(E) trusted(E) asn1_encoder(E) hid_generic(E) usbhid(E) crct10dif_pclmul(E) crc32_pclmul(E) ghash_clmulni_intel(E) rtsx_pci_sdmmc(E) mmc_core(E) aesni_intel(E) crypto_simd(E) cryptd(E) nouveau(E) drm_ttm_helper(E) i915(E) i2c_algo_bit(E) ttm(E) drm_kms_helper(E) syscopyarea(E) sysfillrect(E) sysimgblt(E) serio_raw(E) fb_sys_fops(E) xhci_pci(E) sr_mod(E) xhci_pci_renesas(E) cec(E) cdrom(E) rc_core(E) xhci_hcd(E) rtsx_pci(E) drm(E) usbcore(E) mxm_wmi(E) wmi(E) battery(E) video(E)
+[ 1956.695053]  button(E) btrfs(E) blake2b_generic(E) libcrc32c(E) crc32c_intel(E) xor(E) raid6_pq(E) sg(E) dm_multipath(E) dm_mod(E) scsi_dh_rdac(E) scsi_dh_emc(E) scsi_dh_alua(E) br_netfilter(E) bridge(E) stp(E) llc(E) msr(E) efivarfs(E)
+[ 1956.695252] CR2: fffffffffffffff4
+[ 1956.695274] ---[ end trace 4a2f23ab9816ab5e ]---
+[ 1957.136609] RIP: 0010:shmem_read_mapping_page_gfp+0xcc/0x130
+[ 1957.136651] Code: 24 30 e8 f7 ed ff ff 5a 59 85 c0 74 66 48 63 d8 48 89 5c 24 20 be 08 00 00 00 48 89 df e8 5c 38 0c 00 48 89 df e8 f4 2d 0c 00 <48> 8b 13 48 c7 c0 fb ff ff ff f7 c2 00 00 80 00 74 30 48 ba 00 00
+[ 1957.136675] RSP: 0018:ffff88814171f9c0 EFLAGS: 00010246
+[ 1957.136701] RAX: 0000000000000000 RBX: fffffffffffffff4 RCX: ffffffffb2e74f5c
+[ 1957.136721] RDX: 0000000000000003 RSI: dffffc0000000000 RDI: fffffffffffffff4
+[ 1957.136741] RBP: 1ffff110282e3f38 R08: 1ffffffffffffffe R09: fffffffffffffffb
+[ 1957.136761] R10: fffffbffffffffff R11: 0000000000000001 R12: 00000000001120d2
+[ 1957.136780] R13: 0000000000000007 R14: ffff8881c46864a8 R15: ffff8881227227a0
+[ 1957.136800] FS:  00007f95af103980(0000) GS:ffff8883d1680000(0000) knlGS:0000000000000000
+[ 1957.136822] CS:  0010 DS: 0000 ES: 0000 CR0: 0000000080050033
+[ 1957.136842] CR2: fffffffffffffff4 CR3: 00000001390bc004 CR4: 00000000001706e0
+[ 1964.470867] BUG: unable to handle page fault for address: fffffffffffffff4
+[ 1964.470897] #PF: supervisor read access in kernel mode
+[ 1964.470914] #PF: error_code(0x0000) - not-present page
+[ 1964.470931] PGD 15922f067 P4D 15922f067 PUD 159231067 PMD 0 
+[ 1964.470975] Oops: 0000 [#3] PREEMPT SMP KASAN PTI
+[ 1964.470997] CPU: 0 PID: 8866 Comm: Renderer Tainted: G      D  C  E     5.15.0-staging+ #3 d228a98602aa922492a86af10410fd6f82c809b4
+[ 1964.471024] Hardware name: ASUSTeK COMPUTER INC. N750JK/N750JK, BIOS N750JK.203 05/21/2014
+[ 1964.471042] RIP: 0010:shmem_read_mapping_page_gfp+0xcc/0x130
+[ 1964.471076] Code: 24 30 e8 f7 ed ff ff 5a 59 85 c0 74 66 48 63 d8 48 89 5c 24 20 be 08 00 00 00 48 89 df e8 5c 38 0c 00 48 89 df e8 f4 2d 0c 00 <48> 8b 13 48 c7 c0 fb ff ff ff f7 c2 00 00 80 00 74 30 48 ba 00 00
+[ 1964.471100] RSP: 0018:ffff8881fdd57960 EFLAGS: 00010246
+[ 1964.471124] RAX: 0000000000000000 RBX: fffffffffffffff4 RCX: ffffffffb2e74f5c
+[ 1964.471143] RDX: 0000000000000003 RSI: dffffc0000000000 RDI: fffffffffffffff4
+[ 1964.471162] RBP: 1ffff1103fbaaf2c R08: 1ffffffffffffffe R09: fffffffffffffffb
+[ 1964.471182] R10: fffffbffffffffff R11: 0000000000000001 R12: 00000000001120d2
+[ 1964.471200] R13: 0000000000000000 R14: ffff88811c095e70 R15: ffff88819a604a80
+[ 1964.471220] FS:  00007f6df8054640(0000) GS:ffff8883d1600000(0000) knlGS:0000000000000000
+[ 1964.471241] CS:  0010 DS: 0000 ES: 0000 CR0: 0000000080050033
+[ 1964.471259] CR2: fffffffffffffff4 CR3: 000000013b276005 CR4: 00000000001706f0
+[ 1964.471277] Call Trace:
+[ 1964.471292]  <TASK>
+[ 1964.471309]  ? shmem_fault+0x3d0/0x3d0
+[ 1964.471347]  ? sg_alloc_table+0x22/0xc0
+[ 1964.471382]  shmem_get_pages+0x35e/0x980 [i915 838f262dd3d024cb0ddd15a59d9497770fe94862]
+[ 1964.472417]  ? lock_acquire+0xce/0x410
+[ 1964.472459]  ? shmem_writeback+0x310/0x310 [i915 838f262dd3d024cb0ddd15a59d9497770fe94862]
+[ 1964.473491]  ? mutex_lock_interruptible_nested+0x20/0x20
+[ 1964.473522]  ? rcu_read_lock_sched_held+0x12/0x70
+[ 1964.473555]  ? dma_resv_get_excl_unlocked+0x310/0x310 [i915 838f262dd3d024cb0ddd15a59d9497770fe94862]
+[ 1964.474600]  ? i915_gem_object_lookup+0x14b/0x270 [i915 838f262dd3d024cb0ddd15a59d9497770fe94862]
+[ 1964.475619]  ? flush_write_domain+0x210/0x210 [i915 838f262dd3d024cb0ddd15a59d9497770fe94862]
+[ 1964.476626]  __i915_gem_object_get_pages+0x126/0x130 [i915 838f262dd3d024cb0ddd15a59d9497770fe94862]
+[ 1964.477479]  i915_gem_set_domain_ioctl+0x303/0x450 [i915 838f262dd3d024cb0ddd15a59d9497770fe94862]
+[ 1964.478537]  drm_ioctl_kernel+0x165/0x250 [drm 5afef28e3d5bebb73092e9108b659e492fa84d31]
+[ 1964.478902]  ? i915_gem_object_set_to_cpu_domain+0x160/0x160 [i915 838f262dd3d024cb0ddd15a59d9497770fe94862]
+[ 1964.479991]  ? drm_setversion+0x350/0x350 [drm 5afef28e3d5bebb73092e9108b659e492fa84d31]
+[ 1964.480354]  ? check_stack_object+0x22/0x60
+[ 1964.480398]  drm_ioctl+0x337/0x5e0 [drm 5afef28e3d5bebb73092e9108b659e492fa84d31]
+[ 1964.480767]  ? i915_gem_object_set_to_cpu_domain+0x160/0x160 [i915 838f262dd3d024cb0ddd15a59d9497770fe94862]
+[ 1964.481853]  ? drm_version+0x150/0x150 [drm 5afef28e3d5bebb73092e9108b659e492fa84d31]
+[ 1964.482211]  ? lock_downgrade+0x3c0/0x3c0
+[ 1964.482244]  ? lock_release+0xb2/0x450
+[ 1964.482274]  ? ktime_get_coarse_real_ts64+0x19/0x80
+[ 1964.482308]  ? lock_downgrade+0x3c0/0x3c0
+[ 1964.482356]  ? __fget_files+0x137/0x250
+[ 1964.482405]  __x64_sys_ioctl+0xb9/0xf0
+[ 1964.482442]  do_syscall_64+0x5c/0x80
+[ 1964.482480]  ? __fget_files+0x137/0x250
+[ 1964.482522]  ? __audit_syscall_exit+0x10f/0x150
+[ 1964.482558]  ? rcu_read_lock_sched_held+0x12/0x70
+[ 1964.482587]  ? lockdep_hardirqs_on_prepare+0xe/0x230
+[ 1964.482624]  ? do_syscall_64+0x69/0x80
+[ 1964.482650]  ? do_syscall_64+0x69/0x80
+[ 1964.482676]  ? lockdep_hardirqs_on_prepare+0xe/0x230
+[ 1964.482711]  entry_SYSCALL_64_after_hwframe+0x44/0xae
+[ 1964.482741] RIP: 0033:0x7f6e10b4e31b
+[ 1964.482765] Code: ff ff ff 85 c0 79 9b 49 c7 c4 ff ff ff ff 5b 5d 4c 89 e0 41 5c c3 66 0f 1f 84 00 00 00 00 00 f3 0f 1e fa b8 10 00 00 00 0f 05 <48> 3d 01 f0 ff ff 73 01 c3 48 8b 0d cd 2a 0f 00 f7 d8 64 89 01 48
+[ 1964.482791] RSP: 002b:00007f6df8051e38 EFLAGS: 00000246 ORIG_RAX: 0000000000000010
+[ 1964.482822] RAX: ffffffffffffffda RBX: 00007f6df8051eb4 RCX: 00007f6e10b4e31b
+[ 1964.482844] RDX: 00007f6df8051eb4 RSI: 00000000400c645f RDI: 0000000000000006
+[ 1964.482865] RBP: 00000000400c645f R08: 0000000000001f40 R09: 000055f0e64a5712
+[ 1964.482885] R10: 00007f6d8815a800 R11: 0000000000000246 R12: 00007f6e0562a048
+[ 1964.482907] R13: 0000000000000006 R14: 00000000c00c6466 R15: 00007f6e0562a048
+[ 1964.482961]  </TASK>
+[ 1964.482978] Modules linked in: nft_fib_inet(E) nft_fib_ipv4(E) nft_fib_ipv6(E) nft_fib(E) nft_reject_inet(E) nf_reject_ipv4(E) nf_reject_ipv6(E) nft_reject(E) nft_ct(E) nft_chain_nat(E) nf_tables(E) ebtable_nat(E) af_packet(E) ebtable_broute(E) ip6table_nat(E) ip6table_mangle(E) ip6table_raw(E) ip6table_security(E) iptable_nat(E) nf_nat(E) nf_conntrack(E) nf_defrag_ipv6(E) nf_defrag_ipv4(E) iptable_mangle(E) iptable_raw(E) iptable_security(E) ip_set(E) nfnetlink(E) ebtable_filter(E) ebtables(E) ip6table_filter(E) ip6_tables(E) iptable_filter(E) bpfilter(E) dmi_sysfs(E) r8188eu(CE) intel_rapl_msr(E) intel_rapl_common(E) pktcdvd(E) x86_pkg_temp_thermal(E) intel_powerclamp(E) iTCO_wdt(E) intel_pmc_bxt(E) iwlmvm(E) iTCO_vendor_support(E) coretemp(E) mei_hdcp(E) at24(E) snd_hda_codec_realtek(E) snd_hda_codec_generic(E) kvm_intel(E) mac80211(E) kvm(E) asus_nb_wmi(E) ledtrig_audio(E) snd_hda_codec_hdmi(E) libarc4(E) asus_wmi(E) irqbypass(E) sparse_keymap(E) platform_profile(E)
+[ 1964.483511]  r8169(E) snd_hda_intel(E) iwlwifi(E) snd_intel_dspcfg(E) snd_intel_sdw_acpi(E) snd_hda_codec(E) mei_me(E) joydev(E) snd_hda_core(E) pcspkr(E) mei(E) snd_hwdep(E) efi_pstore(E) thermal(E) snd_pcm(E) realtek(E) snd_timer(E) cfg80211(E) mdio_devres(E) i2c_i801(E) snd(E) libphy(E) lpc_ich(E) i2c_smbus(E) rfkill(E) soundcore(E) ac(E) tiny_power_button(E) asus_wireless(E) nls_iso8859_1(E) nls_cp437(E) vfat(E) fat(E) fuse(E) configfs(E) ip_tables(E) x_tables(E) dm_crypt(E) essiv(E) authenc(E) trusted(E) asn1_encoder(E) hid_generic(E) usbhid(E) crct10dif_pclmul(E) crc32_pclmul(E) ghash_clmulni_intel(E) rtsx_pci_sdmmc(E) mmc_core(E) aesni_intel(E) crypto_simd(E) cryptd(E) nouveau(E) drm_ttm_helper(E) i915(E) i2c_algo_bit(E) ttm(E) drm_kms_helper(E) syscopyarea(E) sysfillrect(E) sysimgblt(E) serio_raw(E) fb_sys_fops(E) xhci_pci(E) sr_mod(E) xhci_pci_renesas(E) cec(E) cdrom(E) rc_core(E) xhci_hcd(E) rtsx_pci(E) drm(E) usbcore(E) mxm_wmi(E) wmi(E) battery(E) video(E)
+[ 1964.484187]  button(E) btrfs(E) blake2b_generic(E) libcrc32c(E) crc32c_intel(E) xor(E) raid6_pq(E) sg(E) dm_multipath(E) dm_mod(E) scsi_dh_rdac(E) scsi_dh_emc(E) scsi_dh_alua(E) br_netfilter(E) bridge(E) stp(E) llc(E) msr(E) efivarfs(E)
+[ 1964.484388] CR2: fffffffffffffff4
+[ 1964.484410] ---[ end trace 4a2f23ab9816ab5f ]---
+[ 1964.913214] RIP: 0010:shmem_read_mapping_page_gfp+0xcc/0x130
+[ 1964.913251] Code: 24 30 e8 f7 ed ff ff 5a 59 85 c0 74 66 48 63 d8 48 89 5c 24 20 be 08 00 00 00 48 89 df e8 5c 38 0c 00 48 89 df e8 f4 2d 0c 00 <48> 8b 13 48 c7 c0 fb ff ff ff f7 c2 00 00 80 00 74 30 48 ba 00 00
+[ 1964.913271] RSP: 0018:ffff88814171f9c0 EFLAGS: 00010246
+[ 1964.913293] RAX: 0000000000000000 RBX: fffffffffffffff4 RCX: ffffffffb2e74f5c
+[ 1964.913310] RDX: 0000000000000003 RSI: dffffc0000000000 RDI: fffffffffffffff4
+[ 1964.913327] RBP: 1ffff110282e3f38 R08: 1ffffffffffffffe R09: fffffffffffffffb
+[ 1964.913344] R10: fffffbffffffffff R11: 0000000000000001 R12: 00000000001120d2
+[ 1964.913360] R13: 0000000000000007 R14: ffff8881c46864a8 R15: ffff8881227227a0
+[ 1964.913377] FS:  00007f6df8054640(0000) GS:ffff8883d1600000(0000) knlGS:0000000000000000
+[ 1964.913396] CS:  0010 DS: 0000 ES: 0000 CR0: 0000000080050033
+[ 1964.913412] CR2: fffffffffffffff4 CR3: 000000013b276006 CR4: 00000000001706f0
+[ 1964.924746] BUG: unable to handle page fault for address: fffffffffffffff4
+[ 1964.924775] #PF: supervisor read access in kernel mode
+[ 1964.924792] #PF: error_code(0x0000) - not-present page
+[ 1964.924808] PGD 15922f067 P4D 15922f067 PUD 159231067 PMD 0 
+[ 1964.924861] Oops: 0000 [#4] PREEMPT SMP KASAN PTI
+[ 1964.924882] CPU: 5 PID: 8563 Comm: kmail Tainted: G      D  C  E     5.15.0-staging+ #3 d228a98602aa922492a86af10410fd6f82c809b4
+[ 1964.924910] Hardware name: ASUSTeK COMPUTER INC. N750JK/N750JK, BIOS N750JK.203 05/21/2014
+[ 1964.924928] RIP: 0010:shmem_read_mapping_page_gfp+0xcc/0x130
+[ 1964.924961] Code: 24 30 e8 f7 ed ff ff 5a 59 85 c0 74 66 48 63 d8 48 89 5c 24 20 be 08 00 00 00 48 89 df e8 5c 38 0c 00 48 89 df e8 f4 2d 0c 00 <48> 8b 13 48 c7 c0 fb ff ff ff f7 c2 00 00 80 00 74 30 48 ba 00 00
+[ 1964.924985] RSP: 0018:ffff88812c2279d8 EFLAGS: 00010246
+[ 1964.925010] RAX: 0000000000000000 RBX: fffffffffffffff4 RCX: ffffffffb2e74f5c
+[ 1964.925029] RDX: 0000000000000003 RSI: dffffc0000000000 RDI: fffffffffffffff4
+[ 1964.925048] RBP: 1ffff11025844f3b R08: 1ffffffffffffffe R09: fffffffffffffffb
+[ 1964.925067] R10: fffffbffffffffff R11: 0000000000000001 R12: 00000000001120d2
+[ 1964.925086] R13: 0000000000000129 R14: ffff88811c571a08 R15: ffff88811c287620
+[ 1964.925106] FS:  00007fa67310a040(0000) GS:ffff8883d1880000(0000) knlGS:0000000000000000
+[ 1964.925128] CS:  0010 DS: 0000 ES: 0000 CR0: 0000000080050033
+[ 1964.925146] CR2: fffffffffffffff4 CR3: 0000000122020001 CR4: 00000000001706e0
+[ 1964.925166] Call Trace:
+[ 1964.925181]  <TASK>
+[ 1964.925199]  ? shmem_fault+0x3d0/0x3d0
+[ 1964.925232]  ? __cond_resched+0x18/0x20
+[ 1964.925272]  shmem_get_pages+0x35e/0x980 [i915 838f262dd3d024cb0ddd15a59d9497770fe94862]
+[ 1964.926261]  ? lock_acquire+0xce/0x410
+[ 1964.926301]  ? shmem_writeback+0x310/0x310 [i915 838f262dd3d024cb0ddd15a59d9497770fe94862]
+[ 1964.927276]  ? mutex_lock_interruptible_nested+0x20/0x20
+[ 1964.927310]  ? dma_resv_get_excl_unlocked+0x310/0x310 [i915 838f262dd3d024cb0ddd15a59d9497770fe94862]
+[ 1964.928297]  ? i915_gem_object_lookup+0x14b/0x270 [i915 838f262dd3d024cb0ddd15a59d9497770fe94862]
+[ 1964.929266]  ? flush_write_domain+0x210/0x210 [i915 838f262dd3d024cb0ddd15a59d9497770fe94862]
+[ 1964.930246]  __i915_gem_object_get_pages+0x126/0x130 [i915 838f262dd3d024cb0ddd15a59d9497770fe94862]
+[ 1964.931218]  i915_gem_set_domain_ioctl+0x303/0x450 [i915 838f262dd3d024cb0ddd15a59d9497770fe94862]
+[ 1964.932196]  drm_ioctl_kernel+0x165/0x250 [drm 5afef28e3d5bebb73092e9108b659e492fa84d31]
+[ 1964.932523]  ? i915_gem_object_set_to_cpu_domain+0x160/0x160 [i915 838f262dd3d024cb0ddd15a59d9497770fe94862]
+[ 1964.933494]  ? drm_setversion+0x350/0x350 [drm 5afef28e3d5bebb73092e9108b659e492fa84d31]
+[ 1964.933818]  ? check_stack_object+0x22/0x60
+[ 1964.933867]  drm_ioctl+0x337/0x5e0 [drm 5afef28e3d5bebb73092e9108b659e492fa84d31]
+[ 1964.934218]  ? i915_gem_object_set_to_cpu_domain+0x160/0x160 [i915 838f262dd3d024cb0ddd15a59d9497770fe94862]
+[ 1964.935249]  ? drm_version+0x150/0x150 [drm 5afef28e3d5bebb73092e9108b659e492fa84d31]
+[ 1964.935586]  ? lock_downgrade+0x3c0/0x3c0
+[ 1964.935616]  ? lock_release+0xb2/0x450
+[ 1964.935645]  ? ktime_get_coarse_real_ts64+0x19/0x80
+[ 1964.935677]  ? lock_downgrade+0x3c0/0x3c0
+[ 1964.935708]  ? drm_version+0x150/0x150 [drm 5afef28e3d5bebb73092e9108b659e492fa84d31]
+[ 1964.936070]  ? lock_downgrade+0x3c0/0x3c0
+[ 1964.936113]  ? __fget_files+0x137/0x250
+[ 1964.936164]  __x64_sys_ioctl+0xb9/0xf0
+[ 1964.936200]  do_syscall_64+0x5c/0x80
+[ 1964.936230]  ? __audit_syscall_exit+0x10f/0x150
+[ 1964.936265]  ? rcu_read_lock_sched_held+0x12/0x70
+[ 1964.936295]  ? lockdep_hardirqs_on_prepare+0xe/0x230
+[ 1964.936332]  ? do_syscall_64+0x69/0x80
+[ 1964.936361]  ? do_syscall_64+0x69/0x80
+[ 1964.936387]  ? asm_exc_page_fault+0x8/0x30
+[ 1964.936413]  ? lockdep_hardirqs_on_prepare+0xe/0x230
+[ 1964.936449]  entry_SYSCALL_64_after_hwframe+0x44/0xae
+[ 1964.936479] RIP: 0033:0x7fa67d6af31b
+[ 1964.936504] Code: ff ff ff 85 c0 79 9b 49 c7 c4 ff ff ff ff 5b 5d 4c 89 e0 41 5c c3 66 0f 1f 84 00 00 00 00 00 f3 0f 1e fa b8 10 00 00 00 0f 05 <48> 3d 01 f0 ff ff 73 01 c3 48 8b 0d cd 2a 0f 00 f7 d8 64 89 01 48
+[ 1964.936530] RSP: 002b:00007fff7a540c78 EFLAGS: 00000246 ORIG_RAX: 0000000000000010
+[ 1964.936561] RAX: ffffffffffffffda RBX: 00007fff7a540cf4 RCX: 00007fa67d6af31b
+[ 1964.936583] RDX: 00007fff7a540cf4 RSI: 00000000400c645f RDI: 0000000000000007
+[ 1964.936604] RBP: 00000000400c645f R08: 0000000000000008 R09: 000055c7343ff010
+[ 1964.936625] R10: 00007fa67d7a2aa0 R11: 0000000000000246 R12: 000055c7345623f0
+[ 1964.936647] R13: 0000000000000007 R14: 00000000c00c6466 R15: 000055c7345623f0
+[ 1964.936702]  </TASK>
+[ 1964.936718] Modules linked in: nft_fib_inet(E) nft_fib_ipv4(E) nft_fib_ipv6(E) nft_fib(E) nft_reject_inet(E) nf_reject_ipv4(E) nf_reject_ipv6(E) nft_reject(E) nft_ct(E) nft_chain_nat(E) nf_tables(E) ebtable_nat(E) af_packet(E) ebtable_broute(E) ip6table_nat(E) ip6table_mangle(E) ip6table_raw(E) ip6table_security(E) iptable_nat(E) nf_nat(E) nf_conntrack(E) nf_defrag_ipv6(E) nf_defrag_ipv4(E) iptable_mangle(E) iptable_raw(E) iptable_security(E) ip_set(E) nfnetlink(E) ebtable_filter(E) ebtables(E) ip6table_filter(E) ip6_tables(E) iptable_filter(E) bpfilter(E) dmi_sysfs(E) r8188eu(CE) intel_rapl_msr(E) intel_rapl_common(E) pktcdvd(E) x86_pkg_temp_thermal(E) intel_powerclamp(E) iTCO_wdt(E) intel_pmc_bxt(E) iwlmvm(E) iTCO_vendor_support(E) coretemp(E) mei_hdcp(E) at24(E) snd_hda_codec_realtek(E) snd_hda_codec_generic(E) kvm_intel(E) mac80211(E) kvm(E) asus_nb_wmi(E) ledtrig_audio(E) snd_hda_codec_hdmi(E) libarc4(E) asus_wmi(E) irqbypass(E) sparse_keymap(E) platform_profile(E)
+[ 1964.937257]  r8169(E) snd_hda_intel(E) iwlwifi(E) snd_intel_dspcfg(E) snd_intel_sdw_acpi(E) snd_hda_codec(E) mei_me(E) joydev(E) snd_hda_core(E) pcspkr(E) mei(E) snd_hwdep(E) efi_pstore(E) thermal(E) snd_pcm(E) realtek(E) snd_timer(E) cfg80211(E) mdio_devres(E) i2c_i801(E) snd(E) libphy(E) lpc_ich(E) i2c_smbus(E) rfkill(E) soundcore(E) ac(E) tiny_power_button(E) asus_wireless(E) nls_iso8859_1(E) nls_cp437(E) vfat(E) fat(E) fuse(E) configfs(E) ip_tables(E) x_tables(E) dm_crypt(E) essiv(E) authenc(E) trusted(E) asn1_encoder(E) hid_generic(E) usbhid(E) crct10dif_pclmul(E) crc32_pclmul(E) ghash_clmulni_intel(E) rtsx_pci_sdmmc(E) mmc_core(E) aesni_intel(E) crypto_simd(E) cryptd(E) nouveau(E) drm_ttm_helper(E) i915(E) i2c_algo_bit(E) ttm(E) drm_kms_helper(E) syscopyarea(E) sysfillrect(E) sysimgblt(E) serio_raw(E) fb_sys_fops(E) xhci_pci(E) sr_mod(E) xhci_pci_renesas(E) cec(E) cdrom(E) rc_core(E) xhci_hcd(E) rtsx_pci(E) drm(E) usbcore(E) mxm_wmi(E) wmi(E) battery(E) video(E)
+[ 1964.937937]  button(E) btrfs(E) blake2b_generic(E) libcrc32c(E) crc32c_intel(E) xor(E) raid6_pq(E) sg(E) dm_multipath(E) dm_mod(E) scsi_dh_rdac(E) scsi_dh_emc(E) scsi_dh_alua(E) br_netfilter(E) bridge(E) stp(E) llc(E) msr(E) efivarfs(E)
+[ 1964.938138] CR2: fffffffffffffff4
+[ 1964.938160] ---[ end trace 4a2f23ab9816ab60 ]---
+[ 1965.269120] RIP: 0010:shmem_read_mapping_page_gfp+0xcc/0x130
+[ 1965.269167] Code: 24 30 e8 f7 ed ff ff 5a 59 85 c0 74 66 48 63 d8 48 89 5c 24 20 be 08 00 00 00 48 89 df e8 5c 38 0c 00 48 89 df e8 f4 2d 0c 00 <48> 8b 13 48 c7 c0 fb ff ff ff f7 c2 00 00 80 00 74 30 48 ba 00 00
+[ 1965.269196] RSP: 0018:ffff88814171f9c0 EFLAGS: 00010246
+[ 1965.269225] RAX: 0000000000000000 RBX: fffffffffffffff4 RCX: ffffffffb2e74f5c
+[ 1965.269248] RDX: 0000000000000003 RSI: dffffc0000000000 RDI: fffffffffffffff4
+[ 1965.269270] RBP: 1ffff110282e3f38 R08: 1ffffffffffffffe R09: fffffffffffffffb
+[ 1965.269292] R10: fffffbffffffffff R11: 0000000000000001 R12: 00000000001120d2
+[ 1965.269314] R13: 0000000000000007 R14: ffff8881c46864a8 R15: ffff8881227227a0
+[ 1965.269336] FS:  00007fa67310a040(0000) GS:ffff8883d1880000(0000) knlGS:0000000000000000
+[ 1965.269361] CS:  0010 DS: 0000 ES: 0000 CR0: 0000000080050033
+[ 1965.269383] CR2: fffffffffffffff4 CR3: 0000000122020001 CR4: 00000000001706e0
+
+----- Cut here -----
