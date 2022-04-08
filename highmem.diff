@@ -1,5 +1,5 @@
 diff --git a/Documentation/vm/highmem.rst b/Documentation/vm/highmem.rst
-index 0f69a9fec34d..3b6443f00cbc 100644
+index 0f69a9fec34d..2288e0257416 100644
 --- a/Documentation/vm/highmem.rst
 +++ b/Documentation/vm/highmem.rst
 @@ -56,10 +56,24 @@ The kernel contains several ways of creating temporary mappings:
@@ -37,8 +37,8 @@ index 0f69a9fec34d..3b6443f00cbc 100644
    kmap_atomic() may also be used by interrupt contexts, since it is does not
 -  sleep and the caller may not sleep until after kunmap_atomic() is called.
 +  sleep and the caller can not sleep until after kunmap_atomic() is called.
-+  Each call of kmap_atomic() in the kernel creates a non-preemptable section
-+  and disable pagefaults. That could be the source of unwanted latency, so
++  Each call of kmap_atomic() in the kernel creates a non-preemptible section
++  and disable page faults. That could be the source of unwanted latency, so
 +  only use it if absolutely required, instead use the corresponding kmap_local
 +  variant if possible (see below).
  
