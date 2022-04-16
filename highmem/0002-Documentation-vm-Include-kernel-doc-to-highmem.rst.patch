@@ -1,0 +1,80 @@
+From 355812cd01af83d5aa5d4fb7288bc702b22b36ce Mon Sep 17 00:00:00 2001
+From: "Fabio M. De Francesco" <fmdefrancesco@gmail.com>
+Date: Fri, 15 Apr 2022 23:53:42 +0200
+Subject: [PATCH 2/2] Documentation/vm: Include kernel-doc to highmem.rst
+
+Include kernel-doc comments to highmem.rst from
+include/kernel/highmem.h.
+
+From now on, the "Using kmap_atomic" section is redundant, therefore
+romove that section.
+
+Cc: Jonathan Corbet <corbet@lwn.net>
+Cc: Thomas Gleixner <tglx@linutronix.de>
+Cc: Ira Weiny <ira.weiny@intel.com>
+Cc: Matthew Wilcox <willy@infradead.org>
+Cc: Peter Zijlstra <peterz@infradead.org>
+Signed-off-by: Fabio M. De Francesco <fmdefrancesco@gmail.com>
+---
+ Documentation/vm/highmem.rst | 41 ++++++------------------------------
+ 1 file changed, 6 insertions(+), 35 deletions(-)
+
+diff --git a/Documentation/vm/highmem.rst b/Documentation/vm/highmem.rst
+index 12dcfbee094d..5dcee6233cd5 100644
+--- a/Documentation/vm/highmem.rst
++++ b/Documentation/vm/highmem.rst
+@@ -117,41 +117,6 @@ The kernel contains several ways of creating temporary mappings:
+   synchronization to unmap.
+ 
+ 
+-Using kmap_atomic
+-=================
+-
+-When and where to use kmap_atomic() is straightforward.  It is used when code
+-wants to access the contents of a page that might be allocated from high memory
+-(see __GFP_HIGHMEM), for example a page in the pagecache.  The API has two
+-functions, and they can be used in a manner similar to the following::
+-
+-	/* Find the page of interest. */
+-	struct page *page = find_get_page(mapping, offset);
+-
+-	/* Gain access to the contents of that page. */
+-	void *vaddr = kmap_atomic(page);
+-
+-	/* Do something to the contents of that page. */
+-	memset(vaddr, 0, PAGE_SIZE);
+-
+-	/* Unmap that page. */
+-	kunmap_atomic(vaddr);
+-
+-Note that the kunmap_atomic() call takes the result of the kmap_atomic() call
+-not the argument.
+-
+-If you need to map two pages because you want to copy from one page to
+-another you need to keep the kmap_atomic calls strictly nested, like::
+-
+-	vaddr1 = kmap_atomic(page1);
+-	vaddr2 = kmap_atomic(page2);
+-
+-	memcpy(vaddr1, vaddr2, PAGE_SIZE);
+-
+-	kunmap_atomic(vaddr2);
+-	kunmap_atomic(vaddr1);
+-
+-
+ Cost of Temporary Mappings
+ ==========================
+ 
+@@ -190,3 +155,9 @@ The general recommendation is that you don't use more than 8GiB on a 32-bit
+ machine - although more might work for you and your workload, you're pretty
+ much on your own - don't expect kernel developers to really care much if things
+ come apart.
++
++
++Functions
++=========
++
++.. kernel-doc:: include/linux/highmem.h
+-- 
+2.34.1
+

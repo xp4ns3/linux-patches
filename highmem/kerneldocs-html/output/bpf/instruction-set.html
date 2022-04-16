@@ -1,0 +1,1028 @@
+
+
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>eBPF Instruction Set &mdash; The Linux Kernel 5.18.0-rc1-torvalds+ documentation</title>
+  
+
+  
+  
+  
+  
+
+  
+
+  
+  
+    
+
+  
+
+  
+  
+    <link rel="stylesheet" href="../_static/css/theme.css" type="text/css" />
+  
+
+  
+    <link rel="stylesheet" href="../_static/theme_overrides.css" type="text/css" />
+  
+    <link rel="stylesheet" href="../_static/theme_rtd_colors.css" type="text/css" />
+  
+
+  
+        <link rel="index" title="Index"
+              href="../genindex.html"/>
+        <link rel="search" title="Search" href="../search.html"/>
+    <link rel="top" title="The Linux Kernel 5.18.0-rc1-torvalds+ documentation" href="../index.html"/>
+        <link rel="up" title="BPF Documentation" href="index.html"/>
+        <link rel="next" title="eBPF verifier" href="verifier.html"/>
+        <link rel="prev" title="BPF Documentation" href="index.html"/> 
+
+  
+  <script src="../_static/js/modernizr.min.js"></script>
+
+</head>
+
+<body class="wy-body-for-nav" role="document">
+
+   
+  <div class="wy-grid-for-nav">
+
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search">
+          
+
+          
+            <a href="../index.html" class="icon icon-home"> The Linux Kernel
+          
+
+          
+          </a>
+
+          
+            
+            
+              <div class="version">
+                5.18.0-rc2
+              </div>
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <ul>
+<li class="toctree-l1"><a class="reference internal" href="../admin-guide/index.html">The Linux kernel user’s and administrator’s guide</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../kbuild/index.html">Kernel Build System</a></li>
+</ul>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../firmware-guide/index.html">The Linux kernel firmware guide</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../devicetree/index.html">Open Firmware and Devicetree</a></li>
+</ul>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../userspace-api/index.html">The Linux kernel user-space API guide</a></li>
+</ul>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../process/index.html">Working with the kernel development community</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../dev-tools/index.html">Development tools for the kernel</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../doc-guide/index.html">How to write kernel documentation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../kernel-hacking/index.html">Kernel Hacking Guides</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../trace/index.html">Linux Tracing Technologies</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../maintainer/index.html">Kernel Maintainer Handbook</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../fault-injection/index.html">fault-injection</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../livepatch/index.html">Kernel Livepatching</a></li>
+</ul>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="../driver-api/index.html">The Linux driver implementer’s API guide</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../core-api/index.html">Core API Documentation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../locking/index.html">locking</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../accounting/index.html">Accounting</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../block/index.html">Block</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../cdrom/index.html">cdrom</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../cpu-freq/index.html">Linux CPUFreq - CPU frequency and voltage scaling code in the Linux(TM) kernel</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../ide/index.html">Integrated Drive Electronics (IDE)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../fb/index.html">Frame Buffer</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../fpga/index.html">fpga</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../hid/index.html">Human Interface Devices (HID)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../i2c/index.html">I2C/SMBus Subsystem</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../iio/index.html">Industrial I/O</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../isdn/index.html">ISDN</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../infiniband/index.html">InfiniBand</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../leds/index.html">LEDs</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../netlabel/index.html">NetLabel</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../networking/index.html">Linux Networking Documentation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../pcmcia/index.html">pcmcia</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../power/index.html">Power Management</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../target/index.html">TCM Virtual Device</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../timers/index.html">timers</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../spi/index.html">Serial Peripheral Interface (SPI)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../w1/index.html">1-Wire Subsystem</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../watchdog/index.html">Linux Watchdog Support</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../virt/index.html">Linux Virtualization Support</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../input/index.html">The Linux Input Documentation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../hwmon/index.html">Linux Hardware Monitoring</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../gpu/index.html">Linux GPU Driver Developer’s Guide</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../security/index.html">Security Documentation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../sound/index.html">Linux Sound Subsystem Documentation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../crypto/index.html">Linux Kernel Crypto API</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../filesystems/index.html">Filesystems in the Linux kernel</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../vm/index.html">Linux Memory Management Documentation</a></li>
+<li class="toctree-l1 current"><a class="reference internal" href="index.html">BPF Documentation</a><ul class="current">
+<li class="toctree-l2 current"><a class="current reference internal" href="#">eBPF Instruction Set</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#registers-and-calling-convention">Registers and calling convention</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#instruction-encoding">Instruction encoding</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#instruction-classes">Instruction classes</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#arithmetic-and-jump-instructions">Arithmetic and jump instructions</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#arithmetic-instructions">Arithmetic instructions</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#byte-swap-instructions">Byte swap instructions</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#jump-instructions">Jump instructions</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#load-and-store-instructions">Load and store instructions</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#regular-load-and-store-operations">Regular load and store operations</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#atomic-operations">Atomic operations</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#bit-immediate-instructions">64-bit immediate instructions</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#legacy-bpf-packet-access-instructions">Legacy BPF Packet access instructions</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="verifier.html">eBPF verifier</a></li>
+<li class="toctree-l2"><a class="reference internal" href="libbpf/index.html">libbpf</a></li>
+<li class="toctree-l2"><a class="reference internal" href="btf.html">BPF Type Format (BTF)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="faq.html">Frequently asked questions (FAQ)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="syscall_api.html">Syscall API</a></li>
+<li class="toctree-l2"><a class="reference internal" href="helpers.html">Helper functions</a></li>
+<li class="toctree-l2"><a class="reference internal" href="programs.html">Program Types</a></li>
+<li class="toctree-l2"><a class="reference internal" href="maps.html">eBPF maps</a></li>
+<li class="toctree-l2"><a class="reference internal" href="bpf_prog_run.html">Running BPF programs from userspace</a></li>
+<li class="toctree-l2"><a class="reference internal" href="classic_vs_extended.html">Classic BPF vs eBPF</a></li>
+<li class="toctree-l2"><a class="reference internal" href="bpf_licensing.html">BPF licensing</a></li>
+<li class="toctree-l2"><a class="reference internal" href="test_debug.html">Testing and debugging BPF</a></li>
+<li class="toctree-l2"><a class="reference internal" href="other.html">Other</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../usb/index.html">USB support</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../PCI/index.html">Linux PCI Bus Subsystem</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../scsi/index.html">Linux SCSI Subsystem</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../misc-devices/index.html">Assorted Miscellaneous Devices Documentation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../scheduler/index.html">Linux Scheduler</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../mhi/index.html">MHI</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../tty/index.html">TTY</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../peci/index.html">Linux PECI Subsystem</a></li>
+</ul>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../asm-annotations.html">Assembler Annotations</a></li>
+</ul>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../arch.html">CPU Architectures</a></li>
+</ul>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../tools/index.html">Kernel tools</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../staging/index.html">Unsorted Documentation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../staging/index.html#atomic-types">Atomic Types</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../staging/index.html#atomic-bitops">Atomic bitops</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../staging/index.html#memory-barriers">Memory Barriers</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../watch_queue.html">General notification mechanism</a></li>
+</ul>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../translations/index.html">Translations</a></li>
+</ul>
+
+            
+          
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" role="navigation" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../index.html">The Linux Kernel</a>
+        
+      </nav>
+
+
+      
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="../index.html">Docs</a> &raquo;</li>
+        
+          <li><a href="index.html">BPF Documentation</a> &raquo;</li>
+        
+      <li>eBPF Instruction Set</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+            
+            <a href="../_sources/bpf/instruction-set.rst.txt" rel="nofollow"> View page source</a>
+          
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <div class="section" id="ebpf-instruction-set">
+<h1>eBPF Instruction Set<a class="headerlink" href="#ebpf-instruction-set" title="Permalink to this headline">¶</a></h1>
+<div class="section" id="registers-and-calling-convention">
+<h2>Registers and calling convention<a class="headerlink" href="#registers-and-calling-convention" title="Permalink to this headline">¶</a></h2>
+<p>eBPF has 10 general purpose registers and a read-only frame pointer register,
+all of which are 64-bits wide.</p>
+<p>The eBPF calling convention is defined as:</p>
+<blockquote>
+<div><ul class="simple">
+<li>R0: return value from function calls, and exit value for eBPF programs</li>
+<li>R1 - R5: arguments for function calls</li>
+<li>R6 - R9: callee saved registers that function calls will preserve</li>
+<li>R10: read-only frame pointer to access stack</li>
+</ul>
+</div></blockquote>
+<p>R0 - R5 are scratch registers and eBPF programs needs to spill/fill them if
+necessary across calls.</p>
+</div>
+<div class="section" id="instruction-encoding">
+<h2>Instruction encoding<a class="headerlink" href="#instruction-encoding" title="Permalink to this headline">¶</a></h2>
+<p>eBPF has two instruction encodings:</p>
+<blockquote>
+<div><ul class="simple">
+<li>the basic instruction encoding, which uses 64 bits to encode an instruction</li>
+<li>the wide instruction encoding, which appends a second 64-bit immediate value
+(imm64) after the basic instruction for a total of 128 bits.</li>
+</ul>
+</div></blockquote>
+<p>The basic instruction encoding looks as follows:</p>
+<blockquote>
+<div><table border="1" class="docutils">
+<colgroup>
+<col width="19%" />
+<col width="10%" />
+<col width="22%" />
+<col width="30%" />
+<col width="18%" />
+</colgroup>
+<thead valign="bottom">
+<tr class="row-odd"><th class="head">32 bits (MSB)</th>
+<th class="head">16 bits</th>
+<th class="head">4 bits</th>
+<th class="head">4 bits</th>
+<th class="head">8 bits (LSB)</th>
+</tr>
+</thead>
+<tbody valign="top">
+<tr class="row-even"><td>immediate</td>
+<td>offset</td>
+<td>source register</td>
+<td>destination register</td>
+<td>opcode</td>
+</tr>
+</tbody>
+</table>
+</div></blockquote>
+<p>Note that most instructions do not use all of the fields.
+Unused fields shall be cleared to zero.</p>
+<div class="section" id="instruction-classes">
+<h3>Instruction classes<a class="headerlink" href="#instruction-classes" title="Permalink to this headline">¶</a></h3>
+<p>The three LSB bits of the ‘opcode’ field store the instruction class:</p>
+<blockquote>
+<div><table border="1" class="docutils">
+<colgroup>
+<col width="20%" />
+<col width="11%" />
+<col width="69%" />
+</colgroup>
+<thead valign="bottom">
+<tr class="row-odd"><th class="head">class</th>
+<th class="head">value</th>
+<th class="head">description</th>
+</tr>
+</thead>
+<tbody valign="top">
+<tr class="row-even"><td>BPF_LD</td>
+<td>0x00</td>
+<td>non-standard load operations</td>
+</tr>
+<tr class="row-odd"><td>BPF_LDX</td>
+<td>0x01</td>
+<td>load into register operations</td>
+</tr>
+<tr class="row-even"><td>BPF_ST</td>
+<td>0x02</td>
+<td>store from immediate operations</td>
+</tr>
+<tr class="row-odd"><td>BPF_STX</td>
+<td>0x03</td>
+<td>store from register operations</td>
+</tr>
+<tr class="row-even"><td>BPF_ALU</td>
+<td>0x04</td>
+<td>32-bit arithmetic operations</td>
+</tr>
+<tr class="row-odd"><td>BPF_JMP</td>
+<td>0x05</td>
+<td>64-bit jump operations</td>
+</tr>
+<tr class="row-even"><td>BPF_JMP32</td>
+<td>0x06</td>
+<td>32-bit jump operations</td>
+</tr>
+<tr class="row-odd"><td>BPF_ALU64</td>
+<td>0x07</td>
+<td>64-bit arithmetic operations</td>
+</tr>
+</tbody>
+</table>
+</div></blockquote>
+</div>
+</div>
+<div class="section" id="arithmetic-and-jump-instructions">
+<h2>Arithmetic and jump instructions<a class="headerlink" href="#arithmetic-and-jump-instructions" title="Permalink to this headline">¶</a></h2>
+<p>For arithmetic and jump instructions (BPF_ALU, BPF_ALU64, BPF_JMP and
+BPF_JMP32), the 8-bit ‘opcode’ field is divided into three parts:</p>
+<blockquote>
+<div><table border="1" class="docutils">
+<colgroup>
+<col width="38%" />
+<col width="16%" />
+<col width="46%" />
+</colgroup>
+<thead valign="bottom">
+<tr class="row-odd"><th class="head">4 bits (MSB)</th>
+<th class="head">1 bit</th>
+<th class="head">3 bits (LSB)</th>
+</tr>
+</thead>
+<tbody valign="top">
+<tr class="row-even"><td>operation code</td>
+<td>source</td>
+<td>instruction class</td>
+</tr>
+</tbody>
+</table>
+</div></blockquote>
+<p>The 4th bit encodes the source operand:</p>
+<blockquote>
+<div><table border="1" class="docutils">
+<colgroup>
+<col width="12%" />
+<col width="10%" />
+<col width="78%" />
+</colgroup>
+<thead valign="bottom">
+<tr class="row-odd"><th class="head">source</th>
+<th class="head">value</th>
+<th class="head">description</th>
+</tr>
+</thead>
+<tbody valign="top">
+<tr class="row-even"><td>BPF_K</td>
+<td>0x00</td>
+<td>use 32-bit immediate as source operand</td>
+</tr>
+<tr class="row-odd"><td>BPF_X</td>
+<td>0x08</td>
+<td>use ‘src_reg’ register as source operand</td>
+</tr>
+</tbody>
+</table>
+</div></blockquote>
+<p>The four MSB bits store the operation code.</p>
+<div class="section" id="arithmetic-instructions">
+<h3>Arithmetic instructions<a class="headerlink" href="#arithmetic-instructions" title="Permalink to this headline">¶</a></h3>
+<p>BPF_ALU uses 32-bit wide operands while BPF_ALU64 uses 64-bit wide operands for
+otherwise identical operations.
+The code field encodes the operation as below:</p>
+<blockquote>
+<div><table border="1" class="docutils">
+<colgroup>
+<col width="13%" />
+<col width="8%" />
+<col width="79%" />
+</colgroup>
+<thead valign="bottom">
+<tr class="row-odd"><th class="head">code</th>
+<th class="head">value</th>
+<th class="head">description</th>
+</tr>
+</thead>
+<tbody valign="top">
+<tr class="row-even"><td>BPF_ADD</td>
+<td>0x00</td>
+<td>dst += src</td>
+</tr>
+<tr class="row-odd"><td>BPF_SUB</td>
+<td>0x10</td>
+<td>dst -= src</td>
+</tr>
+<tr class="row-even"><td>BPF_MUL</td>
+<td>0x20</td>
+<td>dst *= src</td>
+</tr>
+<tr class="row-odd"><td>BPF_DIV</td>
+<td>0x30</td>
+<td>dst /= src</td>
+</tr>
+<tr class="row-even"><td>BPF_OR</td>
+<td>0x40</td>
+<td>dst |= src</td>
+</tr>
+<tr class="row-odd"><td>BPF_AND</td>
+<td>0x50</td>
+<td>dst &amp;= src</td>
+</tr>
+<tr class="row-even"><td>BPF_LSH</td>
+<td>0x60</td>
+<td>dst &lt;&lt;= src</td>
+</tr>
+<tr class="row-odd"><td>BPF_RSH</td>
+<td>0x70</td>
+<td>dst &gt;&gt;= src</td>
+</tr>
+<tr class="row-even"><td>BPF_NEG</td>
+<td>0x80</td>
+<td>dst = ~src</td>
+</tr>
+<tr class="row-odd"><td>BPF_MOD</td>
+<td>0x90</td>
+<td>dst %= src</td>
+</tr>
+<tr class="row-even"><td>BPF_XOR</td>
+<td>0xa0</td>
+<td>dst ^= src</td>
+</tr>
+<tr class="row-odd"><td>BPF_MOV</td>
+<td>0xb0</td>
+<td>dst = src</td>
+</tr>
+<tr class="row-even"><td>BPF_ARSH</td>
+<td>0xc0</td>
+<td>sign extending shift right</td>
+</tr>
+<tr class="row-odd"><td>BPF_END</td>
+<td>0xd0</td>
+<td>byte swap operations (see separate section below)</td>
+</tr>
+</tbody>
+</table>
+</div></blockquote>
+<p>BPF_ADD | BPF_X | BPF_ALU means:</p>
+<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>dst_reg = (u32) dst_reg + (u32) src_reg;
+</pre></div>
+</div>
+<p>BPF_ADD | BPF_X | BPF_ALU64 means:</p>
+<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>dst_reg = dst_reg + src_reg
+</pre></div>
+</div>
+<p>BPF_XOR | BPF_K | BPF_ALU means:</p>
+<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>src_reg = (u32) src_reg ^ (u32) imm32
+</pre></div>
+</div>
+<p>BPF_XOR | BPF_K | BPF_ALU64 means:</p>
+<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>src_reg = src_reg ^ imm32
+</pre></div>
+</div>
+</div>
+<div class="section" id="byte-swap-instructions">
+<h3>Byte swap instructions<a class="headerlink" href="#byte-swap-instructions" title="Permalink to this headline">¶</a></h3>
+<p>The byte swap instructions use an instruction class of <code class="docutils literal notranslate"><span class="pre">BFP_ALU</span></code> and a 4-bit
+code field of <code class="docutils literal notranslate"><span class="pre">BPF_END</span></code>.</p>
+<p>The byte swap instructions instructions operate on the destination register
+only and do not use a separate source register or immediate value.</p>
+<p>The 1-bit source operand field in the opcode is used to to select what byte
+order the operation convert from or to:</p>
+<blockquote>
+<div><table border="1" class="docutils">
+<colgroup>
+<col width="14%" />
+<col width="8%" />
+<col width="78%" />
+</colgroup>
+<thead valign="bottom">
+<tr class="row-odd"><th class="head">source</th>
+<th class="head">value</th>
+<th class="head">description</th>
+</tr>
+</thead>
+<tbody valign="top">
+<tr class="row-even"><td>BPF_TO_LE</td>
+<td>0x00</td>
+<td>convert between host byte order and little endian</td>
+</tr>
+<tr class="row-odd"><td>BPF_TO_BE</td>
+<td>0x08</td>
+<td>convert between host byte order and big endian</td>
+</tr>
+</tbody>
+</table>
+</div></blockquote>
+<p>The imm field encodes the width of the swap operations.  The following widths
+are supported: 16, 32 and 64.</p>
+<p>Examples:</p>
+<p><code class="docutils literal notranslate"><span class="pre">BPF_ALU</span> <span class="pre">|</span> <span class="pre">BPF_TO_LE</span> <span class="pre">|</span> <span class="pre">BPF_END</span></code> with imm = 16 means:</p>
+<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>dst_reg = htole16(dst_reg)
+</pre></div>
+</div>
+<p><code class="docutils literal notranslate"><span class="pre">BPF_ALU</span> <span class="pre">|</span> <span class="pre">BPF_TO_BE</span> <span class="pre">|</span> <span class="pre">BPF_END</span></code> with imm = 64 means:</p>
+<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>dst_reg = htobe64(dst_reg)
+</pre></div>
+</div>
+<p><code class="docutils literal notranslate"><span class="pre">BPF_FROM_LE</span></code> and <code class="docutils literal notranslate"><span class="pre">BPF_FROM_BE</span></code> exist as aliases for <code class="docutils literal notranslate"><span class="pre">BPF_TO_LE</span></code> and
+<code class="docutils literal notranslate"><span class="pre">BPF_TO_LE</span></code> respetively.</p>
+</div>
+<div class="section" id="jump-instructions">
+<h3>Jump instructions<a class="headerlink" href="#jump-instructions" title="Permalink to this headline">¶</a></h3>
+<p>BPF_JMP32 uses 32-bit wide operands while BPF_JMP uses 64-bit wide operands for
+otherwise identical operations.
+The code field encodes the operation as below:</p>
+<blockquote>
+<div><table border="1" class="docutils">
+<colgroup>
+<col width="16%" />
+<col width="10%" />
+<col width="50%" />
+<col width="24%" />
+</colgroup>
+<thead valign="bottom">
+<tr class="row-odd"><th class="head">code</th>
+<th class="head">value</th>
+<th class="head">description</th>
+<th class="head">notes</th>
+</tr>
+</thead>
+<tbody valign="top">
+<tr class="row-even"><td>BPF_JA</td>
+<td>0x00</td>
+<td>PC += off</td>
+<td>BPF_JMP only</td>
+</tr>
+<tr class="row-odd"><td>BPF_JEQ</td>
+<td>0x10</td>
+<td>PC += off if dst == src</td>
+<td>&#160;</td>
+</tr>
+<tr class="row-even"><td>BPF_JGT</td>
+<td>0x20</td>
+<td>PC += off if dst &gt; src</td>
+<td>unsigned</td>
+</tr>
+<tr class="row-odd"><td>BPF_JGE</td>
+<td>0x30</td>
+<td>PC += off if dst &gt;= src</td>
+<td>unsigned</td>
+</tr>
+<tr class="row-even"><td>BPF_JSET</td>
+<td>0x40</td>
+<td>PC += off if dst &amp; src</td>
+<td>&#160;</td>
+</tr>
+<tr class="row-odd"><td>BPF_JNE</td>
+<td>0x50</td>
+<td>PC += off if dst != src</td>
+<td>&#160;</td>
+</tr>
+<tr class="row-even"><td>BPF_JSGT</td>
+<td>0x60</td>
+<td>PC += off if dst &gt; src</td>
+<td>signed</td>
+</tr>
+<tr class="row-odd"><td>BPF_JSGE</td>
+<td>0x70</td>
+<td>PC += off if dst &gt;= src</td>
+<td>signed</td>
+</tr>
+<tr class="row-even"><td>BPF_CALL</td>
+<td>0x80</td>
+<td>function call</td>
+<td>&#160;</td>
+</tr>
+<tr class="row-odd"><td>BPF_EXIT</td>
+<td>0x90</td>
+<td>function / program return</td>
+<td>BPF_JMP only</td>
+</tr>
+<tr class="row-even"><td>BPF_JLT</td>
+<td>0xa0</td>
+<td>PC += off if dst &lt; src</td>
+<td>unsigned</td>
+</tr>
+<tr class="row-odd"><td>BPF_JLE</td>
+<td>0xb0</td>
+<td>PC += off if dst &lt;= src</td>
+<td>unsigned</td>
+</tr>
+<tr class="row-even"><td>BPF_JSLT</td>
+<td>0xc0</td>
+<td>PC += off if dst &lt; src</td>
+<td>signed</td>
+</tr>
+<tr class="row-odd"><td>BPF_JSLE</td>
+<td>0xd0</td>
+<td>PC += off if dst &lt;= src</td>
+<td>signed</td>
+</tr>
+</tbody>
+</table>
+</div></blockquote>
+<p>The eBPF program needs to store the return value into register R0 before doing a
+BPF_EXIT.</p>
+</div>
+</div>
+<div class="section" id="load-and-store-instructions">
+<h2>Load and store instructions<a class="headerlink" href="#load-and-store-instructions" title="Permalink to this headline">¶</a></h2>
+<p>For load and store instructions (BPF_LD, BPF_LDX, BPF_ST and BPF_STX), the
+8-bit ‘opcode’ field is divided as:</p>
+<blockquote>
+<div><table border="1" class="docutils">
+<colgroup>
+<col width="34%" />
+<col width="17%" />
+<col width="49%" />
+</colgroup>
+<thead valign="bottom">
+<tr class="row-odd"><th class="head">3 bits (MSB)</th>
+<th class="head">2 bits</th>
+<th class="head">3 bits (LSB)</th>
+</tr>
+</thead>
+<tbody valign="top">
+<tr class="row-even"><td>mode</td>
+<td>size</td>
+<td>instruction class</td>
+</tr>
+</tbody>
+</table>
+</div></blockquote>
+<p>The size modifier is one of:</p>
+<blockquote>
+<div><table border="1" class="docutils">
+<colgroup>
+<col width="33%" />
+<col width="13%" />
+<col width="54%" />
+</colgroup>
+<thead valign="bottom">
+<tr class="row-odd"><th class="head">size modifier</th>
+<th class="head">value</th>
+<th class="head">description</th>
+</tr>
+</thead>
+<tbody valign="top">
+<tr class="row-even"><td>BPF_W</td>
+<td>0x00</td>
+<td>word        (4 bytes)</td>
+</tr>
+<tr class="row-odd"><td>BPF_H</td>
+<td>0x08</td>
+<td>half word   (2 bytes)</td>
+</tr>
+<tr class="row-even"><td>BPF_B</td>
+<td>0x10</td>
+<td>byte</td>
+</tr>
+<tr class="row-odd"><td>BPF_DW</td>
+<td>0x18</td>
+<td>double word (8 bytes)</td>
+</tr>
+</tbody>
+</table>
+</div></blockquote>
+<p>The mode modifier is one of:</p>
+<blockquote>
+<div><table border="1" class="docutils">
+<colgroup>
+<col width="24%" />
+<col width="9%" />
+<col width="67%" />
+</colgroup>
+<thead valign="bottom">
+<tr class="row-odd"><th class="head">mode modifier</th>
+<th class="head">value</th>
+<th class="head">description</th>
+</tr>
+</thead>
+<tbody valign="top">
+<tr class="row-even"><td>BPF_IMM</td>
+<td>0x00</td>
+<td>64-bit immediate instructions</td>
+</tr>
+<tr class="row-odd"><td>BPF_ABS</td>
+<td>0x20</td>
+<td>legacy BPF packet access (absolute)</td>
+</tr>
+<tr class="row-even"><td>BPF_IND</td>
+<td>0x40</td>
+<td>legacy BPF packet access (indirect)</td>
+</tr>
+<tr class="row-odd"><td>BPF_MEM</td>
+<td>0x60</td>
+<td>regular load and store operations</td>
+</tr>
+<tr class="row-even"><td>BPF_ATOMIC</td>
+<td>0xc0</td>
+<td>atomic operations</td>
+</tr>
+</tbody>
+</table>
+</div></blockquote>
+<div class="section" id="regular-load-and-store-operations">
+<h3>Regular load and store operations<a class="headerlink" href="#regular-load-and-store-operations" title="Permalink to this headline">¶</a></h3>
+<p>The <code class="docutils literal notranslate"><span class="pre">BPF_MEM</span></code> mode modifier is used to encode regular load and store
+instructions that transfer data between a register and memory.</p>
+<p><code class="docutils literal notranslate"><span class="pre">BPF_MEM</span> <span class="pre">|</span> <span class="pre">&lt;size&gt;</span> <span class="pre">|</span> <span class="pre">BPF_STX</span></code> means:</p>
+<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>*(size *) (dst_reg + off) = src_reg
+</pre></div>
+</div>
+<p><code class="docutils literal notranslate"><span class="pre">BPF_MEM</span> <span class="pre">|</span> <span class="pre">&lt;size&gt;</span> <span class="pre">|</span> <span class="pre">BPF_ST</span></code> means:</p>
+<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>*(size *) (dst_reg + off) = imm32
+</pre></div>
+</div>
+<p><code class="docutils literal notranslate"><span class="pre">BPF_MEM</span> <span class="pre">|</span> <span class="pre">&lt;size&gt;</span> <span class="pre">|</span> <span class="pre">BPF_LDX</span></code> means:</p>
+<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>dst_reg = *(size *) (src_reg + off)
+</pre></div>
+</div>
+<p>Where size is one of: <code class="docutils literal notranslate"><span class="pre">BPF_B</span></code>, <code class="docutils literal notranslate"><span class="pre">BPF_H</span></code>, <code class="docutils literal notranslate"><span class="pre">BPF_W</span></code>, or <code class="docutils literal notranslate"><span class="pre">BPF_DW</span></code>.</p>
+</div>
+<div class="section" id="atomic-operations">
+<h3>Atomic operations<a class="headerlink" href="#atomic-operations" title="Permalink to this headline">¶</a></h3>
+<p>Atomic operations are operations that operate on memory and can not be
+interrupted or corrupted by other access to the same memory region
+by other eBPF programs or means outside of this specification.</p>
+<p>All atomic operations supported by eBPF are encoded as store operations
+that use the <code class="docutils literal notranslate"><span class="pre">BPF_ATOMIC</span></code> mode modifier as follows:</p>
+<blockquote>
+<div><ul class="simple">
+<li><code class="docutils literal notranslate"><span class="pre">BPF_ATOMIC</span> <span class="pre">|</span> <span class="pre">BPF_W</span> <span class="pre">|</span> <span class="pre">BPF_STX</span></code> for 32-bit operations</li>
+<li><code class="docutils literal notranslate"><span class="pre">BPF_ATOMIC</span> <span class="pre">|</span> <span class="pre">BPF_DW</span> <span class="pre">|</span> <span class="pre">BPF_STX</span></code> for 64-bit operations</li>
+<li>8-bit and 16-bit wide atomic operations are not supported.</li>
+</ul>
+</div></blockquote>
+<p>The imm field is used to encode the actual atomic operation.
+Simple atomic operation use a subset of the values defined to encode
+arithmetic operations in the imm field to encode the atomic operation:</p>
+<blockquote>
+<div><table border="1" class="docutils">
+<colgroup>
+<col width="33%" />
+<col width="21%" />
+<col width="46%" />
+</colgroup>
+<thead valign="bottom">
+<tr class="row-odd"><th class="head">imm</th>
+<th class="head">value</th>
+<th class="head">description</th>
+</tr>
+</thead>
+<tbody valign="top">
+<tr class="row-even"><td>BPF_ADD</td>
+<td>0x00</td>
+<td>atomic add</td>
+</tr>
+<tr class="row-odd"><td>BPF_OR</td>
+<td>0x40</td>
+<td>atomic or</td>
+</tr>
+<tr class="row-even"><td>BPF_AND</td>
+<td>0x50</td>
+<td>atomic and</td>
+</tr>
+<tr class="row-odd"><td>BPF_XOR</td>
+<td>0xa0</td>
+<td>atomic xor</td>
+</tr>
+</tbody>
+</table>
+</div></blockquote>
+<p><code class="docutils literal notranslate"><span class="pre">BPF_ATOMIC</span> <span class="pre">|</span> <span class="pre">BPF_W</span>&#160; <span class="pre">|</span> <span class="pre">BPF_STX</span></code> with imm = BPF_ADD means:</p>
+<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>*(u32 *)(dst_reg + off16) += src_reg
+</pre></div>
+</div>
+<p><code class="docutils literal notranslate"><span class="pre">BPF_ATOMIC</span> <span class="pre">|</span> <span class="pre">BPF_DW</span> <span class="pre">|</span> <span class="pre">BPF_STX</span></code> with imm = BPF ADD means:</p>
+<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>*(u64 *)(dst_reg + off16) += src_reg
+</pre></div>
+</div>
+<p><code class="docutils literal notranslate"><span class="pre">BPF_XADD</span></code> is a deprecated name for <code class="docutils literal notranslate"><span class="pre">BPF_ATOMIC</span> <span class="pre">|</span> <span class="pre">BPF_ADD</span></code>.</p>
+<p>In addition to the simple atomic operations, there also is a modifier and
+two complex atomic operations:</p>
+<blockquote>
+<div><table border="1" class="docutils">
+<colgroup>
+<col width="20%" />
+<col width="30%" />
+<col width="50%" />
+</colgroup>
+<thead valign="bottom">
+<tr class="row-odd"><th class="head">imm</th>
+<th class="head">value</th>
+<th class="head">description</th>
+</tr>
+</thead>
+<tbody valign="top">
+<tr class="row-even"><td>BPF_FETCH</td>
+<td>0x01</td>
+<td>modifier: return old value</td>
+</tr>
+<tr class="row-odd"><td>BPF_XCHG</td>
+<td>0xe0 | BPF_FETCH</td>
+<td>atomic exchange</td>
+</tr>
+<tr class="row-even"><td>BPF_CMPXCHG</td>
+<td>0xf0 | BPF_FETCH</td>
+<td>atomic compare and exchange</td>
+</tr>
+</tbody>
+</table>
+</div></blockquote>
+<p>The <code class="docutils literal notranslate"><span class="pre">BPF_FETCH</span></code> modifier is optional for simple atomic operations, and
+always set for the complex atomic operations.  If the <code class="docutils literal notranslate"><span class="pre">BPF_FETCH</span></code> flag
+is set, then the operation also overwrites <code class="docutils literal notranslate"><span class="pre">src_reg</span></code> with the value that
+was in memory before it was modified.</p>
+<p>The <code class="docutils literal notranslate"><span class="pre">BPF_XCHG</span></code> operation atomically exchanges <code class="docutils literal notranslate"><span class="pre">src_reg</span></code> with the value
+addressed by <code class="docutils literal notranslate"><span class="pre">dst_reg</span> <span class="pre">+</span> <span class="pre">off</span></code>.</p>
+<p>The <code class="docutils literal notranslate"><span class="pre">BPF_CMPXCHG</span></code> operation atomically compares the value addressed by
+<code class="docutils literal notranslate"><span class="pre">dst_reg</span> <span class="pre">+</span> <span class="pre">off</span></code> with <code class="docutils literal notranslate"><span class="pre">R0</span></code>. If they match, the value addressed by
+<code class="docutils literal notranslate"><span class="pre">dst_reg</span> <span class="pre">+</span> <span class="pre">off</span></code> is replaced with <code class="docutils literal notranslate"><span class="pre">src_reg</span></code>. In either case, the
+value that was at <code class="docutils literal notranslate"><span class="pre">dst_reg</span> <span class="pre">+</span> <span class="pre">off</span></code> before the operation is zero-extended
+and loaded back to <code class="docutils literal notranslate"><span class="pre">R0</span></code>.</p>
+<p>Clang can generate atomic instructions by default when <code class="docutils literal notranslate"><span class="pre">-mcpu=v3</span></code> is
+enabled. If a lower version for <code class="docutils literal notranslate"><span class="pre">-mcpu</span></code> is set, the only atomic instruction
+Clang can generate is <code class="docutils literal notranslate"><span class="pre">BPF_ADD</span></code> <em>without</em> <code class="docutils literal notranslate"><span class="pre">BPF_FETCH</span></code>. If you need to enable
+the atomics features, while keeping a lower <code class="docutils literal notranslate"><span class="pre">-mcpu</span></code> version, you can use
+<code class="docutils literal notranslate"><span class="pre">-Xclang</span> <span class="pre">-target-feature</span> <span class="pre">-Xclang</span> <span class="pre">+alu32</span></code>.</p>
+</div>
+<div class="section" id="bit-immediate-instructions">
+<h3>64-bit immediate instructions<a class="headerlink" href="#bit-immediate-instructions" title="Permalink to this headline">¶</a></h3>
+<p>Instructions with the <code class="docutils literal notranslate"><span class="pre">BPF_IMM</span></code> mode modifier use the wide instruction
+encoding for an extra imm64 value.</p>
+<p>There is currently only one such instruction.</p>
+<p><code class="docutils literal notranslate"><span class="pre">BPF_LD</span> <span class="pre">|</span> <span class="pre">BPF_DW</span> <span class="pre">|</span> <span class="pre">BPF_IMM</span></code> means:</p>
+<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>dst_reg = imm64
+</pre></div>
+</div>
+</div>
+<div class="section" id="legacy-bpf-packet-access-instructions">
+<h3>Legacy BPF Packet access instructions<a class="headerlink" href="#legacy-bpf-packet-access-instructions" title="Permalink to this headline">¶</a></h3>
+<p>eBPF has special instructions for access to packet data that have been
+carried over from classic BPF to retain the performance of legacy socket
+filters running in the eBPF interpreter.</p>
+<p>The instructions come in two forms: <code class="docutils literal notranslate"><span class="pre">BPF_ABS</span> <span class="pre">|</span> <span class="pre">&lt;size&gt;</span> <span class="pre">|</span> <span class="pre">BPF_LD</span></code> and
+<code class="docutils literal notranslate"><span class="pre">BPF_IND</span> <span class="pre">|</span> <span class="pre">&lt;size&gt;</span> <span class="pre">|</span> <span class="pre">BPF_LD</span></code>.</p>
+<p>These instructions are used to access packet data and can only be used when
+the program context is a pointer to networking packet.  <code class="docutils literal notranslate"><span class="pre">BPF_ABS</span></code>
+accesses packet data at an absolute offset specified by the immediate data
+and <code class="docutils literal notranslate"><span class="pre">BPF_IND</span></code> access packet data at an offset that includes the value of
+a register in addition to the immediate data.</p>
+<p>These instructions have seven implicit operands:</p>
+<blockquote>
+<div><ul class="simple">
+<li>Register R6 is an implicit input that must contain pointer to a
+<a class="reference internal" href="../networking/kapi.html#c.sk_buff" title="sk_buff"><code class="xref c c-type docutils literal notranslate"><span class="pre">struct</span> <span class="pre">sk_buff</span></code></a>.</li>
+<li>Register R0 is an implicit output which contains the data fetched from
+the packet.</li>
+<li>Registers R1-R5 are scratch registers that are clobbered after a call to
+<code class="docutils literal notranslate"><span class="pre">BPF_ABS</span> <span class="pre">|</span> <span class="pre">BPF_LD</span></code> or <code class="docutils literal notranslate"><span class="pre">BPF_IND</span></code> | BPF_LD instructions.</li>
+</ul>
+</div></blockquote>
+<p>These instructions have an implicit program exit condition as well. When an
+eBPF program is trying to access the data beyond the packet boundary, the
+program execution will be aborted.</p>
+<p><code class="docutils literal notranslate"><span class="pre">BPF_ABS</span> <span class="pre">|</span> <span class="pre">BPF_W</span> <span class="pre">|</span> <span class="pre">BPF_LD</span></code> means:</p>
+<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>R0 = ntohl(*(u32 *) (((struct sk_buff *) R6)-&gt;data + imm32))
+</pre></div>
+</div>
+<p><code class="docutils literal notranslate"><span class="pre">BPF_IND</span> <span class="pre">|</span> <span class="pre">BPF_W</span> <span class="pre">|</span> <span class="pre">BPF_LD</span></code> means:</p>
+<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>R0 = ntohl(*(u32 *) (((struct sk_buff *) R6)-&gt;data + src_reg + imm32))
+</pre></div>
+</div>
+</div>
+</div>
+</div>
+
+
+           </div>
+           <div class="articleComments">
+            
+           </div>
+          </div>
+          <footer>
+  
+    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
+      
+        <a href="verifier.html" class="btn btn-neutral float-right" title="eBPF verifier" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right"></span></a>
+      
+      
+        <a href="index.html" class="btn btn-neutral" title="BPF Documentation" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>
+      
+    </div>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &copy; Copyright The kernel development community.
+
+    </p>
+  </div>
+  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/snide/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+
+  
+
+    <script type="text/javascript">
+        var DOCUMENTATION_OPTIONS = {
+            URL_ROOT:'../',
+            VERSION:'5.18.0-rc1-torvalds+',
+            COLLAPSE_INDEX:false,
+            FILE_SUFFIX:'.html',
+            HAS_SOURCE:  true,
+            SOURCELINK_SUFFIX: '.txt'
+        };
+    </script>
+      <script type="text/javascript" src="../_static/jquery.js"></script>
+      <script type="text/javascript" src="../_static/underscore.js"></script>
+      <script type="text/javascript" src="../_static/doctools.js"></script>
+      <script type="text/javascript" src="../_static/language_data.js"></script>
+
+  
+
+  
+  
+    <script type="text/javascript" src="../_static/js/theme.js"></script>
+  
+
+  
+  
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.StickyNav.enable();
+      });
+  </script>
+   
+
+</body>
+</html>
