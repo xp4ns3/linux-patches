@@ -1,7 +1,7 @@
-From 355812cd01af83d5aa5d4fb7288bc702b22b36ce Mon Sep 17 00:00:00 2001
+From 7f529d75ba4f6004a2028ecf20cb407ed0ea8c57 Mon Sep 17 00:00:00 2001
 From: "Fabio M. De Francesco" <fmdefrancesco@gmail.com>
 Date: Fri, 15 Apr 2022 23:53:42 +0200
-Subject: [PATCH 2/2] Documentation/vm: Include kernel-doc to highmem.rst
+Subject: [PATCH] Documentation/vm: Include kernel-doc to highmem.rst
 
 Include kernel-doc comments to highmem.rst from
 include/kernel/highmem.h.

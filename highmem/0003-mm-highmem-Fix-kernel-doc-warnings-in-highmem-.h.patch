@@ -1,0 +1,83 @@
+From f03d5fddbf10bb3a58d0dff7c231636d0a26615b Mon Sep 17 00:00:00 2001
+From: "Fabio M. De Francesco" <fmdefrancesco@gmail.com>
+Date: Mon, 18 Apr 2022 09:19:45 +0200
+Subject: [PATCH] mm/highmem: Fix kernel-doc warnings in highmem*.h
+
+`scripts/kernel-doc -none include/linux/highmem*` reports the following
+warnings:
+
+include/linux/highmem.h:160: warning: expecting prototype for kunmap_atomic(). Prototype was for nr_free_highpages() instead
+include/linux/highmem-internal.h:256: warning: Function parameter or member '__addr' not described in 'kunmap_atomic'
+include/linux/highmem-internal.h:256: warning: Excess function parameter 'addr' description in 'kunmap_atomic'
+
+Fix these warnings by (1) move the kernel-doc comments from highmem.h to
+highmem-internal.h (which is the file were the kunmap_atomic() macro is
+actually defined), (2) merge it with the comment which already was in
+highmem-internal.h, and (3) use correct parameter names.
+
+Acked-by: Mike Rapoport <rppt@linux.ibm.com>
+Signed-off-by: Fabio M. De Francesco <fmdefrancesco@gmail.com>
+---
+ include/linux/highmem-internal.h | 14 +++++++++++---
+ include/linux/highmem.h          | 13 +------------
+ 2 files changed, 12 insertions(+), 15 deletions(-)
+
+diff --git a/include/linux/highmem-internal.h b/include/linux/highmem-internal.h
+index a77be5630209..7307de391288 100644
+--- a/include/linux/highmem-internal.h
++++ b/include/linux/highmem-internal.h
+@@ -236,9 +236,17 @@ static inline unsigned long totalhigh_pages(void) { return 0UL; }
+ 
+ #endif /* CONFIG_HIGHMEM */
+ 
+-/*
+- * Prevent people trying to call kunmap_atomic() as if it were kunmap()
+- * kunmap_atomic() should get the return value of kmap_atomic, not the page.
++/**
++ * kunmap_atomic - Unmap the virtual address mapped by kmap_atomic()
++ * @__addr:       Virtual address to be unmapped
++ *
++ * Counterpart to kmap_atomic().
++ *
++ * Effectively a wrapper around kunmap_local() which additionally undoes
++ * the side effects of kmap_atomic(), i.e. reenabling pagefaults and
++ * preemption. Prevent people trying to call kunmap_atomic() as if it
++ * were kunmap() because kunmap_atomic() should get the return value of
++ * kmap_atomic(), not its argument which is a pointer to struct page.
+  */
+ #define kunmap_atomic(__addr)					\
+ do {								\
+diff --git a/include/linux/highmem.h b/include/linux/highmem.h
+index 39bb9b47fa9c..0a7a89721e5d 100644
+--- a/include/linux/highmem.h
++++ b/include/linux/highmem.h
+@@ -37,7 +37,7 @@ static inline void *kmap(struct page *page);
+ 
+ /**
+  * kunmap - Unmap the virtual address mapped by kmap()
+- * @addr:	Virtual address to be unmapped
++ * @page:	Virtual address to be unmapped
+  *
+  * Counterpart to kmap(). A NOOP for CONFIG_HIGHMEM=n and for mappings of
+  * pages in the low memory area.
+@@ -145,17 +145,6 @@ static inline void *kmap_local_folio(struct folio *folio, size_t offset);
+  */
+ static inline void *kmap_atomic(struct page *page);
+ 
+-/**
+- * kunmap_atomic - Unmap the virtual address mapped by kmap_atomic()
+- * @addr:	Virtual address to be unmapped
+- *
+- * Counterpart to kmap_atomic().
+- *
+- * Effectively a wrapper around kunmap_local() which additionally undoes
+- * the side effects of kmap_atomic(), i.e. reenabling pagefaults and
+- * preemption.
+- */
+-
+ /* Highmem related interfaces for management code */
+ static inline unsigned int nr_free_highpages(void);
+ static inline unsigned long totalhigh_pages(void);
+-- 
+2.34.1
+

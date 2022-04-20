@@ -1,8 +1,8 @@
-From 10de3b59bf4a1dfa3fcd90271dcea2d2fdaff5c8 Mon Sep 17 00:00:00 2001
+From e1fa9994b35f8caa88d25af71655363c5aa2db0d Mon Sep 17 00:00:00 2001
 From: "Fabio M. De Francesco" <fmdefrancesco@gmail.com>
 Date: Tue, 12 Apr 2022 14:40:03 +0200
-Subject: [PATCH 1/2] Documentation/vm: Extend "Temporary Virtual Mappings"
- section in highmem.rst
+Subject: [PATCH] Documentation/vm: Extend "Temporary Virtual Mappings" section
+ in highmem.rst
 
 Extend and rework the "Temporary Virtual Mappings" section of the highmem.rst
 documentation.
