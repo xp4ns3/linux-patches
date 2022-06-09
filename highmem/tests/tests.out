@@ -1,0 +1,39 @@
+tweed32:/usr/lib/xfstests # ./check tests/btrfs/150
+FSTYP         -- btrfs
+PLATFORM      -- Linux/i686 tweed32 5.19.0-rc1-torvalds-debug-x86_32+ #16 SMP PREEMPT_DYNAMIC Thu Jun 9 02:20:08 CEST 2022
+MKFS_OPTIONS  -- /dev/loop1
+MOUNT_OPTIONS -- /dev/loop1 /mnt/scratch
+
+btrfs/150 2s ...  2s
+Ran: btrfs/150
+Passed all 1 tests
+
+tweed32:/usr/lib/xfstests # ./check -g compress
+FSTYP         -- btrfs
+PLATFORM      -- Linux/i686 tweed32 5.19.0-rc1-torvalds-debug-x86_32+ #16 SMP PREEMPT_DYNAMIC Thu Jun 9 02:20:08 CEST 2022
+MKFS_OPTIONS  -- /dev/loop1
+MOUNT_OPTIONS -- /dev/loop1 /mnt/scratch
+
+btrfs/024 3s ...  2s
+btrfs/026 6s ...  5s
+btrfs/037 4s ...  3s
+btrfs/038 3s ...  2s
+btrfs/041 4s ...  3s
+btrfs/062 39s ...  35s
+btrfs/063 22s ...  19s
+btrfs/067 37s ...  35s
+btrfs/068 13s ...  12s
+btrfs/070       [not run] btrfs and this test needs 5 or more disks in SCRATCH_DEV_POOL
+btrfs/071       [not run] btrfs and this test needs 5 or more disks in SCRATCH_DEV_POOL
+btrfs/072 39s ...  36s
+btrfs/073 21s ...  19s
+btrfs/074 37s ...  37s
+btrfs/076 4s ...  3s
+btrfs/103 4s ...  3s
+btrfs/106 3s ...  2s
+btrfs/109 4s ...  3s
+btrfs/113 4s ...  3s
+btrfs/138 49s ... 
+
+Here the VM freezes indefinetdly :-(
+I have to reset it, no other way left...
