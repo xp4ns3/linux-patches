@@ -1,0 +1,13 @@
+umount /mnt/test
+losetup -D
+mkfs.btrfs -f ~xp4ns3/disks/test.img
+mkfs.btrfs -f ~xp4ns3/disks/scratch1.img
+mkfs.btrfs -f ~xp4ns3/disks/scratch2.img
+mkfs.btrfs -f ~xp4ns3/disks/scratch3.img
+mkfs.btrfs -f ~xp4ns3/disks/scratch4.img
+losetup /dev/loop0 ~xp4ns3/disks/test.img
+losetup /dev/loop1 ~xp4ns3/disks/scratch1.img
+losetup /dev/loop2 ~xp4ns3/disks/scratch2.img
+losetup /dev/loop3 ~xp4ns3/disks/scratch3.img
+losetup /dev/loop4 ~xp4ns3/disks/scratch4.img
+mount /dev/loop0 /mnt/test/
