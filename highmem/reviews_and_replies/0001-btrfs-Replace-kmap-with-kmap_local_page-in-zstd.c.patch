@@ -107,12 +107,14 @@ index 0fe31a6f6e68..fda034793d5e 100644
  		}
 +		workspace->in_buf.src = NULL;
 
-Why is (in_buf) set to null?
+> Why is (in_buf) set to null?
 
-Ira
+> Ira
 
 Sorry, I made a bit of confusion. Probably I was thinking about double
 unmapping in "out". However, this cannot happen. I'll delete this line.
+
+Thanks,
 
 Fabio
 
