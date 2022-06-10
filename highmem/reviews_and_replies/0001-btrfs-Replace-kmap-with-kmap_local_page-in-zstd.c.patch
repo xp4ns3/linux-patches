@@ -111,10 +111,20 @@ Why is (in_buf) set to null?
 
 Ira
 
+Because, if "out_page" == NULL", code jumps to the "out" label.
+If non NULL, workspace->out_buf.dst would be unmapped for the second
+time.
+
  		out_page = alloc_page(GFP_NOFS);
  		if (out_page == NULL) {
+
+^^^ The above-mentioned test is here ^^^
+
  			ret = -ENOMEM;
  			goto out;
+
+^^^ Here it is the jump ^^^
+
  		}
  		pages[nr_pages++] = out_page;
 -		workspace->out_buf.dst = kmap(out_page);
@@ -130,6 +140,15 @@ Ira
 -		kunmap(in_page);
 +	if (workspace->out_buf.dst)
 +		kunmap_local(workspace->out_buf.dst);
+
+^^^ Here it is that said double un-mapping ^^^
+
+Am I overlooking something?
+
+Thanks,
+
+Fabio
+
 +	if (workspace->in_buf.src) {
 +		kunmap_local(workspace->in_buf.src);
  		put_page(in_page);
