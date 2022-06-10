@@ -62,6 +62,12 @@ index 767a0c6c9694..85c45f380982 100644
  					memcpy(workspace->buf + i * PAGE_SIZE,
  					       data_in, PAGE_SIZE);
  					start += PAGE_SIZE;
+
+	[after looking below]
+
+Ok after looking below it may be best to do the unmap here and set data_in =
+NULL;  And only handle the remap if strm.next_in is using the mapped address.
+
  				}
  				workspace->strm.next_in = workspace->buf;
  			} else {
@@ -85,6 +91,14 @@ index 767a0c6c9694..85c45f380982 100644
 -			kunmap(out_page);
 +			kunmap_local(data_in);
 +			put_page(in_page);
+
+We don't want to put the page here.
+
+put_page() releases a reference on the page that find_get_page() took.  If you
+release it the page in the page cache may be going away.
+
+All we need to do is unmap/map the page.  Keep the reference for it.
+
 +
 +			kunmap_local(cpage_out);
  			if (nr_pages == nr_dest_pages) {
@@ -99,8 +113,23 @@ index 767a0c6c9694..85c45f380982 100644
 +			cpage_out = kmap_local_page(out_page);
 +
 +			in_page = find_get_page(mapping, start >> PAGE_SHIFT);
+
+Ah well...  Ok this may work.
+
 +			data_in = kmap_local_page(in_page);
 +			workspace->strm.next_in = data_in;
+
+Oh no it won't...  See how strm.next_in is sometimes set to workspace->buf vs
+data_in above?  I did not catch this detail when I was looking before.  This
+will have to be accounted for in the remap...
+
+	[See above...]
+
+I think this is probalby working some of the time and not others.  This may be
+why test 138 hangs.  Not sure.  You could put in some debug prints comparing
+workspace->strm.next_in to workspace->buf...  Better to simply compare them
+then put in a print if they don't seem correct.
+
 +			workspace->strm.avail_in = min(bytes_left,
 +						       (unsigned long)workspace->buf_size);
 +
@@ -132,6 +161,13 @@ index 767a0c6c9694..85c45f380982 100644
 +			workspace->strm.next_in = data_in;
 +			workspace->strm.avail_in = min(bytes_left,
 +						       (unsigned long)workspace->buf_size);
+
+I think there is the potential for the same issue here.
+
+:-(
+
+Ira
+
 +
  			pages[nr_pages] = out_page;
  			nr_pages++;
