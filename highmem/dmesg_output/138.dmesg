@@ -1,23 +1,24 @@
-[ 7087.670320] run fstests btrfs/138 at 2022-06-07 09:07:13
-[ 7087.855972] BTRFS info (device loop0): flagging fs with big metadata feature
-[ 7087.855975] BTRFS info (device loop0): using free space tree
-[ 7087.855976] BTRFS info (device loop0): has skinny extents
-[ 7087.998550] BTRFS: device fsid f05cc339-df28-4917-a409-f4d5d4f147e7 devid 1 transid 6 /dev/loop1 scanned by mkfs.btrfs (25383)
-[ 7088.015717] BTRFS info (device loop1): flagging fs with big metadata feature
-[ 7088.015720] BTRFS info (device loop1): using free space tree
-[ 7088.015721] BTRFS info (device loop1): has skinny extents
-[ 7088.017766] BTRFS info (device loop1): checking UUID tree
-[ 7124.628434] BTRFS info (device loop1): flagging fs with big metadata feature
-[ 7124.628438] BTRFS info (device loop1): using free space tree
-[ 7124.628439] BTRFS info (device loop1): has skinny extents
-[ 7124.649389] BTRFS info (device loop1): setting incompat feature flag for COMPRESS_LZO (0x8)
-[ 7129.157853] BTRFS info (device loop1): flagging fs with big metadata feature
-[ 7129.157858] BTRFS info (device loop1): using free space tree
-[ 7129.157859] BTRFS info (device loop1): has skinny extents
-[ 7129.181749] BTRFS info (device loop1): setting incompat feature flag for COMPRESS_ZSTD (0x10)
-[ 7134.348385] BTRFS info (device loop1): flagging fs with big metadata feature
-[ 7134.348389] BTRFS info (device loop1): using free space tree
-[ 7134.348389] BTRFS info (device loop1): has skinny extents
-[ 7134.513729] BTRFS info (device loop1): flagging fs with big metadata feature
-[ 7134.513732] BTRFS info (device loop1): using free space tree
-[ 7134.513733] BTRFS info (device loop1): has skinny extents
+tweed32:/usr/lib/xfstests # cat results/btrfs/138.dmesg 
+[ 1286.929283] run fstests btrfs/138 at 2022-06-10 17:21:30
+[ 1287.090289] BTRFS info (device loop0): flagging fs with big metadata feature
+[ 1287.090292] BTRFS info (device loop0): using free space tree
+[ 1287.090293] BTRFS info (device loop0): has skinny extents
+[ 1287.215036] BTRFS: device fsid 06e21efe-2454-4d0c-ab80-f226320e1544 devid 1 transid 6 /dev/loop1 scanned by mkfs.btrfs (19573)
+[ 1287.226730] BTRFS info (device loop1): flagging fs with big metadata feature
+[ 1287.226733] BTRFS info (device loop1): using free space tree
+[ 1287.226735] BTRFS info (device loop1): has skinny extents
+[ 1287.228967] BTRFS info (device loop1): checking UUID tree
+[ 1321.763502] BTRFS info (device loop1): flagging fs with big metadata feature
+[ 1321.763506] BTRFS info (device loop1): using free space tree
+[ 1321.763506] BTRFS info (device loop1): has skinny extents
+[ 1321.779751] BTRFS info (device loop1): setting incompat feature flag for COMPRESS_LZO (0x8)
+[ 1325.730614] BTRFS info (device loop1): flagging fs with big metadata feature
+[ 1325.730617] BTRFS info (device loop1): using free space tree
+[ 1325.730618] BTRFS info (device loop1): has skinny extents
+[ 1325.748761] BTRFS info (device loop1): setting incompat feature flag for COMPRESS_ZSTD (0x10)
+[ 1330.663239] BTRFS info (device loop1): flagging fs with big metadata feature
+[ 1330.663243] BTRFS info (device loop1): using free space tree
+[ 1330.663245] BTRFS info (device loop1): has skinny extents
+[ 1330.813468] BTRFS info (device loop1): flagging fs with big metadata feature
+[ 1330.813471] BTRFS info (device loop1): using free space tree
+[ 1330.813472] BTRFS info (device loop1): has skinny extents

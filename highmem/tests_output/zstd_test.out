@@ -1,0 +1,44 @@
+tweed32:/usr/lib/xfstests # ./check -g compress
+FSTYP         -- btrfs
+PLATFORM      -- Linux/i686 tweed32 5.19.0-rc1-vanilla-debug+ #20 SMP PREEMPT_DYNAMIC Fri Jun 10 14:15:51 CEST 2022
+MKFS_OPTIONS  -- /dev/loop1
+MOUNT_OPTIONS -- /dev/loop1 /mnt/scratch
+
+btrfs/024 0s ...  0s
+btrfs/026 3s ...  3s
+btrfs/037 1s ...  1s
+btrfs/038 0s ...  1s
+btrfs/041 1s ...  0s
+btrfs/062 34s ...  34s
+btrfs/063 18s ...  18s
+btrfs/067 32s ...  30s
+btrfs/068 10s ...  10s
+btrfs/070       [not run] btrfs and this test needs 5 or more disks in SCRATCH_DEV_POOL
+btrfs/071       [not run] btrfs and this test needs 5 or more disks in SCRATCH_DEV_POOL
+btrfs/072 34s ...  34s
+btrfs/073 13s ...  17s
+btrfs/074 35s ...  33s
+btrfs/076 0s ...  1s
+btrfs/103 1s ...  0s
+btrfs/106 0s ...  1s
+btrfs/109 0s ...  0s
+btrfs/113 1s ...  0s
+btrfs/138 43s ... - output mismatch (see /usr/lib/xfstests/results//btrfs/138.out.bad)
+    --- tests/btrfs/138.out     2022-05-11 04:02:17.000000000 +0200
+    +++ /usr/lib/xfstests/results//btrfs/138.out.bad    2022-06-10 17:22:14.419547768 +0200
+    @@ -1,2 +1,3 @@
+     QA output created by 138
+    +Checksum mismatch for zstd (expected 4c99665eb952380c4c2c748a78be4f8a, got d41d8cd98f00b204e9800998ecf8427e)
+     Silence is golden
+    ...
+    (Run 'diff -u /usr/lib/xfstests/tests/btrfs/138.out /usr/lib/xfstests/results//btrfs/138.out.bad'  to see the entire diff)
+btrfs/149 1s ...  1s
+btrfs/183 0s ...  1s
+btrfs/205 2s ...  1s
+btrfs/234 2s ...  2s
+btrfs/246 0s ...  1s
+btrfs/251 1s ...  1s
+Ran: btrfs/024 btrfs/026 btrfs/037 btrfs/038 btrfs/041 btrfs/062 btrfs/063 btrfs/067 btrfs/068 btrfs/070 btrfs/071 btrfs/072 btrfs/073 btrfs/074 btrfs/076 btrfs/103 btrfs/106 btrfs/109 btrfs/113 btrfs/138 btrfs/149 btrfs/183 btrfs/205 btrfs/234 btrfs/246 btrfs/251
+Not run: btrfs/070 btrfs/071
+Failures: btrfs/138
+Failed 1 of 26 tests

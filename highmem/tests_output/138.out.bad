@@ -1,0 +1,4 @@
+tweed32:/usr/lib/xfstests # cat results/btrfs/138.out.bad 
+QA output created by 138
+Checksum mismatch for zstd (expected 4c99665eb952380c4c2c748a78be4f8a, got d41d8cd98f00b204e9800998ecf8427e)
+Silence is golden
