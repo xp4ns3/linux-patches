@@ -1,0 +1,26 @@
+1) Fabio pushes Patches directly to ready_to_go if and only if they he feels
+   that there is no need of private discussions / reviews. 
+
+2) Whenever patches need private discussion before going to Maintainers and
+   lists, Fabio pushes these patches to asking_for_reviews.
+
+3) Ira may move patches from asking_for_reviews to ready_to_go with no need
+   of further notice whener he feels they are ready to go public. Otherwise
+   he may move them to reviews_and_replies.
+
+4) reviews_and_replies is where further changes to patches are discussed
+   in line and where questions and replies should remain until Fabio pushes
+   new versions either to ready_to_go or (again) to asking_for_reviews.
+   
+5) If new versions cannot yet go to ready_to_go, Ira copies them from
+   asking_for_reviews and paste into reviews_and_replies, and write
+   comments in line.
+   
+6) All highmem related patches which are ready for submissions stay forever
+   in ready_to_go. The purpose is keeping log of completed tasks. For the
+   same reason this directory will soon be populated also with all the
+   patches which have already been submitted publicly before 2022-06-10.
+
+7) Fabio will update contents in dmesg_output, xfstests_config, tests_output
+   compiler_output, whenever he needs to share information which may be
+   relevant for private discussions / reviews.
