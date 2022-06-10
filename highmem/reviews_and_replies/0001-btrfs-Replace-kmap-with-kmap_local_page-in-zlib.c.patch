@@ -65,8 +65,11 @@ index 767a0c6c9694..85c45f380982 100644
 
 	[after looking below]
 
-Ok after looking below it may be best to do the unmap here and set data_in =
-NULL;  And only handle the remap if strm.next_in is using the mapped address.
+> Ok after looking below it may be best to do the unmap here and set data_in =
+> NULL;  And only handle the remap if strm.next_in is using the mapped address.
+
+Not sure to understand this by only looking at this patch.
+I'll need to read again the entire function.
 
  				}
  				workspace->strm.next_in = workspace->buf;
@@ -92,12 +95,14 @@ NULL;  And only handle the remap if strm.next_in is using the mapped address.
 +			kunmap_local(data_in);
 +			put_page(in_page);
 
-We don't want to put the page here.
+> We don't want to put the page here.
 
-put_page() releases a reference on the page that find_get_page() took.  If you
-release it the page in the page cache may be going away.
+> put_page() releases a reference on the page that find_get_page() took.  If you
+> release it the page in the page cache may be going away.
 
-All we need to do is unmap/map the page.  Keep the reference for it.
+I know this, page will be acquired again later
+
+> All we need to do is unmap/map the page.  Keep the reference for it.
 
 +
 +			kunmap_local(cpage_out);
@@ -114,21 +119,30 @@ All we need to do is unmap/map the page.  Keep the reference for it.
 +
 +			in_page = find_get_page(mapping, start >> PAGE_SHIFT);
 
-Ah well...  Ok this may work.
+> Ah well...  Ok this may work.
+
+I think so.
 
 +			data_in = kmap_local_page(in_page);
 +			workspace->strm.next_in = data_in;
 
-Oh no it won't...  See how strm.next_in is sometimes set to workspace->buf vs
-data_in above?  I did not catch this detail when I was looking before.  This
-will have to be accounted for in the remap...
+> Oh no it won't...  See how strm.next_in is sometimes set to workspace->buf vs
+> data_in above?  I did not catch this detail when I was looking before.
+
+I did not note it either.
+
+> This will have to be accounted for in the remap...
+
+Yes, absolutely.
 
 	[See above...]
 
-I think this is probalby working some of the time and not others.  This may be
-why test 138 hangs.  Not sure.  You could put in some debug prints comparing
-workspace->strm.next_in to workspace->buf...  Better to simply compare them
-then put in a print if they don't seem correct.
+> I think this is probalby working some of the time and not others.  This may be
+> why test 138 hangs.  Not sure.  You could put in some debug prints comparing
+> workspace->strm.next_in to workspace->buf...  Better to simply compare them
+> then put in a print if they don't seem correct.
+
+Let me think a bit more on this... I'm not sure to understand where and how to compare these fields :-(
 
 +			workspace->strm.avail_in = min(bytes_left,
 +						       (unsigned long)workspace->buf_size);
@@ -162,11 +176,20 @@ then put in a print if they don't seem correct.
 +			workspace->strm.avail_in = min(bytes_left,
 +						       (unsigned long)workspace->buf_size);
 
-I think there is the potential for the same issue here.
+> I think there is the potential for the same issue here.
 
-:-(
+> :-(
 
-Ira
+Yes it seems the very same situation.
+This code is a bit too complex for my current knowledge and skills :-(
+I'm not worried of complex things just because they are complex...
+I'm only worried about the time it takes to figure out how to address these kinds of issues. 
+
+Thanks for your review,
+
+Fabio
+
+> Ira
 
 +
  			pages[nr_pages] = out_page;
