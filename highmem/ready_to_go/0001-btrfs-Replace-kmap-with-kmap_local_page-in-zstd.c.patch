@@ -1,4 +1,4 @@
-From f854083e08de73bea864b32b9e80af464cd71825 Mon Sep 17 00:00:00 2001
+From 2c0aa5088e74cdad9af416b5ebd0fc00c0793a9d Mon Sep 17 00:00:00 2001
 From: "Fabio M. De Francesco" <fmdefrancesco@gmail.com>
 Date: Tue, 31 May 2022 16:53:35 +0200
 Subject: [PATCH] btrfs: Replace kmap() with kmap_local_page() in zstd.c
@@ -15,14 +15,15 @@ local mapping / unmapping ordering rules.
 Tested with xfstests on QEMU + KVM 32 bits VM with 4GB of RAM and
 HIGHMEM64G enabled.
 
+Cc: Filipe Manana <fdmanana@kernel.org>
 Suggested-by: Ira Weiny <ira.weiny@intel.com>
 Signed-off-by: Fabio M. De Francesco <fmdefrancesco@gmail.com>
 ---
- fs/btrfs/zstd.c | 41 ++++++++++++++++++++++-------------------
- 1 file changed, 22 insertions(+), 19 deletions(-)
+ fs/btrfs/zstd.c | 42 +++++++++++++++++++++++-------------------
+ 1 file changed, 23 insertions(+), 19 deletions(-)
 
 diff --git a/fs/btrfs/zstd.c b/fs/btrfs/zstd.c
-index 0fe31a6f6e68..ccfc098319fd 100644
+index 0fe31a6f6e68..4d50eb3edce5 100644
 --- a/fs/btrfs/zstd.c
 +++ b/fs/btrfs/zstd.c
 @@ -391,6 +391,8 @@ int zstd_compress_pages(struct list_head *ws, struct address_space *mapping,
@@ -140,12 +141,13 @@ index 0fe31a6f6e68..ccfc098319fd 100644
  	workspace->in_buf.pos = 0;
  	workspace->in_buf.size = min_t(size_t, srclen, PAGE_SIZE);
  
-@@ -603,14 +606,14 @@ int zstd_decompress_bio(struct list_head *ws, struct compressed_bio *cb)
+@@ -603,14 +606,15 @@ int zstd_decompress_bio(struct list_head *ws, struct compressed_bio *cb)
  			break;
  
  		if (workspace->in_buf.pos == workspace->in_buf.size) {
 -			kunmap(pages_in[page_in_index++]);
 +			kunmap_local((void *)workspace->in_buf.src);
++			page_in_index++;
  			if (page_in_index >= total_pages_in) {
  				workspace->in_buf.src = NULL;
  				ret = -EIO;
@@ -157,7 +159,7 @@ index 0fe31a6f6e68..ccfc098319fd 100644
  			workspace->in_buf.pos = 0;
  			workspace->in_buf.size = min_t(size_t, srclen, PAGE_SIZE);
  		}
-@@ -619,7 +622,7 @@ int zstd_decompress_bio(struct list_head *ws, struct compressed_bio *cb)
+@@ -619,7 +623,7 @@ int zstd_decompress_bio(struct list_head *ws, struct compressed_bio *cb)
  	zero_fill_bio(cb->orig_bio);
  done:
  	if (workspace->in_buf.src)

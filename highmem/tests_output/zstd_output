@@ -1,0 +1,35 @@
+tweed32:/usr/lib/xfstests # ./check -g compress
+FSTYP         -- btrfs
+PLATFORM      -- Linux/i686 tweed32 5.19.0-rc1-vanilla-debug+ #22 SMP PREEMPT_DYNAMIC Sat Jun 11 14:31:39 CEST 2022
+MKFS_OPTIONS  -- /dev/loop1
+MOUNT_OPTIONS -- /dev/loop1 /mnt/scratch
+
+btrfs/024 1s ...  0s
+btrfs/026 3s ...  3s
+btrfs/037 1s ...  1s
+btrfs/038 1s ...  0s
+btrfs/041 0s ...  1s
+btrfs/062 34s ...  35s
+btrfs/063 18s ...  18s
+btrfs/067 33s ...  32s
+btrfs/068 10s ...  10s
+btrfs/070       [not run] btrfs and this test needs 5 or more disks in SCRATCH_DEV_POOL
+btrfs/071       [not run] btrfs and this test needs 5 or more disks in SCRATCH_DEV_POOL
+btrfs/072 33s ...  33s
+btrfs/073 17s ...  15s
+btrfs/074 36s ...  32s
+btrfs/076 0s ...  0s
+btrfs/103 1s ...  1s
+btrfs/106 1s ...  1s
+btrfs/109 1s ...  0s
+btrfs/113 0s ...  1s
+btrfs/138 43s ...  46s
+btrfs/149 1s ...  1s
+btrfs/183 1s ...  1s
+btrfs/205 1s ...  1s
+btrfs/234 3s ...  3s
+btrfs/246 0s ...  0s
+btrfs/251 1s ...  1s
+Ran: btrfs/024 btrfs/026 btrfs/037 btrfs/038 btrfs/041 btrfs/062 btrfs/063 btrfs/067 btrfs/068 btrfs/070 btrfs/071 btrfs/072 btrfs/073 btrfs/074 btrfs/076 btrfs/103 btrfs/106 btrfs/109 btrfs/113 btrfs/138 btrfs/149 btrfs/183 btrfs/205 btrfs/234 btrfs/246 btrfs/251
+Not run: btrfs/070 btrfs/071
+Passed all 26 tests 
