@@ -1,0 +1,214 @@
+From a6a02a4553c0dde593c2b51334265f7b96011bd1 Mon Sep 17 00:00:00 2001
+From: "Fabio M. De Francesco" <fmdefrancesco@gmail.com>
+Date: Sun, 12 Jun 2022 12:42:00 +0200
+Subject: [PATCH] btrfs: Replace kmap() with kmap_local_page() in zlib.c
+
+The use of kmap() is being deprecated in favor of kmap_local_page(). With
+kmap_local_page(), the mapping is per thread, CPU local and not globally
+visible.
+
+Therefore, use kmap_local_page() / kunmap_local() in zlib.c because in
+this file the mappings are per thread and are not visible in other
+contexts; meanwhile refactor zlib_compress_pages() to comply with nested
+local mapping / unmapping ordering rules.
+
+Tested with xfstests on QEMU + KVM 32 bits VM with 4GB of RAM and
+HIGHMEM64G enabled.
+
+Suggested-by: Ira Weiny <ira.weiny@intel.com>
+Signed-off-by: Fabio M. De Francesco <fmdefrancesco@gmail.com>
+---
+ fs/btrfs/zlib.c | 76 +++++++++++++++++++++++++++++++++----------------
+ 1 file changed, 51 insertions(+), 25 deletions(-)
+
+diff --git a/fs/btrfs/zlib.c b/fs/btrfs/zlib.c
+index 767a0c6c9694..f5e2e96bf736 100644
+--- a/fs/btrfs/zlib.c
++++ b/fs/btrfs/zlib.c
+@@ -97,8 +97,8 @@ int zlib_compress_pages(struct list_head *ws, struct address_space *mapping,
+ {
+ 	struct workspace *workspace = list_entry(ws, struct workspace, list);
+ 	int ret;
+-	char *data_in;
+-	char *cpage_out;
++	char *data_in = NULL;
++	char *cpage_out = NULL;
+ 	int nr_pages = 0;
+ 	struct page *in_page = NULL;
+ 	struct page *out_page = NULL;
+@@ -126,7 +126,7 @@ int zlib_compress_pages(struct list_head *ws, struct address_space *mapping,
+ 		ret = -ENOMEM;
+ 		goto out;
+ 	}
+-	cpage_out = kmap(out_page);
++	cpage_out = kmap_local_page(out_page);
+ 	pages[0] = out_page;
+ 	nr_pages = 1;
+ 
+@@ -148,26 +148,26 @@ int zlib_compress_pages(struct list_head *ws, struct address_space *mapping,
+ 				int i;
+ 
+ 				for (i = 0; i < in_buf_pages; i++) {
+-					if (in_page) {
+-						kunmap(in_page);
++					if (data_in) {
++						kunmap_local(data_in);
+ 						put_page(in_page);
+ 					}
+ 					in_page = find_get_page(mapping,
+ 								start >> PAGE_SHIFT);
+-					data_in = kmap(in_page);
++					data_in = kmap_local_page(in_page);
+ 					memcpy(workspace->buf + i * PAGE_SIZE,
+ 					       data_in, PAGE_SIZE);
+ 					start += PAGE_SIZE;
+ 				}
+ 				workspace->strm.next_in = workspace->buf;
+ 			} else {
+-				if (in_page) {
+-					kunmap(in_page);
++				if (data_in) {
++					kunmap_local(data_in);
+ 					put_page(in_page);
+ 				}
+ 				in_page = find_get_page(mapping,
+ 							start >> PAGE_SHIFT);
+-				data_in = kmap(in_page);
++				data_in = kmap_local_page(in_page);
+ 				start += PAGE_SIZE;
+ 				workspace->strm.next_in = data_in;
+ 			}
+@@ -196,9 +196,14 @@ int zlib_compress_pages(struct list_head *ws, struct address_space *mapping,
+ 		 * the stream end if required
+ 		 */
+ 		if (workspace->strm.avail_out == 0) {
+-			kunmap(out_page);
++			kunmap_local(data_in);
++			data_in = NULL;
++			put_page(in_page);
++
++			kunmap_local(cpage_out);
+ 			if (nr_pages == nr_dest_pages) {
+-				out_page = NULL;
++				cpage_out = NULL;
++				put_page(out_page);
+ 				ret = -E2BIG;
+ 				goto out;
+ 			}
+@@ -207,7 +212,15 @@ int zlib_compress_pages(struct list_head *ws, struct address_space *mapping,
+ 				ret = -ENOMEM;
+ 				goto out;
+ 			}
+-			cpage_out = kmap(out_page);
++
++			cpage_out = kmap_local_page(out_page);
++
++			in_page = find_get_page(mapping, start >> PAGE_SHIFT);
++			data_in = kmap_local_page(in_page);
++			workspace->strm.next_in = data_in;
++			workspace->strm.avail_in = min(bytes_left,
++						       (unsigned long)workspace->buf_size);
++
+ 			pages[nr_pages] = out_page;
+ 			nr_pages++;
+ 			workspace->strm.avail_out = PAGE_SIZE;
+@@ -233,10 +246,15 @@ int zlib_compress_pages(struct list_head *ws, struct address_space *mapping,
+ 			ret = -EIO;
+ 			goto out;
+ 		} else if (workspace->strm.avail_out == 0) {
++			kunmap_local(data_in);
++			data_in = NULL;
++			put_page(in_page);
++
+ 			/* get another page for the stream end */
+-			kunmap(out_page);
++			kunmap_local(cpage_out);
+ 			if (nr_pages == nr_dest_pages) {
+-				out_page = NULL;
++				cpage_out = NULL;
++				put_page(out_page);
+ 				ret = -E2BIG;
+ 				goto out;
+ 			}
+@@ -245,7 +263,14 @@ int zlib_compress_pages(struct list_head *ws, struct address_space *mapping,
+ 				ret = -ENOMEM;
+ 				goto out;
+ 			}
+-			cpage_out = kmap(out_page);
++			cpage_out = kmap_local_page(out_page);
++
++			in_page = find_get_page(mapping, start >> PAGE_SHIFT);
++			data_in = kmap_local_page(in_page);
++			workspace->strm.next_in = data_in;
++			workspace->strm.avail_in = min(bytes_left,
++						       (unsigned long)workspace->buf_size);
++
+ 			pages[nr_pages] = out_page;
+ 			nr_pages++;
+ 			workspace->strm.avail_out = PAGE_SIZE;
+@@ -264,13 +289,13 @@ int zlib_compress_pages(struct list_head *ws, struct address_space *mapping,
+ 	*total_in = workspace->strm.total_in;
+ out:
+ 	*out_pages = nr_pages;
+-	if (out_page)
+-		kunmap(out_page);
+-
+-	if (in_page) {
+-		kunmap(in_page);
++	if (data_in) {
++		kunmap_local(data_in);
+ 		put_page(in_page);
+ 	}
++	if (cpage_out)
++		kunmap_local(cpage_out);
++
+ 	return ret;
+ }
+ 
+@@ -287,7 +312,7 @@ int zlib_decompress_bio(struct list_head *ws, struct compressed_bio *cb)
+ 	unsigned long buf_start;
+ 	struct page **pages_in = cb->compressed_pages;
+ 
+-	data_in = kmap(pages_in[page_in_index]);
++	data_in = kmap_local_page(pages_in[page_in_index]);
+ 	workspace->strm.next_in = data_in;
+ 	workspace->strm.avail_in = min_t(size_t, srclen, PAGE_SIZE);
+ 	workspace->strm.total_in = 0;
+@@ -309,7 +334,7 @@ int zlib_decompress_bio(struct list_head *ws, struct compressed_bio *cb)
+ 
+ 	if (Z_OK != zlib_inflateInit2(&workspace->strm, wbits)) {
+ 		pr_warn("BTRFS: inflateInit failed\n");
+-		kunmap(pages_in[page_in_index]);
++		kunmap_local(data_in);
+ 		return -EIO;
+ 	}
+ 	while (workspace->strm.total_in < srclen) {
+@@ -336,13 +361,14 @@ int zlib_decompress_bio(struct list_head *ws, struct compressed_bio *cb)
+ 
+ 		if (workspace->strm.avail_in == 0) {
+ 			unsigned long tmp;
+-			kunmap(pages_in[page_in_index]);
++
++			kunmap_local(data_in);
+ 			page_in_index++;
+ 			if (page_in_index >= total_pages_in) {
+ 				data_in = NULL;
+ 				break;
+ 			}
+-			data_in = kmap(pages_in[page_in_index]);
++			data_in = kmap_local_page(pages_in[page_in_index]);
+ 			workspace->strm.next_in = data_in;
+ 			tmp = srclen - workspace->strm.total_in;
+ 			workspace->strm.avail_in = min(tmp, PAGE_SIZE);
+@@ -355,7 +381,7 @@ int zlib_decompress_bio(struct list_head *ws, struct compressed_bio *cb)
+ done:
+ 	zlib_inflateEnd(&workspace->strm);
+ 	if (data_in)
+-		kunmap(pages_in[page_in_index]);
++		kunmap_local(data_in);
+ 	if (!ret)
+ 		zero_fill_bio(cb->orig_bio);
+ 	return ret;
+-- 
+2.36.1
+
