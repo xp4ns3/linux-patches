@@ -1,4 +1,4 @@
-From ae7143c0d800466f1f3f0f47486d6522eef5135f Mon Sep 17 00:00:00 2001
+From 7c95e5c3b5c304332be3210b7e2f3240000e9c79 Mon Sep 17 00:00:00 2001
 From: "Fabio M. De Francesco" <fmdefrancesco@gmail.com>
 Date: Sun, 12 Jun 2022 12:42:00 +0200
 Subject: [PATCH] btrfs: Replace kmap() with kmap_local_page() in zlib.c
@@ -22,7 +22,7 @@ Signed-off-by: Fabio M. De Francesco <fmdefrancesco@gmail.com>
  1 file changed, 55 insertions(+), 25 deletions(-)
 
 diff --git a/fs/btrfs/zlib.c b/fs/btrfs/zlib.c
-index 767a0c6c9694..4c213e1a6591 100644
+index 767a0c6c9694..ca0ed7546144 100644
 --- a/fs/btrfs/zlib.c
 +++ b/fs/btrfs/zlib.c
 @@ -97,8 +97,8 @@ int zlib_compress_pages(struct list_head *ws, struct address_space *mapping,
@@ -93,7 +93,7 @@ index 767a0c6c9694..4c213e1a6591 100644
 +				cpage_out = NULL;
 +				put_page(out_page);
 +				/* pages[nr_pages] = NULL; */
-+				/* nr_pages--; */
++				nr_pages--;
  				ret = -E2BIG;
  				goto out;
  			}
@@ -130,7 +130,7 @@ index 767a0c6c9694..4c213e1a6591 100644
 +				cpage_out = NULL;
 +				put_page(out_page);
 +				/* pages[nr_pages] = NULL; */
-+				/* nr_pages--; */
++				nr_pages--; 
  				ret = -E2BIG;
  				goto out;
  			}
