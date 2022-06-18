@@ -1,0 +1,97 @@
+From 658b75b7f79d3d53d187679a99c10945e821d67f Mon Sep 17 00:00:00 2001
+From: "Fabio M. De Francesco" <fmdefrancesco@gmail.com>
+Date: Sat, 18 Jun 2022 10:29:27 +0200
+Subject: [PATCH] btrfs: Convert zlib_compress_pages() to use kmap_local_page()
+
+The use of kmap() is being deprecated in favor of kmap_local_page(). With
+kmap_local_page(), the mapping is per thread, CPU local and not globally
+visible.
+
+Therefore, use kmap_local_page() / kunmap_local() in zlib_compress_pages()
+because in this function the mappings are per thread and are not visible
+in other contexts.
+
+Tested with xfstests on QEMU + KVM 32-bit VM with 4GB of RAM and
+HIGHMEM64G enabled. This patch passes 26/26 tests of group "compress".
+
+Cc: Qu Wenruo <wqu@suse.com>
+Suggested-by: Ira Weiny <ira.weiny@intel.com>
+Signed-off-by: Fabio M. De Francesco <fmdefrancesco@gmail.com>
+---
+
+This patch builds only on top of
+"[PATCH] btrfs: zlib: refactor how we prepare the input buffer" by Qu Wenruo".
+https://lore.kernel.org/linux-btrfs/d0bfc791b5509df7b9ad44e41ada197d1b3149b3.1655519730.git.wqu@suse.com/
+
+ fs/btrfs/zlib.c | 18 +++++++++---------
+ 1 file changed, 9 insertions(+), 9 deletions(-)
+
+diff --git a/fs/btrfs/zlib.c b/fs/btrfs/zlib.c
+index 966e17cea981..4496dd30bd71 100644
+--- a/fs/btrfs/zlib.c
++++ b/fs/btrfs/zlib.c
+@@ -160,7 +160,7 @@ int zlib_compress_pages(struct list_head *ws, struct address_space *mapping,
+ 		ret = -ENOMEM;
+ 		goto out;
+ 	}
+-	cpage_out = kmap(out_page);
++	cpage_out = kmap_local_page(out_page);
+ 	pages[0] = out_page;
+ 	nr_pages = 1;
+ 
+@@ -198,9 +198,9 @@ int zlib_compress_pages(struct list_head *ws, struct address_space *mapping,
+ 		 * the stream end if required
+ 		 */
+ 		if (workspace->strm.avail_out == 0) {
+-			kunmap(out_page);
++			kunmap_local(cpage_out);
+ 			if (nr_pages == nr_dest_pages) {
+-				out_page = NULL;
++				cpage_out = NULL;
+ 				ret = -E2BIG;
+ 				goto out;
+ 			}
+@@ -209,7 +209,7 @@ int zlib_compress_pages(struct list_head *ws, struct address_space *mapping,
+ 				ret = -ENOMEM;
+ 				goto out;
+ 			}
+-			cpage_out = kmap(out_page);
++			cpage_out = kmap_local_page(out_page);
+ 			pages[nr_pages] = out_page;
+ 			nr_pages++;
+ 			workspace->strm.avail_out = PAGE_SIZE;
+@@ -236,9 +236,9 @@ int zlib_compress_pages(struct list_head *ws, struct address_space *mapping,
+ 			goto out;
+ 		} else if (workspace->strm.avail_out == 0) {
+ 			/* get another page for the stream end */
+-			kunmap(out_page);
++			kunmap_local(cpage_out);
+ 			if (nr_pages == nr_dest_pages) {
+-				out_page = NULL;
++				cpage_out = NULL;
+ 				ret = -E2BIG;
+ 				goto out;
+ 			}
+@@ -247,7 +247,7 @@ int zlib_compress_pages(struct list_head *ws, struct address_space *mapping,
+ 				ret = -ENOMEM;
+ 				goto out;
+ 			}
+-			cpage_out = kmap(out_page);
++			cpage_out = kmap_local_page(out_page);
+ 			pages[nr_pages] = out_page;
+ 			nr_pages++;
+ 			workspace->strm.avail_out = PAGE_SIZE;
+@@ -266,8 +266,8 @@ int zlib_compress_pages(struct list_head *ws, struct address_space *mapping,
+ 	*total_in = workspace->strm.total_in;
+ out:
+ 	*out_pages = nr_pages;
+-	if (out_page)
+-		kunmap(out_page);
++	if (cpage_out)
++		kunmap_local(cpage_out);
+ 	return ret;
+ }
+ 
+-- 
+2.36.1
+
