@@ -1,0 +1,47 @@
+From 24278b4789d4ca063820d19041739c8e8c4a7ba5 Mon Sep 17 00:00:00 2001
+From: "Fabio M. De Francesco" <fmdefrancesco@gmail.com>
+Date: Thu, 23 Jun 2022 18:05:59 +0200
+Subject: [PATCH] nfs: Replace kmap() with kmap_local_page()
+
+The use of kmap_atomic() is being deprecated in favor of kmap_local_page().
+With kmap_local_page(), the mapping is per thread, CPU local and not
+globally visible. Furthermore, the mapping can be acquired from any context
+(including interrupts).
+
+Therefore, use kmap_local_page() in nfs_do_filldir() because this
+mapping is per thread, CPU local, and not globally visible.
+
+Tested on a QEMU + KVM 32-bits VM with 4GB of RAM and a kernel with
+HIGHMEM64GB enabled.
+
+Suggested-by: Ira Weiny <ira.weiny@intel.com>
+Signed-off-by: Fabio M. De Francesco <fmdefrancesco@gmail.com>
+---
+ fs/nfs/dir.c | 4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
+
+diff --git a/fs/nfs/dir.c b/fs/nfs/dir.c
+index 0c4e8dd6aa96..8b89f10d8899 100644
+--- a/fs/nfs/dir.c
++++ b/fs/nfs/dir.c
+@@ -1084,7 +1084,7 @@ static void nfs_do_filldir(struct nfs_readdir_descriptor *desc,
+ 	struct nfs_cache_array *array;
+ 	unsigned int i;
+ 
+-	array = kmap(desc->page);
++	array = kmap_local_page(desc->page);
+ 	for (i = desc->cache_entry_index; i < array->size; i++) {
+ 		struct nfs_cache_array_entry *ent;
+ 
+@@ -1110,7 +1110,7 @@ static void nfs_do_filldir(struct nfs_readdir_descriptor *desc,
+ 	if (array->page_is_eof)
+ 		desc->eof = !desc->eob;
+ 
+-	kunmap(desc->page);
++	kunmap_local(array);
+ 	dfprintk(DIRCACHE, "NFS: nfs_do_filldir() filling ended @ cookie %llu\n",
+ 			(unsigned long long)desc->dir_cookie);
+ }
+-- 
+2.36.1
+
