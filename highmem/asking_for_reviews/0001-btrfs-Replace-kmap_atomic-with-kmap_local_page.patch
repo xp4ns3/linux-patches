@@ -24,11 +24,10 @@ which are being output without this patch. It apparently seems that these
 changes don't introduce further errors, however I'd like to ask for
 comments before sending a "real" patch.
 
-With this patch, in fs/btrfs there are no longer call sites of kmap() and
-kmap_atomic().
+With this patch, there are no more call sites for kmap() and kmap_atomic()
+in fs/btrfs.
 
-[1] https://lore.kernel.org/linux-btrfs/20220601132545.GM20
-633@twin.jikos.cz/
+[1] https://lore.kernel.org/linux-btrfs/20220601132545.GM20633@twin.jikos.cz/
 
 Suggested-by: Ira Weiny <ira.weiny@intel.com>
 Suggested-by: David Sterba <dsterba@suse.cz>
