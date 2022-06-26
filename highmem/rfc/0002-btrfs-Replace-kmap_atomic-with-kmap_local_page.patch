@@ -1,7 +1,7 @@
-From af5ff440ff3d495361dee6352f87203b0314b3cd Mon Sep 17 00:00:00 2001
+From 63db8272e7622b3c0775ff2afb3785b512784eaa Mon Sep 17 00:00:00 2001
 From: "Fabio M. De Francesco" <fmdefrancesco@gmail.com>
 Date: Tue, 21 Jun 2022 09:11:45 +0200
-Subject: [RFC PATCH] btrfs: Replace kmap_atomic() with kmap_local_page()
+Subject: [PATCH] btrfs: Replace kmap_atomic() with kmap_local_page()
 
 kmap_atomic() is being deprecated in favor of kmap_local_page() where it
 is feasible. With kmap_local_page() mappings are per thread, CPU local,
@@ -24,10 +24,11 @@ which are being output without this patch. It apparently seems that these
 changes don't introduce further errors, however I'd like to ask for
 comments before sending a "real" patch.
 
-With this patch, there are no more call sites for kmap() and kmap_atomic()
-in fs/btrfs.
+With this patch, in fs/btrfs there are no longer call sites of kmap() and
+kmap_atomic().
 
-[1] https://lore.kernel.org/linux-btrfs/20220601132545.GM20633@twin.jikos.cz/
+[1] https://lore.kernel.org/linux-btrfs/20220601132545.GM20
+633@twin.jikos.cz/
 
 Suggested-by: Ira Weiny <ira.weiny@intel.com>
 Suggested-by: David Sterba <dsterba@suse.cz>
