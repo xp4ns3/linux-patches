@@ -54,10 +54,6 @@ index 770c4c6bbaef..b4f44662cda7 100644
 -					if (in_page) {
 -						kunmap(in_page);
 +					if (data_in) {
-
-I don't see how this error would cause a hang forever.  But one thing I notice
-is you will need to set data_in to NULL for the first time through this loop.
-
 +						kunmap_local(data_in);
  						put_page(in_page);
  					}
