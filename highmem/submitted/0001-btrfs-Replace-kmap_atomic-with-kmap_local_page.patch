@@ -1,0 +1,108 @@
+From 8583bff9a87c5bf9b7bca2116c42019045e9fe32 Mon Sep 17 00:00:00 2001
+From: "Fabio M. De Francesco" <fmdefrancesco@gmail.com>
+Date: Tue, 21 Jun 2022 09:11:45 +0200
+Subject: [PATCH] btrfs: Replace kmap_atomic() with kmap_local_page()
+
+kmap_atomic() is being deprecated in favor of kmap_local_page() where it
+is feasible. With kmap_local_page() mappings are per thread, CPU local,
+and not globally visible.
+
+As far as I can see, the kmap_atomic() calls in compression.c and in
+inode.c can be safely converted.
+
+Above all else, David Sterba has confirmed that "The context in
+check_compressed_csum is atomic [...]" and that "kmap_atomic() in inode.c
+[...] also can be replaced by kmap_local_page().".[1]
+
+Therefore, convert all kmap_atomic() calls currently still left in fs/btrfs
+to kmap_local_page().
+
+Tested with xfstests on a QEMU + KVM 32-bits VM with 4GB RAM and booting a
+kernel with HIGHMEM64GB enabled.
+
+[1] https://lore.kernel.org/linux-btrfs/20220601132545.GM20
+633@twin.jikos.cz/
+
+Suggested-by: Ira Weiny <ira.weiny@intel.com>
+Suggested-by: David Sterba <dsterba@suse.cz>
+Signed-off-by: Fabio M. De Francesco <fmdefrancesco@gmail.com>
+---
+
+Tests of groups "quick" and "compress" output several errors largely due
+to memory leaks and shift-out-of-bounds. However, these errors are exactly
+the same which are output without this and other conversions of mine to use
+kmap_local_page(). Therefore, it looks like these changes don't introduce
+regressions.
+
+The previous RFC PATCH can be ignored:
+https://lore.kernel.org/lkml/20220624084215.7287-1-fmdefrancesco@gmail.com/
+
+With this patch, in fs/btrfs there are no longer call sites of kmap() and
+kmap_atomic().
+
+ fs/btrfs/compression.c |  4 ++--
+ fs/btrfs/inode.c       | 12 ++++++------
+ 2 files changed, 8 insertions(+), 8 deletions(-)
+
+diff --git a/fs/btrfs/compression.c b/fs/btrfs/compression.c
+index f4564f32f6d9..b49719ae45b4 100644
+--- a/fs/btrfs/compression.c
++++ b/fs/btrfs/compression.c
+@@ -175,10 +175,10 @@ static int check_compressed_csum(struct btrfs_inode *inode, struct bio *bio,
+ 		/* Hash through the page sector by sector */
+ 		for (pg_offset = 0; pg_offset < bytes_left;
+ 		     pg_offset += sectorsize) {
+-			kaddr = kmap_atomic(page);
++			kaddr = kmap_local_page(page);
+ 			crypto_shash_digest(shash, kaddr + pg_offset,
+ 					    sectorsize, csum);
+-			kunmap_atomic(kaddr);
++			kunmap_local(kaddr);
+ 
+ 			if (memcmp(&csum, cb_sum, csum_size) != 0) {
+ 				btrfs_print_data_csum_error(inode, disk_start,
+diff --git a/fs/btrfs/inode.c b/fs/btrfs/inode.c
+index e921d6c432ac..0a7a621710f6 100644
+--- a/fs/btrfs/inode.c
++++ b/fs/btrfs/inode.c
+@@ -332,9 +332,9 @@ static int insert_inline_extent(struct btrfs_trans_handle *trans,
+ 			cur_size = min_t(unsigned long, compressed_size,
+ 				       PAGE_SIZE);
+ 
+-			kaddr = kmap_atomic(cpage);
++			kaddr = kmap_local_page(cpage);
+ 			write_extent_buffer(leaf, kaddr, ptr, cur_size);
+-			kunmap_atomic(kaddr);
++			kunmap_local(kaddr);
+ 
+ 			i++;
+ 			ptr += cur_size;
+@@ -345,9 +345,9 @@ static int insert_inline_extent(struct btrfs_trans_handle *trans,
+ 	} else {
+ 		page = find_get_page(inode->vfs_inode.i_mapping, 0);
+ 		btrfs_set_file_extent_compression(leaf, ei, 0);
+-		kaddr = kmap_atomic(page);
++		kaddr = kmap_local_page(page);
+ 		write_extent_buffer(leaf, kaddr, ptr, size);
+-		kunmap_atomic(kaddr);
++		kunmap_local(kaddr);
+ 		put_page(page);
+ 	}
+ 	btrfs_mark_buffer_dirty(leaf);
+@@ -3357,11 +3357,11 @@ static int check_data_csum(struct inode *inode, struct btrfs_bio *bbio,
+ 	offset_sectors = bio_offset >> fs_info->sectorsize_bits;
+ 	csum_expected = ((u8 *)bbio->csum) + offset_sectors * csum_size;
+ 
+-	kaddr = kmap_atomic(page);
++	kaddr = kmap_local_page(page);
+ 	shash->tfm = fs_info->csum_shash;
+ 
+ 	crypto_shash_digest(shash, kaddr + pgoff, len, csum);
+-	kunmap_atomic(kaddr);
++	kunmap_local(kaddr);
+ 
+ 	if (memcmp(csum, csum_expected, csum_size))
+ 		goto zeroit;
+-- 
+2.36.1
+
