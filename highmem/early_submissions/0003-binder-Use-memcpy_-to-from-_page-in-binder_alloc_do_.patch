@@ -1,0 +1,64 @@
+From e88a6a8fece9b92be4f55735134a022061e6e68b Mon Sep 17 00:00:00 2001
+From: "Fabio M. De Francesco" <fmdefrancesco@gmail.com>
+Date: Mon, 25 Apr 2022 19:57:54 +0200
+Subject: [PATCH 3/3] binder: Use memcpy_{to,from}_page() in
+ binder_alloc_do_buffer_copy()
+
+The use of kmap_atomic() is being deprecated in favor of kmap_local_page()
+where it is feasible. Each call of kmap_atomic() in the kernel creates
+a non-preemptible section and disable pagefaults. This could be a source
+of unwanted latency, so kmap_local_page() should be preferred.
+
+With kmap_local_page(), the mapping is per thread, CPU local and not
+globally visible. Furthermore, the mapping can be acquired from any context
+(including interrupts). binder_alloc_do_buffer_copy() is a function where
+the use of kmap_local_page() in place of kmap_atomic() is correctly suited.
+
+Use kmap_local_page() / kunmap_local() in place of kmap_atomic() /
+kunmap_atomic() but, instead of open coding the mappings and call memcpy()
+to and from the virtual addresses of the mapped pages, prefer the use of
+the memcpy_{to,from}_page() wrappers (as suggested by Christophe
+Jaillet).
+
+Cc: Christophe JAILLET <christophe.jaillet@wanadoo.fr>
+Acked-by: Todd Kjos <tkjos@google.com>
+Signed-off-by: Fabio M. De Francesco <fmdefrancesco@gmail.com>
+Link: https://lore.kernel.org/r/20220425175754.8180-4-fmdefrancesco@gmail.com
+Signed-off-by: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+---
+ drivers/android/binder_alloc.c | 13 ++-----------
+ 1 file changed, 2 insertions(+), 11 deletions(-)
+
+diff --git a/drivers/android/binder_alloc.c b/drivers/android/binder_alloc.c
+index 0875c463c002..5649a0371a1f 100644
+--- a/drivers/android/binder_alloc.c
++++ b/drivers/android/binder_alloc.c
+@@ -1244,23 +1244,14 @@ static int binder_alloc_do_buffer_copy(struct binder_alloc *alloc,
+ 		unsigned long size;
+ 		struct page *page;
+ 		pgoff_t pgoff;
+-		void *tmpptr;
+-		void *base_ptr;
+ 
+ 		page = binder_alloc_get_page(alloc, buffer,
+ 					     buffer_offset, &pgoff);
+ 		size = min_t(size_t, bytes, PAGE_SIZE - pgoff);
+-		base_ptr = kmap_atomic(page);
+-		tmpptr = base_ptr + pgoff;
+ 		if (to_buffer)
+-			memcpy(tmpptr, ptr, size);
++			memcpy_to_page(page, pgoff, ptr, size);
+ 		else
+-			memcpy(ptr, tmpptr, size);
+-		/*
+-		 * kunmap_atomic() takes care of flushing the cache
+-		 * if this device has VIVT cache arch
+-		 */
+-		kunmap_atomic(base_ptr);
++			memcpy_from_page(ptr, page, pgoff, size);
+ 		bytes -= size;
+ 		pgoff = 0;
+ 		ptr = ptr + size;
+-- 
+2.36.1
+

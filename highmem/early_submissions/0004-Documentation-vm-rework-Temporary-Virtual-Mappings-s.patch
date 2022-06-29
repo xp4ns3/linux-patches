@@ -1,0 +1,133 @@
+From 110bf7a523075e42703fbe9c136ad00b867bec3a Mon Sep 17 00:00:00 2001
+From: "Fabio M. De Francesco" <fmdefrancesco@gmail.com>
+Date: Fri, 13 May 2022 16:48:55 -0700
+Subject: [PATCH 4/4] Documentation/vm: rework "Temporary Virtual Mappings"
+ section
+
+Extend and rework the "Temporary Virtual Mappings" section of the
+highmem.rst documentation.
+
+Despite the local kmaps were introduced by Thomas Gleixner in October
+2020, documentation was still missing information about them.  These
+additions rely largely on Gleixner's patches, Jonathan Corbet's LWN
+articles, comments by Ira Weiny and Matthew Wilcox, and in-code comments
+from ./include/linux/highmem.h.
+
+1) Add a paragraph to document kmap_local_page().
+2) Reorder the list of functions by decreasing order of preference
+   of use.
+3) Rework part of the kmap() entry in list.
+
+Link: https://lkml.kernel.org/r/20220428212455.892-5-fmdefrancesco@gmail.com
+Signed-off-by: Fabio M. De Francesco <fmdefrancesco@gmail.com>
+Suggested-by: Ira Weiny <ira.weiny@intel.com>
+Reviewed-by: Sebastian Andrzej Siewior <bigeasy@linutronix.de>
+Reviewed-by: Ira Weiny <ira.weiny@intel.com>
+Cc: Jonathan Corbet <corbet@lwn.net>
+Cc: Matthew Wilcox <willy@infradead.org>
+Cc: Peter Zijlstra <peterz@infradead.org>
+Cc: Thomas Gleixner <tglx@linutronix.de>
+Cc: Catalin Marinas <catalin.marinas@arm.com>
+Cc: Mike Rapoport <rppt@linux.ibm.com>
+Cc: Peter Collingbourne <pcc@google.com>
+Cc: Vlastimil Babka <vbabka@suse.cz>
+Cc: Will Deacon <will@kernel.org>
+Cc: Jonathan Corbet <corbet@lwn.net>
+Signed-off-by: Andrew Morton <akpm@linux-foundation.org>
+---
+ Documentation/vm/highmem.rst | 70 ++++++++++++++++++++++++++++++------
+ 1 file changed, 59 insertions(+), 11 deletions(-)
+
+diff --git a/Documentation/vm/highmem.rst b/Documentation/vm/highmem.rst
+index e05bf5524174..c9887f241c6c 100644
+--- a/Documentation/vm/highmem.rst
++++ b/Documentation/vm/highmem.rst
+@@ -50,26 +50,74 @@ space when they use mm context tags.
+ Temporary Virtual Mappings
+ ==========================
+ 
+-The kernel contains several ways of creating temporary mappings:
++The kernel contains several ways of creating temporary mappings. The following
++list shows them in order of preference of use.
+ 
+-* vmap().  This can be used to make a long duration mapping of multiple
+-  physical pages into a contiguous virtual space.  It needs global
+-  synchronization to unmap.
++* kmap_local_page().  This function is used to require short term mappings.
++  It can be invoked from any context (including interrupts) but the mappings
++  can only be used in the context which acquired them.
++
++  This function should be preferred, where feasible, over all the others.
+ 
+-* kmap().  This permits a short duration mapping of a single page.  It needs
+-  global synchronization, but is amortized somewhat.  It is also prone to
+-  deadlocks when using in a nested fashion, and so it is not recommended for
+-  new code.
++  These mappings are thread-local and CPU-local, meaning that the mapping
++  can only be accessed from within this thread and the thread is bound the
++  CPU while the mapping is active. Even if the thread is preempted (since
++  preemption is never disabled by the function) the CPU can not be
++  unplugged from the system via CPU-hotplug until the mapping is disposed.
++
++  It's valid to take pagefaults in a local kmap region, unless the context
++  in which the local mapping is acquired does not allow it for other reasons.
++
++  kmap_local_page() always returns a valid virtual address and it is assumed
++  that kunmap_local() will never fail.
++
++  Nesting kmap_local_page() and kmap_atomic() mappings is allowed to a certain
++  extent (up to KMAP_TYPE_NR) but their invocations have to be strictly ordered
++  because the map implementation is stack based. See kmap_local_page() kdocs
++  (included in the "Functions" section) for details on how to manage nested
++  mappings.
+ 
+ * kmap_atomic().  This permits a very short duration mapping of a single
+   page.  Since the mapping is restricted to the CPU that issued it, it
+   performs well, but the issuing task is therefore required to stay on that
+   CPU until it has finished, lest some other task displace its mappings.
+ 
+-  kmap_atomic() may also be used by interrupt contexts, since it is does not
+-  sleep and the caller may not sleep until after kunmap_atomic() is called.
++  kmap_atomic() may also be used by interrupt contexts, since it does not
++  sleep and the callers too may not sleep until after kunmap_atomic() is
++  called.
++
++  Each call of kmap_atomic() in the kernel creates a non-preemptible section
++  and disable pagefaults. This could be a source of unwanted latency. Therefore
++  users should prefer kmap_local_page() instead of kmap_atomic().
+ 
+-  It may be assumed that k[un]map_atomic() won't fail.
++  It is assumed that k[un]map_atomic() won't fail.
++
++* kmap().  This should be used to make short duration mapping of a single
++  page with no restrictions on preemption or migration. It comes with an
++  overhead as mapping space is restricted and protected by a global lock
++  for synchronization. When mapping is no longer needed, the address that
++  the page was mapped to must be released with kunmap().
++
++  Mapping changes must be propagated across all the CPUs. kmap() also
++  requires global TLB invalidation when the kmap's pool wraps and it might
++  block when the mapping space is fully utilized until a slot becomes
++  available. Therefore, kmap() is only callable from preemptible context.
++
++  All the above work is necessary if a mapping must last for a relatively
++  long time but the bulk of high-memory mappings in the kernel are
++  short-lived and only used in one place. This means that the cost of
++  kmap() is mostly wasted in such cases. kmap() was not intended for long
++  term mappings but it has morphed in that direction and its use is
++  strongly discouraged in newer code and the set of the preceding functions
++  should be preferred.
++
++  On 64-bit systems, calls to kmap_local_page(), kmap_atomic() and kmap() have
++  no real work to do because a 64-bit address space is more than sufficient to
++  address all the physical memory whose pages are permanently mapped.
++
++* vmap().  This can be used to make a long duration mapping of multiple
++  physical pages into a contiguous virtual space.  It needs global
++  synchronization to unmap.
+ 
+ 
+ Cost of Temporary Mappings
+-- 
+2.36.1
+

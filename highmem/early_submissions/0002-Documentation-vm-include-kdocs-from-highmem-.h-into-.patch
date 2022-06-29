@@ -1,0 +1,50 @@
+From 174270c2d664ca8ff60d2d95211b4790cedf881c Mon Sep 17 00:00:00 2001
+From: "Fabio M. De Francesco" <fmdefrancesco@gmail.com>
+Date: Fri, 13 May 2022 16:48:55 -0700
+Subject: [PATCH 2/4] Documentation/vm: include kdocs from highmem*.h into
+ highmem.rst
+
+kernel-docs that are in include/linux/highmem.h and in
+include/linux/highmem-internal.h should be included in highmem.rst.
+
+Use kdocs directives to include the above-mentioned comments into
+highmem.rst.
+
+Link: https://lkml.kernel.org/r/20220428212455.892-3-fmdefrancesco@gmail.com
+Signed-off-by: Fabio M. De Francesco <fmdefrancesco@gmail.com>
+Acked-by: Mike Rapoport <rppt@linux.ibm.com>
+Reviewed-by: Ira Weiny <ira.weiny@intel.com>
+Suggested-by: Ira Weiny <ira.weiny@intel.com>
+Reviewed-by: Sebastian Andrzej Siewior <bigeasy@linutronix.de>
+Cc: Jonathan Corbet <corbet@lwn.net>
+Cc: Matthew Wilcox <willy@infradead.org>
+Cc: Peter Zijlstra <peterz@infradead.org>
+Cc: Thomas Gleixner <tglx@linutronix.de>
+Cc: Catalin Marinas <catalin.marinas@arm.com>
+Cc: Peter Collingbourne <pcc@google.com>
+Cc: Vlastimil Babka <vbabka@suse.cz>
+Cc: Will Deacon <will@kernel.org>
+Cc: Jonathan Corbet <corbet@lwn.net>
+Signed-off-by: Andrew Morton <akpm@linux-foundation.org>
+---
+ Documentation/vm/highmem.rst | 7 +++++++
+ 1 file changed, 7 insertions(+)
+
+diff --git a/Documentation/vm/highmem.rst b/Documentation/vm/highmem.rst
+index 0f69a9fec34d..ccff08a8211d 100644
+--- a/Documentation/vm/highmem.rst
++++ b/Documentation/vm/highmem.rst
+@@ -145,3 +145,10 @@ The general recommendation is that you don't use more than 8GiB on a 32-bit
+ machine - although more might work for you and your workload, you're pretty
+ much on your own - don't expect kernel developers to really care much if things
+ come apart.
++
++
++Functions
++=========
++
++.. kernel-doc:: include/linux/highmem.h
++.. kernel-doc:: include/linux/highmem-internal.h
+-- 
+2.36.1
+
