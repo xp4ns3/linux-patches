@@ -1,0 +1,44 @@
+From 5afea491051953bb96b6b69be6c0651837608312 Mon Sep 17 00:00:00 2001
+From: "Fabio M. De Francesco" <fmdefrancesco@gmail.com>
+Date: Wed, 29 Jun 2022 10:51:07 +0200
+Subject: [PATCH] ixgbe: Use kmap_local_page in ixgbe_check_lbtest_frame()
+
+The use of kmap() is being deprecated in favor of kmap_local_page().
+
+With kmap_local_page(), the mapping is per thread, CPU local and not
+globally visible. Furthermore, the mapping can be acquired from any context
+(including interrupts).
+
+Therefore, use kmap_local_page() in ixgbe_check_lbtest_frame() because
+this mapping is per thread, CPU local, and not globally visible.
+
+Suggested-by: Ira Weiny <ira.weiny@intel.com>
+Signed-off-by: Fabio M. De Francesco <fmdefrancesco@gmail.com>
+---
+ drivers/net/ethernet/intel/ixgbe/ixgbe_ethtool.c | 4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
+
+diff --git a/drivers/net/ethernet/intel/ixgbe/ixgbe_ethtool.c b/drivers/net/ethernet/intel/ixgbe/ixgbe_ethtool.c
+index 628d0eb0599f..e64d40482bfd 100644
+--- a/drivers/net/ethernet/intel/ixgbe/ixgbe_ethtool.c
++++ b/drivers/net/ethernet/intel/ixgbe/ixgbe_ethtool.c
+@@ -1966,14 +1966,14 @@ static bool ixgbe_check_lbtest_frame(struct ixgbe_rx_buffer *rx_buffer,
+ 
+ 	frame_size >>= 1;
+ 
+-	data = kmap(rx_buffer->page) + rx_buffer->page_offset;
++	data = kmap_local_page(rx_buffer->page) + rx_buffer->page_offset;
+ 
+ 	if (data[3] != 0xFF ||
+ 	    data[frame_size + 10] != 0xBE ||
+ 	    data[frame_size + 12] != 0xAF)
+ 		match = false;
+ 
+-	kunmap(rx_buffer->page);
++	kunmap_local(data);
+ 
+ 	return match;
+ }
+-- 
+2.36.1
+
