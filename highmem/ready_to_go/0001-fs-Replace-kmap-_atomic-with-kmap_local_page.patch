@@ -1,4 +1,4 @@
-From 6befd47435c9c9d99e04c9a7289979a38e0f2ef7 Mon Sep 17 00:00:00 2001
+From 0660a79142c6cd807c8f9a1932e70356f8af6a73 Mon Sep 17 00:00:00 2001
 From: "Fabio M. De Francesco" <fmdefrancesco@gmail.com>
 Date: Thu, 30 Jun 2022 11:40:57 +0200
 Subject: [PATCH] fs: Replace kmap{,_atomic}() with kmap_local_page()
@@ -14,8 +14,7 @@ Therefore, use kmap_local_page() in exec.c because these mappings are per
 thread, CPU local, and not globally visible.
 
 Tested with xfstests on a QEMU + KVM 32-bits VM booting a kernel with
-HIGHMEM64GB enabled. No further errors are introduced by this patch in
-addition to the ones already in vanilla 5.19.rc4.
+HIGHMEM64GB enabled.
 
 Suggested-by: Ira Weiny <ira.weiny@intel.com>
 Signed-off-by: Fabio M. De Francesco <fmdefrancesco@gmail.com>
