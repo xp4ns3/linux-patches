@@ -1,16 +1,25 @@
-From 45c8dd6f5a11aad12522c533d09e3089a59ecd71 Mon Sep 17 00:00:00 2001
+From 8dd0775ee2abc96efdead16ce6106167892ebe3e Mon Sep 17 00:00:00 2001
 From: "Fabio M. De Francesco" <fmdefrancesco@gmail.com>
 Date: Wed, 29 Jun 2022 11:49:42 +0200
-Subject: [PATCH] net: core: Replace kmap() with kmap_local_page()
+Subject: [RFC PATCH] net: core: Replace kmap() with kmap_local_page()
 
 The use of kmap() is being deprecated in favor of kmap_local_page().
 
 With kmap_local_page(), the mappings are per thread, CPU local and not
-globally visible. Furthermore, the mapping can be acquired from any context
-(including interrupts).
+globally visible. Taking page faults is allowed. Furthermore, the mappings
+can be acquired from any context (including interrupts).
 
 Therefore, use kmap_local_page() in sock.c and datagram.c because these
 mappings are per thread, CPU local, and not globally visible.
+
+Actually this is an RFC because I'm not 100% sure that the mappings in
+sock.c are not handed over to other contexts. Unfortunately I know very
+little about this code. The fact that "page" is kmapped and then kunmapped
+before exiting sock_send_page*() is not a guarantee of thread locality.
+That "kernel_sendmsg*()" is a bit "suspicious".
+
+Can anyone please confirm whether or not "kaddr" is handed over to other
+contexts while the call sites might sleep between kmap() / kunmap()?
 
 Suggested-by: Ira Weiny <ira.weiny@intel.com>
 Signed-off-by: Fabio M. De Francesco <fmdefrancesco@gmail.com>
