@@ -1,7 +1,7 @@
-From 524ca631615dde78b730b311bbd8c86cb09a729b Mon Sep 17 00:00:00 2001
+From 4b91c16e1a7a013bdfd5d911524e7c17fdf57cb0 Mon Sep 17 00:00:00 2001
 From: "Fabio M. De Francesco" <fmdefrancesco@gmail.com>
 Date: Thu, 23 Jun 2022 17:35:21 +0200
-Subject: [RFC PATCH] ecryptfs: Replace kmap() with kmap_local_page()
+Subject: [PATCH] ecryptfs: Replace kmap() with kmap_local_page()
 
 The use of kmap() is being deprecated in favor of kmap_local_page().
 
@@ -10,16 +10,14 @@ globally visible.
 
 Use kmap_local_page() on all calling sites where kmap() is currently used.
 
-The mappings in fs/ecryptfs seem to conform to the prerequisites for
-easy conversions to kmap_local_page(), however I am not familiar with this
-code.
-
-This is why this is an RFC PATCH. I'd appreciate if people familiar with
-eCryptfs could test and confirm whether these conversions are safe or not.
-
 Suggested-by: Ira Weiny <ira.weiny@intel.com>
+Reviewed-by: Ira Weiny <ira.weiny@intel.com>
 Signed-off-by: Fabio M. De Francesco <fmdefrancesco@gmail.com>
 ---
+
+Please discard RFC PATCH at
+https://lore.kernel.org/lkml/20220628184950.2045-1-fmdefrancesco@gmail.com/
+
  fs/ecryptfs/crypto.c     | 8 ++++----
  fs/ecryptfs/read_write.c | 8 ++++----
  2 files changed, 8 insertions(+), 8 deletions(-)
