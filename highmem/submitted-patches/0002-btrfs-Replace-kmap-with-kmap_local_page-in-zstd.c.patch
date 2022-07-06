@@ -1,7 +1,7 @@
-From b7e8c760b355938a9f497000d22eaeea2d2c6691 Mon Sep 17 00:00:00 2001
+From 9ae9c388a51b52d2447bb015063d9f4b970a30cb Mon Sep 17 00:00:00 2001
 From: "Fabio M. De Francesco" <fmdefrancesco@gmail.com>
 Date: Tue, 31 May 2022 16:53:35 +0200
-Subject: [PATCH v5 2/2] btrfs: Replace kmap() with kmap_local_page() in zstd.c
+Subject: [PATCH v6 2/2] btrfs: Replace kmap() with kmap_local_page() in zstd.c
 
 The use of kmap() is being deprecated in favor of kmap_local_page(). With
 kmap_local_page(), the mapping is per thread, CPU local and not globally
@@ -13,18 +13,18 @@ the meanwhile use plain page_address() on pages allocated with the GFP_NOFS
 flag instead of calling kmap*() on them (since they are always allocated
 from ZONE_NORMAL).
 
-Tested with xfstests on QEMU + KVM 32 bits VM with 4GB of RAM and
-booting a kernel with HIGHMEM64G enabled.
+Tested with xfstests on QEMU + KVM 32 bits VM with 4GB of RAM, booting a
+kernel with HIGHMEM64G enabled.
 
 Cc: Filipe Manana <fdmanana@kernel.org>
 Suggested-by: Ira Weiny <ira.weiny@intel.com>
 Signed-off-by: Fabio M. De Francesco <fmdefrancesco@gmail.com>
 ---
- fs/btrfs/zstd.c | 34 ++++++++++++++--------------------
- 1 file changed, 14 insertions(+), 20 deletions(-)
+ fs/btrfs/zstd.c | 33 +++++++++++++--------------------
+ 1 file changed, 13 insertions(+), 20 deletions(-)
 
 diff --git a/fs/btrfs/zstd.c b/fs/btrfs/zstd.c
-index 0fe31a6f6e68..78e0272e770e 100644
+index 0fe31a6f6e68..35a0224d4eb7 100644
 --- a/fs/btrfs/zstd.c
 +++ b/fs/btrfs/zstd.c
 @@ -403,7 +403,7 @@ int zstd_compress_pages(struct list_head *ws, struct address_space *mapping,
@@ -64,7 +64,7 @@ index 0fe31a6f6e68..78e0272e770e 100644
  			workspace->out_buf.pos = 0;
  			workspace->out_buf.size = min_t(size_t, max_out,
  							PAGE_SIZE);
-@@ -477,15 +475,15 @@ int zstd_compress_pages(struct list_head *ws, struct address_space *mapping,
+@@ -477,13 +475,12 @@ int zstd_compress_pages(struct list_head *ws, struct address_space *mapping,
  		/* Check if we need more input */
  		if (workspace->in_buf.pos == workspace->in_buf.size) {
  			tot_in += PAGE_SIZE;
@@ -79,11 +79,8 @@ index 0fe31a6f6e68..78e0272e770e 100644
 +			workspace->in_buf.src = kmap_local_page(in_page);
  			workspace->in_buf.pos = 0;
  			workspace->in_buf.size = min_t(size_t, len, PAGE_SIZE);
-+			workspace->out_buf.dst = page_address(out_page);
  		}
- 	}
- 	while (1) {
-@@ -510,9 +508,7 @@ int zstd_compress_pages(struct list_head *ws, struct address_space *mapping,
+@@ -510,9 +507,7 @@ int zstd_compress_pages(struct list_head *ws, struct address_space *mapping,
  
  		tot_out += PAGE_SIZE;
  		max_out -= PAGE_SIZE;
@@ -93,7 +90,7 @@ index 0fe31a6f6e68..78e0272e770e 100644
  			ret = -E2BIG;
  			goto out;
  		}
-@@ -522,7 +518,7 @@ int zstd_compress_pages(struct list_head *ws, struct address_space *mapping,
+@@ -522,7 +517,7 @@ int zstd_compress_pages(struct list_head *ws, struct address_space *mapping,
  			goto out;
  		}
  		pages[nr_pages++] = out_page;
@@ -102,7 +99,7 @@ index 0fe31a6f6e68..78e0272e770e 100644
  		workspace->out_buf.pos = 0;
  		workspace->out_buf.size = min_t(size_t, max_out, PAGE_SIZE);
  	}
-@@ -537,13 +533,10 @@ int zstd_compress_pages(struct list_head *ws, struct address_space *mapping,
+@@ -537,13 +532,10 @@ int zstd_compress_pages(struct list_head *ws, struct address_space *mapping,
  	*total_out = tot_out;
  out:
  	*out_pages = nr_pages;
@@ -118,7 +115,7 @@ index 0fe31a6f6e68..78e0272e770e 100644
  	return ret;
  }
  
-@@ -567,7 +560,7 @@ int zstd_decompress_bio(struct list_head *ws, struct compressed_bio *cb)
+@@ -567,7 +559,7 @@ int zstd_decompress_bio(struct list_head *ws, struct compressed_bio *cb)
  		goto done;
  	}
  
@@ -127,7 +124,7 @@ index 0fe31a6f6e68..78e0272e770e 100644
  	workspace->in_buf.pos = 0;
  	workspace->in_buf.size = min_t(size_t, srclen, PAGE_SIZE);
  
-@@ -603,14 +596,15 @@ int zstd_decompress_bio(struct list_head *ws, struct compressed_bio *cb)
+@@ -603,14 +595,15 @@ int zstd_decompress_bio(struct list_head *ws, struct compressed_bio *cb)
  			break;
  
  		if (workspace->in_buf.pos == workspace->in_buf.size) {
@@ -145,7 +142,7 @@ index 0fe31a6f6e68..78e0272e770e 100644
  			workspace->in_buf.pos = 0;
  			workspace->in_buf.size = min_t(size_t, srclen, PAGE_SIZE);
  		}
-@@ -619,7 +613,7 @@ int zstd_decompress_bio(struct list_head *ws, struct compressed_bio *cb)
+@@ -619,7 +612,7 @@ int zstd_decompress_bio(struct list_head *ws, struct compressed_bio *cb)
  	zero_fill_bio(cb->orig_bio);
  done:
  	if (workspace->in_buf.src)
