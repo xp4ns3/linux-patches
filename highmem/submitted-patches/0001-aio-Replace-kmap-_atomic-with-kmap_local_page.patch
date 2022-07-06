@@ -19,6 +19,11 @@ HIGHMEM64GB enabled.
 Suggested-by: Ira Weiny <ira.weiny@intel.com>
 Signed-off-by: Fabio M. De Francesco <fmdefrancesco@gmail.com>
 ---
+
+I've tested with "./check -g aio". The tests in this group fail 3/26
+times, with and without my patch. Therefore, these changes don't introduce
+further errors.
+
  fs/aio.c | 32 ++++++++++++++++----------------
  1 file changed, 16 insertions(+), 16 deletions(-)
 
