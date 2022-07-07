@@ -1,0 +1,67 @@
+From 0a1517b07aff7bc3e60203b717a4c635e7398b59 Mon Sep 17 00:00:00 2001
+From: "Fabio M. De Francesco" <fmdefrancesco@gmail.com>
+Date: Thu, 7 Jul 2022 16:51:33 +0200
+Subject: [PATCH] kexec: Replace kmap() with kmap_local_page()
+
+The use of kmap() and kmap_atomic() are being deprecated in favor of
+kmap_local_page().
+
+With kmap_local_page(), the mappings are per thread, CPU local and not
+globally visible. Furthermore, the mappings can be acquired from any
+context (including interrupts).
+
+Therefore, use kmap_local_page() in aio.c because these mappings are per
+thread, CPU local, and not globally visible.
+
+Tested on a QEMU + KVM 32-bits VM booting a kernel with HIGHMEM64GB
+enabled.
+
+Suggested-by: Ira Weiny <ira.weiny@intel.com>
+Signed-off-by: Fabio M. De Francesco <fmdefrancesco@gmail.com>
+---
+ kernel/kexec_core.c | 8 ++++----
+ 1 file changed, 4 insertions(+), 4 deletions(-)
+
+diff --git a/kernel/kexec_core.c b/kernel/kexec_core.c
+index 4d34c78334ce..6f98274765d4 100644
+--- a/kernel/kexec_core.c
++++ b/kernel/kexec_core.c
+@@ -814,7 +814,7 @@ static int kimage_load_normal_segment(struct kimage *image,
+ 		if (result < 0)
+ 			goto out;
+ 
+-		ptr = kmap(page);
++		ptr = kmap_local_page(page);
+ 		/* Start with a clear page */
+ 		clear_page(ptr);
+ 		ptr += maddr & ~PAGE_MASK;
+@@ -827,7 +827,7 @@ static int kimage_load_normal_segment(struct kimage *image,
+ 			memcpy(ptr, kbuf, uchunk);
+ 		else
+ 			result = copy_from_user(ptr, buf, uchunk);
+-		kunmap(page);
++		kunmap_local(ptr);
+ 		if (result) {
+ 			result = -EFAULT;
+ 			goto out;
+@@ -878,7 +878,7 @@ static int kimage_load_crash_segment(struct kimage *image,
+ 			goto out;
+ 		}
+ 		arch_kexec_post_alloc_pages(page_address(page), 1, 0);
+-		ptr = kmap(page);
++		ptr = kmap_local_page(page);
+ 		ptr += maddr & ~PAGE_MASK;
+ 		mchunk = min_t(size_t, mbytes,
+ 				PAGE_SIZE - (maddr & ~PAGE_MASK));
+@@ -894,7 +894,7 @@ static int kimage_load_crash_segment(struct kimage *image,
+ 		else
+ 			result = copy_from_user(ptr, buf, uchunk);
+ 		kexec_flush_icache_page(page);
+-		kunmap(page);
++		kunmap_local(ptr);
+ 		arch_kexec_pre_free_pages(page_address(page), 1);
+ 		if (result) {
+ 			result = -EFAULT;
+-- 
+2.36.1
+
