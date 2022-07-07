@@ -1,0 +1,63 @@
+From 18ce31aa638d52139b38496c1d53f536a8f06811 Mon Sep 17 00:00:00 2001
+From: "Fabio M. De Francesco" <fmdefrancesco@gmail.com>
+Date: Wed, 30 Mar 2022 16:33:31 +0200
+Subject: [PATCH] staging: rts5208: Convert kmap() to kmap_local_page()
+
+The use of kmap() is being deprecated in favor of kmap_local_page()
+where it is feasible.
+
+With kmap_local_page(), the mapping is per thread, CPU local and not
+globally visible. Therefore rtsx_stor_access_xfer_buf() is a function
+where the use of kmap_local_page() in place of kmap() is correctly
+suited.
+
+Convert to kmap_local_page() but, instead of open coding it, use the
+helpers memcpy_to_page() and memcpy_from_page().
+
+Make a minor change to a comment related to scatter-gather.
+
+Reviewed-by: Dan Carpenter <dan.carpenter@oracle.com>
+Reviewed-by: Ira Weiny <ira.weiny@intel.com>
+Signed-off-by: Fabio M. De Francesco <fmdefrancesco@gmail.com>
+Link: https://lore.kernel.org/r/20220330143331.8306-1-fmdefrancesco@gmail.com
+Signed-off-by: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+---
+ drivers/staging/rts5208/rtsx_transport.c | 12 +++++-------
+ 1 file changed, 5 insertions(+), 7 deletions(-)
+
+diff --git a/drivers/staging/rts5208/rtsx_transport.c b/drivers/staging/rts5208/rtsx_transport.c
+index 805dc18fac0a..d5ad49de4c56 100644
+--- a/drivers/staging/rts5208/rtsx_transport.c
++++ b/drivers/staging/rts5208/rtsx_transport.c
+@@ -55,9 +55,9 @@ unsigned int rtsx_stor_access_xfer_buf(unsigned char *buffer,
+ 		*offset += cnt;
+ 
+ 	/*
+-	 * Using scatter-gather.  We have to go through the list one entry
+-	 * at a time.  Each s-g entry contains some number of pages, and
+-	 * each page has to be kmap()'ed separately.
++	 * Using scatter-gather. We have to go through the list one entry
++	 * at a time. Each s-g entry contains some number of pages which
++	 * have to be copied one at a time.
+ 	 */
+ 	} else {
+ 		struct scatterlist *sg =
+@@ -92,13 +92,11 @@ unsigned int rtsx_stor_access_xfer_buf(unsigned char *buffer,
+ 			while (sglen > 0) {
+ 				unsigned int plen = min(sglen, (unsigned int)
+ 						PAGE_SIZE - poff);
+-				unsigned char *ptr = kmap(page);
+ 
+ 				if (dir == TO_XFER_BUF)
+-					memcpy(ptr + poff, buffer + cnt, plen);
++					memcpy_to_page(page, poff, buffer + cnt, plen);
+ 				else
+-					memcpy(buffer + cnt, ptr + poff, plen);
+-				kunmap(page);
++					memcpy_from_page(buffer + cnt, page, poff, plen);
+ 
+ 				/* Start at the beginning of the next page */
+ 				poff = 0;
+-- 
+2.36.1
+
