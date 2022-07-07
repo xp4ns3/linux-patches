@@ -1,4 +1,4 @@
-From 0a1517b07aff7bc3e60203b717a4c635e7398b59 Mon Sep 17 00:00:00 2001
+From 0c9b83c180f3a6cdd544381c390c411b04b7f1b6 Mon Sep 17 00:00:00 2001
 From: "Fabio M. De Francesco" <fmdefrancesco@gmail.com>
 Date: Thu, 7 Jul 2022 16:51:33 +0200
 Subject: [PATCH] kexec: Replace kmap() with kmap_local_page()
@@ -10,8 +10,8 @@ With kmap_local_page(), the mappings are per thread, CPU local and not
 globally visible. Furthermore, the mappings can be acquired from any
 context (including interrupts).
 
-Therefore, use kmap_local_page() in aio.c because these mappings are per
-thread, CPU local, and not globally visible.
+Therefore, use kmap_local_page() in kexec_core.c because these mappings are
+per thread, CPU local, and not globally visible.
 
 Tested on a QEMU + KVM 32-bits VM booting a kernel with HIGHMEM64GB
 enabled.
