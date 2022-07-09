@@ -1,0 +1,65 @@
+From da664481aa0b27c0e92cb1c1f30373eb9cc92366 Mon Sep 17 00:00:00 2001
+From: "Fabio M. De Francesco" <fmdefrancesco@gmail.com>
+Date: Sat, 9 Jul 2022 12:50:34 +0200
+Subject: [PATCH] firmware_loader: Replace kmap() with kmap_local_page()
+
+The use of kmap() is being deprecated in favor of kmap_local_page().
+
+With kmap_local_page() the mappings are per thread, CPU local, can take
+page faults, and can be called from any context (including interrupts).
+
+Call kmap_local_page() in firmware_loader wherever kmap() is currently
+used. In firmware_rw() use the helpers copy_{from,to}_page() instead of
+open coding the local mappings + memcpy().
+
+Suggested-by: Ira Weiny <ira.weiny@intel.com>
+Signed-off-by: Fabio M. De Francesco <fmdefrancesco@gmail.com>
+---
+ drivers/base/firmware_loader/main.c  | 4 ++--
+ drivers/base/firmware_loader/sysfs.c | 9 ++++-----
+ 2 files changed, 6 insertions(+), 7 deletions(-)
+
+diff --git a/drivers/base/firmware_loader/main.c b/drivers/base/firmware_loader/main.c
+index ac3f34e80194..7c3590fd97c2 100644
+--- a/drivers/base/firmware_loader/main.c
++++ b/drivers/base/firmware_loader/main.c
+@@ -435,11 +435,11 @@ static int fw_decompress_xz_pages(struct device *dev, struct fw_priv *fw_priv,
+ 
+ 		/* decompress onto the new allocated page */
+ 		page = fw_priv->pages[fw_priv->nr_pages - 1];
+-		xz_buf.out = kmap(page);
++		xz_buf.out = kmap_local_page(page);
+ 		xz_buf.out_pos = 0;
+ 		xz_buf.out_size = PAGE_SIZE;
+ 		xz_ret = xz_dec_run(xz_dec, &xz_buf);
+-		kunmap(page);
++		kunmap_local(xz_buf.out);
+ 		fw_priv->size += xz_buf.out_pos;
+ 		/* partial decompression means either end or error */
+ 		if (xz_buf.out_pos != PAGE_SIZE)
+diff --git a/drivers/base/firmware_loader/sysfs.c b/drivers/base/firmware_loader/sysfs.c
+index 5b0b85b70b6f..10ae9c8fb6cf 100644
+--- a/drivers/base/firmware_loader/sysfs.c
++++ b/drivers/base/firmware_loader/sysfs.c
+@@ -247,14 +247,13 @@ static void firmware_rw(struct fw_priv *fw_priv, char *buffer,
+ 		int page_ofs = offset & (PAGE_SIZE - 1);
+ 		int page_cnt = min_t(size_t, PAGE_SIZE - page_ofs, count);
+ 
+-		page_data = kmap(fw_priv->pages[page_nr]);
+-
+ 		if (read)
+-			memcpy(buffer, page_data + page_ofs, page_cnt);
++			memcpy_from_page(buffer, fw_priv->pages[page_nr],
++					 page_ofs, page_cnt);
+ 		else
+-			memcpy(page_data + page_ofs, buffer, page_cnt);
++			memcpy_to_page(fw_priv->pages[page_nr], page_ofs,
++				       buffer, page_cnt);
+ 
+-		kunmap(fw_priv->pages[page_nr]);
+ 		buffer += page_cnt;
+ 		offset += page_cnt;
+ 		count -= page_cnt;
+-- 
+2.36.1
+
