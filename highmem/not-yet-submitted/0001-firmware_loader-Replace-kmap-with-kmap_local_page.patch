@@ -1,9 +1,23 @@
-From da664481aa0b27c0e92cb1c1f30373eb9cc92366 Mon Sep 17 00:00:00 2001
+From 6e0727cf9e4dc97bf39c845bf77eabb45de8d0ef Mon Sep 17 00:00:00 2001
 From: "Fabio M. De Francesco" <fmdefrancesco@gmail.com>
 Date: Sat, 9 Jul 2022 12:50:34 +0200
-Subject: [PATCH] firmware_loader: Replace kmap() with kmap_local_page()
+Subject: [PATCH v2] firmware_loader: Replace kmap() with kmap_local_page()
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 8bit
 
 The use of kmap() is being deprecated in favor of kmap_local_page().
+
+Two main problems with kmap(): (1) It comes with an overhead as mapping
+space is restricted and protected by a global lock for synchronization and
+(2) kmap() also requires global TLB invalidation when the kmap’s pool wraps
+and it might block when the mapping space is fully utilized until a slot
+becomes available.
+
+kmap_local_page() is preferred over kmap() and kmap_atomic(). Where it
+cannot mechanically replace the latters, code refactor should be considered
+(special care must be taken if kernel virtual addresses are aliases in
+different contexts).
 
 With kmap_local_page() the mappings are per thread, CPU local, can take
 page faults, and can be called from any context (including interrupts).
@@ -12,12 +26,19 @@ Call kmap_local_page() in firmware_loader wherever kmap() is currently
 used. In firmware_rw() use the helpers copy_{from,to}_page() instead of
 open coding the local mappings + memcpy().
 
+Tested on a QEMU + KVM 32-bits VM booting a kernel with HIGHMEM64GB
+enabled. These changes pass "firmware" selftests.
+
 Suggested-by: Ira Weiny <ira.weiny@intel.com>
 Signed-off-by: Fabio M. De Francesco <fmdefrancesco@gmail.com>
 ---
- drivers/base/firmware_loader/main.c  | 4 ++--
- drivers/base/firmware_loader/sysfs.c | 9 ++++-----
- 2 files changed, 6 insertions(+), 7 deletions(-)
+
+v1->v2: Extend commit message to explain better why these changes are
+needed (thanks to Greg Kroah-Hartman).
+
+ drivers/base/firmware_loader/main.c  |  4 ++--
+ drivers/base/firmware_loader/sysfs.c | 10 ++++------
+ 2 files changed, 6 insertions(+), 8 deletions(-)
 
 diff --git a/drivers/base/firmware_loader/main.c b/drivers/base/firmware_loader/main.c
 index ac3f34e80194..7c3590fd97c2 100644
@@ -38,10 +59,15 @@ index ac3f34e80194..7c3590fd97c2 100644
  		/* partial decompression means either end or error */
  		if (xz_buf.out_pos != PAGE_SIZE)
 diff --git a/drivers/base/firmware_loader/sysfs.c b/drivers/base/firmware_loader/sysfs.c
-index 5b0b85b70b6f..10ae9c8fb6cf 100644
+index 5b0b85b70b6f..77bad32c481a 100644
 --- a/drivers/base/firmware_loader/sysfs.c
 +++ b/drivers/base/firmware_loader/sysfs.c
-@@ -247,14 +247,13 @@ static void firmware_rw(struct fw_priv *fw_priv, char *buffer,
+@@ -242,19 +242,17 @@ static void firmware_rw(struct fw_priv *fw_priv, char *buffer,
+ 			loff_t offset, size_t count, bool read)
+ {
+ 	while (count) {
+-		void *page_data;
+ 		int page_nr = offset >> PAGE_SHIFT;
  		int page_ofs = offset & (PAGE_SIZE - 1);
  		int page_cnt = min_t(size_t, PAGE_SIZE - page_ofs, count);
  
