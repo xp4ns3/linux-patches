@@ -1,4 +1,4 @@
-From 6e0727cf9e4dc97bf39c845bf77eabb45de8d0ef Mon Sep 17 00:00:00 2001
+From 7023adaf4a8dd74bc6371da92a7ba7670b67acf6 Mon Sep 17 00:00:00 2001
 From: "Fabio M. De Francesco" <fmdefrancesco@gmail.com>
 Date: Sat, 9 Jul 2022 12:50:34 +0200
 Subject: [PATCH v2] firmware_loader: Replace kmap() with kmap_local_page()
@@ -10,9 +10,9 @@ The use of kmap() is being deprecated in favor of kmap_local_page().
 
 Two main problems with kmap(): (1) It comes with an overhead as mapping
 space is restricted and protected by a global lock for synchronization and
-(2) kmap() also requires global TLB invalidation when the kmap’s pool wraps
-and it might block when the mapping space is fully utilized until a slot
-becomes available.
+(2) kmap() also requires global TLB invalidation when the kmap’s pool
+wraps and it might block when the mapping space is fully utilized until a
+slot becomes available.
 
 kmap_local_page() is preferred over kmap() and kmap_atomic(). Where it
 cannot mechanically replace the latters, code refactor should be considered
@@ -26,15 +26,23 @@ Call kmap_local_page() in firmware_loader wherever kmap() is currently
 used. In firmware_rw() use the helpers copy_{from,to}_page() instead of
 open coding the local mappings + memcpy().
 
-Tested on a QEMU + KVM 32-bits VM booting a kernel with HIGHMEM64GB
-enabled. These changes pass "firmware" selftests.
+Tested with firmware selftests on a QEMU/KVM 32-bits VM booting a kernel
+with HIGHMEM64GB enabled.
 
 Suggested-by: Ira Weiny <ira.weiny@intel.com>
 Signed-off-by: Fabio M. De Francesco <fmdefrancesco@gmail.com>
 ---
 
-v1->v2: Extend commit message to explain better why these changes are
-needed (thanks to Greg Kroah-Hartman).
+With or without this patch, selftests fail with the following message:
+"not ok 1 selftests: firmware: fw_run_tests.sh # TIMEOUT 165 seconds".
+Since I get this message also without this patch, and due to the fact
+that each of the dozens of lines output end with "OK", I think that
+these changes don't introduce errors.
+
+v1->v2: According to the comments from Greg Kroah-Hartman (thanks!),
+extend the commit message adding information about why kmap() should be
+avoided. Delete an unused variable left in the code of v1, which has been
+Reported-by: kernel test robot <lkp@intel.com>
 
  drivers/base/firmware_loader/main.c  |  4 ++--
  drivers/base/firmware_loader/sysfs.c | 10 ++++------
@@ -87,5 +95,5 @@ index 5b0b85b70b6f..77bad32c481a 100644
  		offset += page_cnt;
  		count -= page_cnt;
 -- 
-2.36.1
+2.37.0
 
