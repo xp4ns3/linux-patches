@@ -1,0 +1,94 @@
+From a77194d0f5fa0be0e354283c756467a34df0d774 Mon Sep 17 00:00:00 2001
+From: "Fabio M. De Francesco" <fmdefrancesco@gmail.com>
+Date: Tue, 12 Jul 2022 11:21:32 +0200
+Subject: [PATCH] highmem: Extend and rework kmap_local_page() kdocs
+
+Some details about the usage of kmap_local_page() aren't probably well
+detailed yet.
+
+For example, some users still map pages which cannot come from ZONE_HIGHMEM
+instead of using a plain page_address() on pages acquired with GFP_KERNEL,
+GFP_ATOMIC, GFP_NOFS, and other flags which don't bitwise OR __GFP_HIGHMEM.
+
+Aside that, it looks like the kdocs don't stress enough the invalidity of
+kernel virtual addresses handed to other contexts and that thread locality
+must be checked carefully and assured.
+
+Also, there is currently a sentence about kmap_local_page() that says "Only
+use when really necessary.". This sentence contraddicts everything that it
+is said about kmap() and kmap_atomic() being deprecated in favor of
+kmap_local_page().
+
+Therefore, extend and rework kmap_local_pages() kdocs in accordance with
+what is described above and delete "Only use when really necessary".
+
+Cc: Andrew Morton <akpm@linux-foundation.org>
+Cc: Matthew Wilcox (Oracle) <willy@infradead.org>
+Cc: Mike Rapoport <rppt@linux.ibm.com>
+Cc: Sebastian Andrzej Siewior <bigeasy@linutronix.de>
+Cc: Thomas Gleixner <tglx@linutronix.de>
+Suggested-by: Ira Weiny <ira.weiny@intel.com>
+Signed-off-by: Fabio M. De Francesco <fmdefrancesco@gmail.com>
+---
+ include/linux/highmem.h | 35 +++++++++++++++++++----------------
+ 1 file changed, 19 insertions(+), 16 deletions(-)
+
+diff --git a/include/linux/highmem.h b/include/linux/highmem.h
+index fee9835e3793..8be997af023d 100644
+--- a/include/linux/highmem.h
++++ b/include/linux/highmem.h
+@@ -60,11 +60,17 @@ static inline void kmap_flush_unused(void);
+ 
+ /**
+  * kmap_local_page - Map a page for temporary usage
+- * @page:	Pointer to the page to be mapped
++ * @page: Pointer to the page to be mapped
+  *
+  * Returns: The virtual address of the mapping
+  *
+- * Can be invoked from any context.
++ * Can be invoked from any context, including interrupts.
++ *
++ * On CONFIG_HIGHMEM=n kernels and for low memory pages this returns the
++ * virtual address of the direct mapping. Only real highmem pages are
++ * temporarily mapped. Therefore, users should instead call a plain
++ * page_address() for getting the address of memory pages which, depending
++ * on the GFP_* flags, cannot come from ZONE_HIGHMEM.
+  *
+  * Requires careful handling when nesting multiple mappings because the map
+  * management is stack based. The unmap has to be in the reverse order of
+@@ -78,20 +84,17 @@ static inline void kmap_flush_unused(void);
+  *
+  * Unmapping addr1 before addr2 is invalid and causes malfunction.
+  *
+- * Contrary to kmap() mappings the mapping is only valid in the context of
+- * the caller and cannot be handed to other contexts.
+- *
+- * On CONFIG_HIGHMEM=n kernels and for low memory pages this returns the
+- * virtual address of the direct mapping. Only real highmem pages are
+- * temporarily mapped.
+- *
+- * While it is significantly faster than kmap() for the higmem case it
+- * comes with restrictions about the pointer validity. Only use when really
+- * necessary.
+- *
+- * On HIGHMEM enabled systems mapping a highmem page has the side effect of
+- * disabling migration in order to keep the virtual address stable across
+- * preemption. No caller of kmap_local_page() can rely on this side effect.
++ * While it is significantly faster than kmap(), for the higmem case it
++ * comes with restrictions about the pointers validity. Contrary to kmap()
++ * mappings, the local mappings are only valid in the context of the caller
++ * and cannot be handed to other contexts. In this cases, code should be
++ * refactored and local mappings should be moved to the same context where
++ * the kernel addresses will be used.
++ *
++ * On HIGHMEM enabled systems, mapping a highmem page has the side effect
++ * of disabling migration in order to keep the virtual address stable
++ * across preemption. No caller of kmap_local_page() can rely on this side
++ * effect.
+  */
+ static inline void *kmap_local_page(struct page *page);
+ 
+-- 
+2.37.0
+
