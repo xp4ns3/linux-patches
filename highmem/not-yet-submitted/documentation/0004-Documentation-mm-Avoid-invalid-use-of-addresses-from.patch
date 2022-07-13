@@ -1,0 +1,45 @@
+From 4359e2c230c23bca9fc90cf2d1292fb7246ee572 Mon Sep 17 00:00:00 2001
+From: "Fabio M. De Francesco" <fmdefrancesco@gmail.com>
+Date: Wed, 13 Jul 2022 18:48:14 +0200
+Subject: [PATCH 4/6] Documentation/mm: Avoid invalid use of addresses from
+ kmap_local_page()
+
+Users of kmap_local_page() must be absolutely sure to not hand kernel
+virtual address obtained calling kmap_local_page() on highmem pages.
+Those pointers are thread local, therefore are no longer valid across
+different contexts.
+
+Extend the documentation of kmap_local_page() to warn users about the
+above-mentioned potential invalid use of pointers returned by
+kmap_local_page().
+
+Cc: Andrew Morton <akpm@linux-foundation.org>
+Cc: Matthew Wilcox (Oracle) <willy@infradead.org>
+Cc: Mike Rapoport <rppt@linux.ibm.com>
+Cc: Sebastian Andrzej Siewior <bigeasy@linutronix.de>
+Cc: Thomas Gleixner <tglx@linutronix.de>
+Signed-off-by: Fabio M. De Francesco <fmdefrancesco@gmail.com>
+---
+ Documentation/vm/highmem.rst | 6 ++++++
+ 1 file changed, 6 insertions(+)
+
+diff --git a/Documentation/vm/highmem.rst b/Documentation/vm/highmem.rst
+index f266354c82ab..b72689d47265 100644
+--- a/Documentation/vm/highmem.rst
++++ b/Documentation/vm/highmem.rst
+@@ -77,6 +77,12 @@ list shows them in order of preference of use.
+   page_address() for getting the address of memory pages which, depending
+   on the GFP_* flags, cannot come from ZONE_HIGHMEM.
+ 
++  While it is significantly faster than kmap(), for the higmem case it
++  comes with restrictions about the pointers validity. Contrary to kmap()
++  mappings, the local mappings are only valid in the context of the caller
++  and cannot be handed to other contexts. This implies that users must
++  be absolutely sure not to break the rule of thread locality.
++
+   Nesting kmap_local_page() and kmap_atomic() mappings is allowed to a certain
+   extent (up to KMAP_TYPE_NR) but their invocations have to be strictly ordered
+   because the map implementation is stack based. See kmap_local_page() kdocs
+-- 
+2.37.0
+

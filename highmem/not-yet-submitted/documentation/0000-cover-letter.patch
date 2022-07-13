@@ -1,0 +1,34 @@
+From dfd5a9bc4e3d3d83a34ee816913e243c24fa3656 Mon Sep 17 00:00:00 2001
+From: "Fabio M. De Francesco" <fmdefrancesco@gmail.com>
+Date: Wed, 13 Jul 2022 19:29:57 +0200
+Subject: [PATCH 0/6] highmem: Extend kmap_local_page() documentation
+
+This series of patches rework and extends the documentation of
+kmap_local_page(). Parts of this task are carried out in the kdocs of
+highmem.h, while other parts are changed in highmem.rst. Please note
+that highmem.rst embeds kdocs included from highmem.h and
+highmem-internal.h.
+
+Cc: Andrew Morton <akpm@linux-foundation.org>
+Cc: Matthew Wilcox (Oracle) <willy@infradead.org>
+Cc: Mike Rapoport <rppt@linux.ibm.com>
+Cc: Sebastian Andrzej Siewior <bigeasy@linutronix.de>
+Cc: Thomas Gleixner <tglx@linutronix.de>
+Suggested-by: Ira Weiny <ira.weiny@intel.com>
+
+Fabio M. De Francesco (6):
+  highmem: Remove unneeded spaces in kmap_local_page() kdocs
+  highmem: Specify that kmap_local_page() is callable from interrupts
+  Documentation/mm: Don't kmap*() pages which can't come from HIGHMEM
+  Documentation/mm: Avoid invalid use of addresses from
+    kmap_local_page()
+  Documentation/mm: Prefer kmap_local_page() and avoid kmap()
+  highmem: Delete a sentence from kmap_local_page() kdocs
+
+ Documentation/vm/highmem.rst | 17 +++++++++++++++++
+ include/linux/highmem.h      |  7 +++----
+ 2 files changed, 20 insertions(+), 4 deletions(-)
+
+-- 
+2.37.0
+
