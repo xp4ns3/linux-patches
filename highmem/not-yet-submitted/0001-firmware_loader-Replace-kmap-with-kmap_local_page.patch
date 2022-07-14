@@ -26,18 +26,14 @@ Call kmap_local_page() in firmware_loader wherever kmap() is currently
 used. In firmware_rw() use the helpers copy_{from,to}_page() instead of
 open coding the local mappings + memcpy().
 
-Tested with firmware selftests on a QEMU/KVM 32-bits VM booting a kernel
-with HIGHMEM64GB enabled.
+Successfully tested with "firmware" selftests on a QEMU/KVM 32-bits VM
+with 4GB RAM, booting a kernel with HIGHMEM64GB enabled.
 
+Cc: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+Cc: Luis Chamberlain <mcgrof@kernel.org>
 Suggested-by: Ira Weiny <ira.weiny@intel.com>
 Signed-off-by: Fabio M. De Francesco <fmdefrancesco@gmail.com>
 ---
-
-With or without this patch, selftests fail with the following message:
-"not ok 1 selftests: firmware: fw_run_tests.sh # TIMEOUT 165 seconds".
-Since I get this message also without this patch, and due to the fact
-that each of the dozens of lines output end with "OK", I think that
-these changes don't introduce errors.
 
 v1->v2: According to the comments from Greg Kroah-Hartman (thanks!),
 extend the commit message adding information about why kmap() should be
