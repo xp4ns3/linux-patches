@@ -1,4 +1,4 @@
-From ba42a0a935c90ade135158caf394363b6f73f3a9 Mon Sep 17 00:00:00 2001
+From 1b352994c64557ba7b1e88361b201681b2a260b3 Mon Sep 17 00:00:00 2001
 From: "Fabio M. De Francesco" <fmdefrancesco@gmail.com>
 Date: Sat, 16 Jul 2022 02:12:38 +0200
 Subject: [PATCH] fs/isofs: Replace kmap() with kmap_local_page()
@@ -12,7 +12,7 @@ Signed-off-by: Fabio M. De Francesco <fmdefrancesco@gmail.com>
  1 file changed, 19 insertions(+), 12 deletions(-)
 
 diff --git a/fs/isofs/compress.c b/fs/isofs/compress.c
-index 95a19f25d61c..d3da5e4a3b20 100644
+index 95a19f25d61c..edd66157c46c 100644
 --- a/fs/isofs/compress.c
 +++ b/fs/isofs/compress.c
 @@ -39,8 +39,8 @@ static DEFINE_MUTEX(zisofs_zlib_lock);
@@ -31,7 +31,7 @@ index 95a19f25d61c..d3da5e4a3b20 100644
  			if (!pages[i])
  				continue;
 -			memset(page_address(pages[i]), 0, PAGE_SIZE);
-+			memzero_page(pages[i], 0, PAGE_SIZE);
++			memset(kaddrs[i], 0, PAGE_SIZE);
  			flush_dcache_page(pages[i]);
  			SetPageUptodate(pages[i]);
  		}
@@ -69,7 +69,7 @@ index 95a19f25d61c..d3da5e4a3b20 100644
  	if (poffset && *pages) {
 -		memset(page_address(*pages) + poffset, 0,
 -		       PAGE_SIZE - poffset);
-+		memzero_page(*pages, poffset, PAGE_SIZE - poffset);
++		memset(*kaddrs + poffset, 0, PAGE_SIZE - poffset);
  		flush_dcache_page(*pages);
  		SetPageUptodate(*pages);
  	}
