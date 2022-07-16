@@ -1,4 +1,4 @@
-From 2df3f9b896b54df58081c7f2d8526c5fc873bbc6 Mon Sep 17 00:00:00 2001
+From ba42a0a935c90ade135158caf394363b6f73f3a9 Mon Sep 17 00:00:00 2001
 From: "Fabio M. De Francesco" <fmdefrancesco@gmail.com>
 Date: Sat, 16 Jul 2022 02:12:38 +0200
 Subject: [PATCH] fs/isofs: Replace kmap() with kmap_local_page()
@@ -8,11 +8,11 @@ Subject: [PATCH] fs/isofs: Replace kmap() with kmap_local_page()
 Suggested-by: Ira Weiny <ira.weiny@intel.com>
 Signed-off-by: Fabio M. De Francesco <fmdefrancesco@gmail.com>
 ---
- fs/isofs/compress.c | 28 +++++++++++++++-------------
- 1 file changed, 15 insertions(+), 13 deletions(-)
+ fs/isofs/compress.c | 31 +++++++++++++++++++------------
+ 1 file changed, 19 insertions(+), 12 deletions(-)
 
 diff --git a/fs/isofs/compress.c b/fs/isofs/compress.c
-index 95a19f25d61c..321d2e0f22e9 100644
+index 95a19f25d61c..d3da5e4a3b20 100644
 --- a/fs/isofs/compress.c
 +++ b/fs/isofs/compress.c
 @@ -39,8 +39,8 @@ static DEFINE_MUTEX(zisofs_zlib_lock);
@@ -82,18 +82,21 @@ index 95a19f25d61c..321d2e0f22e9 100644
  	pgoff_t index = page->index, end_index;
  
  	end_index = (inode->i_size + PAGE_SIZE - 1) >> PAGE_SHIFT;
-@@ -334,7 +334,9 @@ static int zisofs_read_folio(struct file *file, struct folio *folio)
- 	}
- 	pages = kcalloc(max_t(unsigned int, zisofs_pages_per_cblock, 1),
- 					sizeof(*pages), GFP_KERNEL);
--	if (!pages) {
-+	kaddrs = kcalloc(max_t(unsigned int, zisofs_pages_per_cblock, 1),
-+			 sizeof(*kaddrs), GFP_KERNEL);
-+	if (!pages || !kaddrs) {
+@@ -338,6 +338,13 @@ static int zisofs_read_folio(struct file *file, struct folio *folio)
  		unlock_page(page);
  		return -ENOMEM;
  	}
-@@ -345,11 +347,11 @@ static int zisofs_read_folio(struct file *file, struct folio *folio)
++	kaddrs = kcalloc(max_t(unsigned int, zisofs_pages_per_cblock, 1),
++			 sizeof(*kaddrs), GFP_KERNEL);
++	if (!kaddrs) {
++		kfree(pages);
++		unlock_page(page);
++		return -ENOMEM;
++	}
+ 	pages[full_page] = page;
+ 
+ 	for (i = 0; i < pcount; i++, index++) {
+@@ -345,11 +352,11 @@ static int zisofs_read_folio(struct file *file, struct folio *folio)
  			pages[i] = grab_cache_page_nowait(mapping, index);
  		if (pages[i]) {
  			ClearPageError(pages[i]);
@@ -107,7 +110,7 @@ index 95a19f25d61c..321d2e0f22e9 100644
  
  	/* Release any residual pages, do not SetPageUptodate */
  	for (i = 0; i < pcount; i++) {
-@@ -357,7 +359,7 @@ static int zisofs_read_folio(struct file *file, struct folio *folio)
+@@ -357,7 +364,7 @@ static int zisofs_read_folio(struct file *file, struct folio *folio)
  			flush_dcache_page(pages[i]);
  			if (i == full_page && err)
  				SetPageError(pages[i]);
