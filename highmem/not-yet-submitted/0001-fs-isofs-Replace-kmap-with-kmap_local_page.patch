@@ -1,0 +1,121 @@
+From 2df3f9b896b54df58081c7f2d8526c5fc873bbc6 Mon Sep 17 00:00:00 2001
+From: "Fabio M. De Francesco" <fmdefrancesco@gmail.com>
+Date: Sat, 16 Jul 2022 02:12:38 +0200
+Subject: [PATCH] fs/isofs: Replace kmap() with kmap_local_page()
+
+...
+
+Suggested-by: Ira Weiny <ira.weiny@intel.com>
+Signed-off-by: Fabio M. De Francesco <fmdefrancesco@gmail.com>
+---
+ fs/isofs/compress.c | 28 +++++++++++++++-------------
+ 1 file changed, 15 insertions(+), 13 deletions(-)
+
+diff --git a/fs/isofs/compress.c b/fs/isofs/compress.c
+index 95a19f25d61c..321d2e0f22e9 100644
+--- a/fs/isofs/compress.c
++++ b/fs/isofs/compress.c
+@@ -39,8 +39,8 @@ static DEFINE_MUTEX(zisofs_zlib_lock);
+  */
+ static loff_t zisofs_uncompress_block(struct inode *inode, loff_t block_start,
+ 				      loff_t block_end, int pcount,
+-				      struct page **pages, unsigned poffset,
+-				      int *errp)
++				      struct page **pages, char **kaddrs,
++				      unsigned poffset, int *errp)
+ {
+ 	unsigned int zisofs_block_shift = ISOFS_I(inode)->i_format_parm[1];
+ 	unsigned int bufsize = ISOFS_BUFFER_SIZE(inode);
+@@ -67,7 +67,7 @@ static loff_t zisofs_uncompress_block(struct inode *inode, loff_t block_start,
+ 		for ( i = 0 ; i < pcount ; i++ ) {
+ 			if (!pages[i])
+ 				continue;
+-			memset(page_address(pages[i]), 0, PAGE_SIZE);
++			memzero_page(pages[i], 0, PAGE_SIZE);
+ 			flush_dcache_page(pages[i]);
+ 			SetPageUptodate(pages[i]);
+ 		}
+@@ -120,8 +120,7 @@ static loff_t zisofs_uncompress_block(struct inode *inode, loff_t block_start,
+ 	       zerr != Z_STREAM_END) {
+ 		if (!stream.avail_out) {
+ 			if (pages[curpage]) {
+-				stream.next_out = page_address(pages[curpage])
+-						+ poffset;
++				stream.next_out = kaddrs[curpage] + poffset;
+ 				stream.avail_out = PAGE_SIZE - poffset;
+ 				poffset = 0;
+ 			} else {
+@@ -199,7 +198,7 @@ static loff_t zisofs_uncompress_block(struct inode *inode, loff_t block_start,
+  * fills in other pages if we have data for them.
+  */
+ static int zisofs_fill_pages(struct inode *inode, int full_page, int pcount,
+-			     struct page **pages)
++			     struct page **pages, char **kaddrs)
+ {
+ 	loff_t start_off, end_off;
+ 	loff_t block_start, block_end;
+@@ -260,7 +259,7 @@ static int zisofs_fill_pages(struct inode *inode, int full_page, int pcount,
+ 		}
+ 		err = 0;
+ 		ret = zisofs_uncompress_block(inode, block_start, block_end,
+-					      pcount, pages, poffset, &err);
++					      pcount, pages, kaddrs, poffset, &err);
+ 		poffset += ret;
+ 		pages += poffset >> PAGE_SHIFT;
+ 		pcount -= poffset >> PAGE_SHIFT;
+@@ -283,8 +282,7 @@ static int zisofs_fill_pages(struct inode *inode, int full_page, int pcount,
+ 	}
+ 
+ 	if (poffset && *pages) {
+-		memset(page_address(*pages) + poffset, 0,
+-		       PAGE_SIZE - poffset);
++		memzero_page(*pages, poffset, PAGE_SIZE - poffset);
+ 		flush_dcache_page(*pages);
+ 		SetPageUptodate(*pages);
+ 	}
+@@ -308,6 +306,8 @@ static int zisofs_read_folio(struct file *file, struct folio *folio)
+ 		PAGE_SHIFT <= zisofs_block_shift ?
+ 		(1 << (zisofs_block_shift - PAGE_SHIFT)) : 0;
+ 	struct page **pages;
++	char **kaddrs;
++
+ 	pgoff_t index = page->index, end_index;
+ 
+ 	end_index = (inode->i_size + PAGE_SIZE - 1) >> PAGE_SHIFT;
+@@ -334,7 +334,9 @@ static int zisofs_read_folio(struct file *file, struct folio *folio)
+ 	}
+ 	pages = kcalloc(max_t(unsigned int, zisofs_pages_per_cblock, 1),
+ 					sizeof(*pages), GFP_KERNEL);
+-	if (!pages) {
++	kaddrs = kcalloc(max_t(unsigned int, zisofs_pages_per_cblock, 1),
++			 sizeof(*kaddrs), GFP_KERNEL);
++	if (!pages || !kaddrs) {
+ 		unlock_page(page);
+ 		return -ENOMEM;
+ 	}
+@@ -345,11 +347,11 @@ static int zisofs_read_folio(struct file *file, struct folio *folio)
+ 			pages[i] = grab_cache_page_nowait(mapping, index);
+ 		if (pages[i]) {
+ 			ClearPageError(pages[i]);
+-			kmap(pages[i]);
++			kaddrs[i] = kmap_local_page(pages[i]);
+ 		}
+ 	}
+ 
+-	err = zisofs_fill_pages(inode, full_page, pcount, pages);
++	err = zisofs_fill_pages(inode, full_page, pcount, pages, kaddrs);
+ 
+ 	/* Release any residual pages, do not SetPageUptodate */
+ 	for (i = 0; i < pcount; i++) {
+@@ -357,7 +359,7 @@ static int zisofs_read_folio(struct file *file, struct folio *folio)
+ 			flush_dcache_page(pages[i]);
+ 			if (i == full_page && err)
+ 				SetPageError(pages[i]);
+-			kunmap(pages[i]);
++			kunmap_local(kaddrs[i]);
+ 			unlock_page(pages[i]);
+ 			if (i != full_page)
+ 				put_page(pages[i]);
+-- 
+2.37.1
+
