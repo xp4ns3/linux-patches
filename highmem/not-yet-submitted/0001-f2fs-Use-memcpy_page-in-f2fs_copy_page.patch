@@ -1,4 +1,4 @@
-From 229a4605ae4b621cd7bf673ab538b67ac5b8775d Mon Sep 17 00:00:00 2001
+From b584f6659fcc91f01952edc34f7968236a2eba24 Mon Sep 17 00:00:00 2001
 From: "Fabio M. De Francesco" <fmdefrancesco@gmail.com>
 Date: Sat, 16 Jul 2022 22:29:58 +0200
 Subject: [PATCH] f2fs: Use memcpy_page() in f2fs_copy_page()
@@ -13,10 +13,6 @@ space is restricted and protected by a global lock for synchronization and
 (2) it also requires global TLB invalidation when the kmap’s pool wraps
 and it might block when the mapping space is fully utilized until a slot
 becomes available.
-
-kmap_local_page() is preferred over kmap() and kmap_atomic(). Where it
-cannot mechanically replace the latters, code refactor should be
-considered.
 
 Therefore, replace kmap() with kmap_local_page() in f2fs_copy_page() and
 use memcpy_page() instead of open coding kmap_local_page() + memcpy().
