@@ -1,0 +1,50 @@
+From 229a4605ae4b621cd7bf673ab538b67ac5b8775d Mon Sep 17 00:00:00 2001
+From: "Fabio M. De Francesco" <fmdefrancesco@gmail.com>
+Date: Sat, 16 Jul 2022 22:29:58 +0200
+Subject: [PATCH] f2fs: Use memcpy_page() in f2fs_copy_page()
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 8bit
+
+The use of kmap() is being deprecated in favor of kmap_local_page().
+
+Two main problems with kmap(): (1) It comes with an overhead as mapping
+space is restricted and protected by a global lock for synchronization and
+(2) it also requires global TLB invalidation when the kmap’s pool wraps
+and it might block when the mapping space is fully utilized until a slot
+becomes available.
+
+kmap_local_page() is preferred over kmap() and kmap_atomic(). Where it
+cannot mechanically replace the latters, code refactor should be
+considered.
+
+Therefore, replace kmap() with kmap_local_page() in f2fs_copy_page() and
+use memcpy_page() instead of open coding kmap_local_page() + memcpy().
+
+Suggested-by: Ira Weiny <ira.weiny@intel.com>
+Signed-off-by: Fabio M. De Francesco <fmdefrancesco@gmail.com>
+---
+ fs/f2fs/f2fs.h | 6 +-----
+ 1 file changed, 1 insertion(+), 5 deletions(-)
+
+diff --git a/fs/f2fs/f2fs.h b/fs/f2fs/f2fs.h
+index d9bbecd008d2..f04e760bb1c1 100644
+--- a/fs/f2fs/f2fs.h
++++ b/fs/f2fs/f2fs.h
+@@ -2698,12 +2698,8 @@ static inline struct page *f2fs_pagecache_get_page(
+ 
+ static inline void f2fs_copy_page(struct page *src, struct page *dst)
+ {
+-	char *src_kaddr = kmap(src);
+-	char *dst_kaddr = kmap(dst);
+ 
+-	memcpy(dst_kaddr, src_kaddr, PAGE_SIZE);
+-	kunmap(dst);
+-	kunmap(src);
++	memcpy_page(dst, 0, src, 0, PAGE_SIZE);
+ }
+ 
+ static inline void f2fs_put_page(struct page *page, int unlock)
+-- 
+2.37.1
+
