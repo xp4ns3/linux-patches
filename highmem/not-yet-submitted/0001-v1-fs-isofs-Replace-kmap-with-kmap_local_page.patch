@@ -1,9 +1,27 @@
-From 1b352994c64557ba7b1e88361b201681b2a260b3 Mon Sep 17 00:00:00 2001
+From 2fdc550e70522e71e7f9c64c167dc5e854110e9b Mon Sep 17 00:00:00 2001
 From: "Fabio M. De Francesco" <fmdefrancesco@gmail.com>
 Date: Sat, 16 Jul 2022 02:12:38 +0200
 Subject: [PATCH] fs/isofs: Replace kmap() with kmap_local_page()
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 8bit
 
-...
+The use of kmap() is being deprecated in favor of kmap_local_page().
+
+Two main problems with kmap(): (1) It comes with an overhead as mapping
+space is restricted and protected by a global lock for synchronization and
+(2) it also requires global TLB invalidation when the kmap’s pool wraps
+and it might block when the mapping space is fully utilized until a slot
+becomes available.
+
+kmap_local_page() is preferred over kmap() and kmap_atomic(). Where it
+cannot mechanically replace the latters, code refactor should be
+considered.
+
+Therefore, replace kmap() with kmap_local_page() in compress.c and add a
+"char **kaddr" argument to the prototypes of the functions which need a
+pointer to an array of kernel virtual addresses along with the pages
+they map.
 
 Suggested-by: Ira Weiny <ira.weiny@intel.com>
 Signed-off-by: Fabio M. De Francesco <fmdefrancesco@gmail.com>
