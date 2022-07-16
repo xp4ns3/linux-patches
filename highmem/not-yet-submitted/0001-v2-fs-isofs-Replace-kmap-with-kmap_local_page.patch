@@ -1,4 +1,4 @@
-From 2d00fc56f8c81340719d42c8478e4821ca91cb7b Mon Sep 17 00:00:00 2001
+From 499d37b441cd0adb6e8b2bbc0579ca84a740dd01 Mon Sep 17 00:00:00 2001
 From: "Fabio M. De Francesco" <fmdefrancesco@gmail.com>
 Date: Sat, 16 Jul 2022 02:12:38 +0200
 Subject: [PATCH] fs/isofs: Replace kmap() with kmap_local_page()
@@ -25,70 +25,37 @@ the pages with zeros.
 Suggested-by: Ira Weiny <ira.weiny@intel.com>
 Signed-off-by: Fabio M. De Francesco <fmdefrancesco@gmail.com>
 ---
- fs/isofs/compress.c | 14 +++++---------
- 1 file changed, 5 insertions(+), 9 deletions(-)
+ fs/isofs/compress.c | 10 +++++++++-
+ 1 file changed, 9 insertions(+), 1 deletion(-)
 
 diff --git a/fs/isofs/compress.c b/fs/isofs/compress.c
-index 95a19f25d61c..fe3eca7de2f4 100644
+index fe3eca7de2f4..94d0ef6c2fc4 100644
 --- a/fs/isofs/compress.c
 +++ b/fs/isofs/compress.c
-@@ -67,7 +67,7 @@ static loff_t zisofs_uncompress_block(struct inode *inode, loff_t block_start,
- 		for ( i = 0 ; i < pcount ; i++ ) {
- 			if (!pages[i])
- 				continue;
--			memset(page_address(pages[i]), 0, PAGE_SIZE);
-+			memzero_page(pages[i], 0, PAGE_SIZE);
- 			flush_dcache_page(pages[i]);
- 			SetPageUptodate(pages[i]);
+@@ -169,6 +169,12 @@ static loff_t zisofs_uncompress_block(struct inode *inode, loff_t block_start,
+ 			}
  		}
-@@ -120,8 +120,7 @@ static loff_t zisofs_uncompress_block(struct inode *inode, loff_t block_start,
- 	       zerr != Z_STREAM_END) {
+ 
++		if (stream.next_out) {
++			if (stream.next_out != zisofs_sink_page) {
++				kunmap_local(stream.next_out);
++				stream.next_out = NULL;
++			}
++
  		if (!stream.avail_out) {
+ 			/* This page completed */
  			if (pages[curpage]) {
--				stream.next_out = page_address(pages[curpage])
--						+ poffset;
-+				stream.next_out = kmap_local_page(pages[curpage] + poffset);
- 				stream.avail_out = PAGE_SIZE - poffset;
- 				poffset = 0;
- 			} else {
-@@ -183,6 +182,7 @@ static loff_t zisofs_uncompress_block(struct inode *inode, loff_t block_start,
+@@ -182,7 +188,9 @@ static loff_t zisofs_uncompress_block(struct inode *inode, loff_t block_start,
  	}
  inflate_out:
  	zlib_inflateEnd(&stream);
-+	kunmap_local(stream.next_out);
+-	kunmap_local(stream.next_out);
++	if (stream.next_out)
++		if (stream.next_out != zisofs_sink_page)
++			kunmap_local(stream.next_out);
  
  z_eio:
  	mutex_unlock(&zisofs_zlib_lock);
-@@ -283,8 +283,7 @@ static int zisofs_fill_pages(struct inode *inode, int full_page, int pcount,
- 	}
- 
- 	if (poffset && *pages) {
--		memset(page_address(*pages) + poffset, 0,
--		       PAGE_SIZE - poffset);
-+		memzero_page(*pages, poffset, PAGE_SIZE - poffset);
- 		flush_dcache_page(*pages);
- 		SetPageUptodate(*pages);
- 	}
-@@ -343,10 +342,8 @@ static int zisofs_read_folio(struct file *file, struct folio *folio)
- 	for (i = 0; i < pcount; i++, index++) {
- 		if (i != full_page)
- 			pages[i] = grab_cache_page_nowait(mapping, index);
--		if (pages[i]) {
-+		if (pages[i])
- 			ClearPageError(pages[i]);
--			kmap(pages[i]);
--		}
- 	}
- 
- 	err = zisofs_fill_pages(inode, full_page, pcount, pages);
-@@ -357,7 +354,6 @@ static int zisofs_read_folio(struct file *file, struct folio *folio)
- 			flush_dcache_page(pages[i]);
- 			if (i == full_page && err)
- 				SetPageError(pages[i]);
--			kunmap(pages[i]);
- 			unlock_page(pages[i]);
- 			if (i != full_page)
- 				put_page(pages[i]);
 -- 
 2.37.1
 
