@@ -1,4 +1,4 @@
-From fde1dc5f13c6a0ce030387828767b5b10f6b7e87 Mon Sep 17 00:00:00 2001
+From aecf7d429287c2c3a4e6601d4aaf35b593cf9663 Mon Sep 17 00:00:00 2001
 From: "Fabio M. De Francesco" <fmdefrancesco@gmail.com>
 Date: Sat, 16 Jul 2022 11:41:18 +0200
 Subject: [PATCH] fs/isofs: Replace kmap() with kmap_local_page()
@@ -25,11 +25,11 @@ the pages with zeros.
 Suggested-by: Ira Weiny <ira.weiny@intel.com>
 Signed-off-by: Fabio M. De Francesco <fmdefrancesco@gmail.com>
 ---
- fs/isofs/compress.c | 23 ++++++++++++++---------
- 1 file changed, 14 insertions(+), 9 deletions(-)
+ fs/isofs/compress.c | 22 +++++++++++++---------
+ 1 file changed, 13 insertions(+), 9 deletions(-)
 
 diff --git a/fs/isofs/compress.c b/fs/isofs/compress.c
-index 95a19f25d61c..af74697483eb 100644
+index 95a19f25d61c..377f4cd0d9fe 100644
 --- a/fs/isofs/compress.c
 +++ b/fs/isofs/compress.c
 @@ -67,7 +67,7 @@ static loff_t zisofs_uncompress_block(struct inode *inode, loff_t block_start,
@@ -84,15 +84,7 @@ index 95a19f25d61c..af74697483eb 100644
  		flush_dcache_page(*pages);
  		SetPageUptodate(*pages);
  	}
-@@ -308,6 +315,7 @@ static int zisofs_read_folio(struct file *file, struct folio *folio)
- 		PAGE_SHIFT <= zisofs_block_shift ?
- 		(1 << (zisofs_block_shift - PAGE_SHIFT)) : 0;
- 	struct page **pages;
-+
- 	pgoff_t index = page->index, end_index;
- 
- 	end_index = (inode->i_size + PAGE_SIZE - 1) >> PAGE_SHIFT;
-@@ -343,10 +351,8 @@ static int zisofs_read_folio(struct file *file, struct folio *folio)
+@@ -343,10 +350,8 @@ static int zisofs_read_folio(struct file *file, struct folio *folio)
  	for (i = 0; i < pcount; i++, index++) {
  		if (i != full_page)
  			pages[i] = grab_cache_page_nowait(mapping, index);
@@ -104,7 +96,7 @@ index 95a19f25d61c..af74697483eb 100644
  	}
  
  	err = zisofs_fill_pages(inode, full_page, pcount, pages);
-@@ -357,7 +363,6 @@ static int zisofs_read_folio(struct file *file, struct folio *folio)
+@@ -357,7 +362,6 @@ static int zisofs_read_folio(struct file *file, struct folio *folio)
  			flush_dcache_page(pages[i]);
  			if (i == full_page && err)
  				SetPageError(pages[i]);
