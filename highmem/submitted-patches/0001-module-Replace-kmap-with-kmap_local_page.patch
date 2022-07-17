@@ -1,4 +1,4 @@
-From 41045c96e9c14c4531abd0c74688c848ca0e2970 Mon Sep 17 00:00:00 2001
+From 70c15c2f5a988c5b784c58a94c3851ca89b296f3 Mon Sep 17 00:00:00 2001
 From: "Fabio M. De Francesco" <fmdefrancesco@gmail.com>
 Date: Sun, 17 Jul 2022 13:50:35 +0200
 Subject: [PATCH] module: Replace kmap() with kmap_local_page()
@@ -26,6 +26,7 @@ Tested on a QEMU/KVM x86_32 VM with 4GB RAM, booting kernels with
 HIGHMEM64GB enabled. Modules compressed with XZ or GZIP decompress
 properly.
 
+Cc: Dmitry Torokhov <dmitry.torokhov@gmail.com>
 Suggested-by: Ira Weiny <ira.weiny@intel.com>
 Signed-off-by: Fabio M. De Francesco <fmdefrancesco@gmail.com>
 ---
@@ -33,7 +34,7 @@ Signed-off-by: Fabio M. De Francesco <fmdefrancesco@gmail.com>
  1 file changed, 4 insertions(+), 4 deletions(-)
 
 diff --git a/kernel/module/decompress.c b/kernel/module/decompress.c
-index 2fc7081dd7c1..30ff8b8f828d 100644
+index 2fc7081dd7c1..4d0bcb3d9e44 100644
 --- a/kernel/module/decompress.c
 +++ b/kernel/module/decompress.c
 @@ -119,10 +119,10 @@ static ssize_t module_gzip_decompress(struct load_info *info,
@@ -45,7 +46,7 @@ index 2fc7081dd7c1..30ff8b8f828d 100644
  		s.avail_out = PAGE_SIZE;
  		rc = zlib_inflate(&s, 0);
 -		kunmap(page);
-+		kunmap_local(s.next.out);
++		kunmap_local(s.next_out);
  
  		new_size += PAGE_SIZE - s.avail_out;
  	} while (rc == Z_OK);
