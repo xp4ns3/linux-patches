@@ -4,18 +4,37 @@ Date: Wed, 13 Jul 2022 19:06:41 +0200
 Subject: [PATCH 5/6] Documentation/mm: Prefer kmap_local_page() and avoid
  kmap()
 
-Two main problems with kmap(): (1) It comes with an overhead as mapping
+<ira>
+The reasoning for converting kmap() to kmap_local_page() was questioned
+recently.[1]
+</ira>
+
+<ira>
+There are ...
+</ira>
+
+...two main problems with kmap(): (1) It comes with an overhead as mapping
 space is restricted and protected by a global lock for synchronization and
 (2) kmap() also requires global TLB invalidation when its pool wraps and
 it might block when the mapping space is fully utilized until a slot
 becomes available.
 
-Warn users to avoid the use of kmap() by designing their code to map
-pages in the same context where the pointer returned by
-kmap_local_page() is going to be used.
+Warn users to avoid the use of kmap(),
 
-The following message can help to understand better:
-https://lore.kernel.org/lkml/1891319.taCxCBeP46@opensuse/
+<ira>
+and instead use kmap_local_page(), 
+</ira>
+
+by designing their code to map
+pages in the same context where ...
+
+<ira>
+... the mapping will be used.
+</ira>
+
+<ira>
+[1] https://lore.kernel.org/lkml/1891319.taCxCBeP46@opensuse/
+</ira>
 
 Cc: Andrew Morton <akpm@linux-foundation.org>
 Cc: Matthew Wilcox (Oracle) <willy@infradead.org>
@@ -40,6 +59,15 @@ index b72689d47265..f43951e07890 100644
 +  thought to make use of thread local mappings, users should try to design
 +  in ways that permit to avoid the use of kmap() by mapping pages in the
 +  same context where the address will be used.
+
+<ira>
+I think this reads a bit weird.  How about:
+
+Most code can be designed to use thread local mappings.  User should therefore
+try to design their code to avoid the use of kmap() by mapping pages in the
+same thread the address will be used and prefer kmap_local_page().
+
+</ira>
 +
    Nesting kmap_local_page() and kmap_atomic() mappings is allowed to a certain
    extent (up to KMAP_TYPE_NR) but their invocations have to be strictly ordered

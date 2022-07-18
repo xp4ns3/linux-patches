@@ -15,6 +15,9 @@ Cc: Mike Rapoport <rppt@linux.ibm.com>
 Cc: Sebastian Andrzej Siewior <bigeasy@linutronix.de>
 Cc: Thomas Gleixner <tglx@linutronix.de>
 Suggested-by: Ira Weiny <ira.weiny@intel.com>
+<ira>
+Reviewed-by: Ira Weiny <ira.weiny@intel.com>
+</ira>
 Signed-off-by: Fabio M. De Francesco <fmdefrancesco@gmail.com>
 ---
  include/linux/highmem.h | 3 +--

@@ -9,7 +9,20 @@ are guaranteed to come from ZONE_NORMAL (or lower). Linux has currently
 several call sites of kmap{,_atomic,_local_page}() on pages allocated,
 for instance, with alloc_page(GFP_NOFS) and other similar allocations.
 
-Therefore, add a paragraph to highmem.rst, to explain better that a
+<ira>
+No offense meant but this is awkward english.
+
+For the above how about:
+
+There is no need to kmap*() pages which are guaranteed to come from ZONE_NORMAL
+(or lower). Linux has currently several call sites of
+kmap{,_atomic,_local_page}() on pages allocated, for instance, with
+alloc_page(GFP_NOFS) and other similar allocations.
+
+</ira>
+
+Add a paragraph to highmem.rst, to explain better that a
+<ira> fixed up here </ira>
 plain page_address() should be used for getting the address of pages
 which cannot come from ZONE_HIGHMEM.
 

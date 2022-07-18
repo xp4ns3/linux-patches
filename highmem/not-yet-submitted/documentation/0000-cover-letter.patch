@@ -9,6 +9,23 @@ highmem.h, while other parts are changed in highmem.rst. Please note
 that highmem.rst embeds kdocs included from highmem.h and
 highmem-internal.h.
 
+<ira>
+This says what the series is doing and how but not really why.
+
+Cover letters and commit messages should focus on the why.
+
+I would say:
+
+The highmem interface is evolving and the current documentation does not
+reflect the intended uses of each of the calls.
+
+Furthermore, the differences of the calls can be confusing and may lead to
+the expanded use of calls which are deprecated.
+
+In addition make minor clean ups.
+</ira>
+
+
 Cc: Andrew Morton <akpm@linux-foundation.org>
 Cc: Matthew Wilcox (Oracle) <willy@infradead.org>
 Cc: Mike Rapoport <rppt@linux.ibm.com>

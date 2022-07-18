@@ -4,6 +4,15 @@ Date: Wed, 13 Jul 2022 16:06:54 +0200
 Subject: [PATCH 2/6] highmem: Specify that kmap_local_page() is callable from
  interrupts
 
+<ira>
+I would lead with the fact that a user was confused about this.
+
+How about this:
+
+In a recent thread converting kmap() to kmap_local_page() the safety of calling
+kmap_local_page() was questioned.[1]
+</ira>
+
 "any context" should probably be enough detail for users who want to
 know whether or not kmap_local_page() can be called from interrupts.
 However, Linux still has kmap_atomic() which might make users think they
@@ -13,6 +22,12 @@ Add "including interrupts" for better clarity.
 
 The following message may help users understand why adding this detail
 might be useful: https://lore.kernel.org/lkml/3187836.aeNJFYEL58@opensuse/
+
+<ira>
+Then here just make this link a footnote:
+
+[1] https://lore.kernel.org/lkml/3187836.aeNJFYEL58@opensuse/
+</ira>
 
 Cc: Andrew Morton <akpm@linux-foundation.org>
 Cc: Matthew Wilcox (Oracle) <willy@infradead.org>
