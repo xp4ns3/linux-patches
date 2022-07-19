@@ -6,6 +6,9 @@ Subject: [PATCH 4/6] Documentation/mm: Avoid invalid use of addresses from
 
 Users of kmap_local_page() must be absolutely sure to not hand kernel
 virtual address obtained calling kmap_local_page() on highmem pages.
+<ira>
+... to other contexts?
+</ira>
 Those pointers are thread local, therefore are no longer valid across
 different contexts.
 
@@ -35,7 +38,13 @@ index f266354c82ab..b72689d47265 100644
 +  comes with restrictions about the pointers validity. Contrary to kmap()
 +  mappings, the local mappings are only valid in the context of the caller
 +  and cannot be handed to other contexts. This implies that users must
-+  be absolutely sure not to break the rule of thread locality.
++  be absolutely ...
+
+<ira>
+... sure to keep the use of the return address local to the thread which mapped
+it.
+</ira>
+
 +
    Nesting kmap_local_page() and kmap_atomic() mappings is allowed to a certain
    extent (up to KMAP_TYPE_NR) but their invocations have to be strictly ordered
