@@ -1,7 +1,7 @@
-From deaced194ea94260394d9912154a8ae70382bb13 Mon Sep 17 00:00:00 2001
+From bc5d45a5f4cc6ebda307477bd42084faf7c6f5b8 Mon Sep 17 00:00:00 2001
 From: "Fabio M. De Francesco" <fmdefrancesco@gmail.com>
 Date: Sun, 17 Jul 2022 13:50:35 +0200
-Subject: [PATCH] module: Replace kmap() with kmap_local_page()
+Subject: [PATCH v2] module: Replace kmap() with kmap_local_page()
 MIME-Version: 1.0
 Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 8bit
@@ -16,9 +16,14 @@ becomes available.
 
 With kmap_local_page() the mappings are per thread, CPU local, can take
 page faults, and can be called from any context (including interrupts).
-It is faster than kmap() in kernels with HIGHMEM enabled. Its use in
-module_gzip_decompress() and in module_xz_decompress() is safe and
-should be preferred.
+Tasks can be preempted and, when scheduled to run again, the kernel
+virtual addresses are restored and still valid.
+
+kmap_local_page() is faster than kmap() in kernels with HIGHMEM enabled.
+
+Since the use of kmap_local_page() in module_gzip_decompress() and in
+module_xz_decompress() is safe (i.e., it does not break the strict rules
+of use), it should be preferred over kmap().
 
 Therefore, replace kmap() with kmap_local_page().
 
@@ -26,9 +31,15 @@ Tested on a QEMU/KVM x86_32 VM with 4GB RAM, booting kernels with
 HIGHMEM64GB enabled. Modules compressed with XZ or GZIP decompress
 properly.
 
+Cc: Matthew Wilcox <willy@infradead.com>
 Suggested-by: Ira Weiny <ira.weiny@intel.com>
 Signed-off-by: Fabio M. De Francesco <fmdefrancesco@gmail.com>
 ---
+
+v1->v2: Add information which says that the pointers returned by
+kmap_local_page() are still valid if tasks are preempted and then
+rescheduled to run again (thanks to Luis Chamberlain).
+
  kernel/module/decompress.c | 8 ++++----
  1 file changed, 4 insertions(+), 4 deletions(-)
 
