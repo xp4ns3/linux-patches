@@ -1,0 +1,29 @@
+From 15916bf86f2165f69ac324957afab59fb4f88830 Mon Sep 17 00:00:00 2001
+From: "Fabio M. De Francesco" <fmdefrancesco@gmail.com>
+Date: Sat, 23 Jul 2022 03:15:04 +0200
+Subject: [PATCH] joystick/iforce: Wake up waiter
+
+...
+
+Signed-off-by: Fabio M. De Francesco <fmdefrancesco@gmail.com>
+---
+ drivers/input/joystick/iforce/iforce-usb.c | 3 +++
+ 1 file changed, 3 insertions(+)
+
+diff --git a/drivers/input/joystick/iforce/iforce-usb.c b/drivers/input/joystick/iforce/iforce-usb.c
+index ea58805c480f..2717e35c79a3 100644
+--- a/drivers/input/joystick/iforce/iforce-usb.c
++++ b/drivers/input/joystick/iforce/iforce-usb.c
+@@ -258,6 +258,9 @@ static void iforce_usb_disconnect(struct usb_interface *intf)
+ 
+ 	usb_set_intfdata(intf, NULL);
+ 
++	clear_bit(IFORCE_XMIT_RUNNING, iforce_usb->iforce.xmit_flags);
++	wake_up(&iforce_usb->iforce.wait);
++
+ 	input_unregister_device(iforce_usb->iforce.dev);
+ 
+ 	usb_free_urb(iforce_usb->irq);
+-- 
+2.37.1
+
