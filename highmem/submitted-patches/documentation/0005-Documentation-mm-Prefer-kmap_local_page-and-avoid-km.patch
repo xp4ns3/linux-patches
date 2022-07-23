@@ -1,0 +1,50 @@
+From 3af61388851ef69aa674f61ac5344a068609c6e4 Mon Sep 17 00:00:00 2001
+From: "Fabio M. De Francesco" <fmdefrancesco@gmail.com>
+Date: Wed, 13 Jul 2022 19:06:41 +0200
+Subject: [PATCH 5/7] Documentation/mm: Prefer kmap_local_page() and avoid kmap()
+
+The reasoning for converting kmap() to kmap_local_page() was questioned
+recently.[1]
+
+There are two main problems with kmap(): (1) It comes with an overhead as
+mapping space is restricted and protected by a global lock for
+synchronization and (2) kmap() also requires global TLB invalidation when
+its pool wraps and it might block when the mapping space is fully utilized
+until a slot becomes available.
+
+Warn users to avoid the use of kmap() and instead use kmap_local_page(),
+by designing their code to map pages in the same context the mapping will
+be used.
+
+[1] https://lore.kernel.org/lkml/1891319.taCxCBeP46@opensuse/
+
+Cc: Andrew Morton <akpm@linux-foundation.org>
+Cc: Matthew Wilcox (Oracle) <willy@infradead.org>
+Cc: Mike Rapoport <rppt@linux.ibm.com>
+Cc: Sebastian Andrzej Siewior <bigeasy@linutronix.de>
+Cc: Thomas Gleixner <tglx@linutronix.de>
+Suggested-by: Ira Weiny <ira.weiny@intel.com>
+Signed-off-by: Fabio M. De Francesco <fmdefrancesco@gmail.com>
+---
+ Documentation/vm/highmem.rst | 5 +++++
+ 1 file changed, 5 insertions(+)
+
+diff --git a/Documentation/vm/highmem.rst b/Documentation/vm/highmem.rst
+index 50d2b1fac24a..564017b447b1 100644
+--- a/Documentation/vm/highmem.rst
++++ b/Documentation/vm/highmem.rst
+@@ -84,6 +84,11 @@ list shows them in order of preference of use.
+   be absolutely sure to keep the use of the return address local to the
+   thread which mapped it.
+ 
++  Most code can be designed to use thread local mappings. User should
++  therefore try to design their code to avoid the use of kmap() by mapping
++  pages in the same thread the address will be used and prefer
++  kmap_local_page().
++
+   Nesting kmap_local_page() and kmap_atomic() mappings is allowed to a certain
+   extent (up to KMAP_TYPE_NR) but their invocations have to be strictly ordered
+   because the map implementation is stack based. See kmap_local_page() kdocs
+-- 
+2.37.1
+

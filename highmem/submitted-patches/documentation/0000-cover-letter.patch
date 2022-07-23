@@ -1,0 +1,41 @@
+From b1ecf73d895bd23b534ab4994e1c7ce93ed8ab9f Mon Sep 17 00:00:00 2001
+From: "Fabio M. De Francesco" <fmdefrancesco@gmail.com>
+Date: Thu, 21 Jul 2022 22:22:22 +0200
+Subject: [PATCH 0/7] highmem: Extend kmap_local_page() documentation 
+
+The Highmem's interface is evolving and the current documentation does not
+reflect the intended uses of each of the calls. Furthermore, after a
+recent series of reworks, the differences of the calls can still be
+confusing and may lead to the expanded use of calls which are deprecated.
+
+This series is the second round of changes towards an enhanced
+documentation of the Highmem's interface; at this stage the patches are
+only focused to kmap_local_page().
+
+In addition it also contains some minor clean ups.
+
+Cc: Andrew Morton <akpm@linux-foundation.org>
+Cc: Matthew Wilcox (Oracle) <willy@infradead.org>
+Cc: Mike Rapoport <rppt@linux.ibm.com>
+Cc: Sebastian Andrzej Siewior <bigeasy@linutronix.de>
+Cc: Thomas Gleixner <tglx@linutronix.de>
+Suggested-by: Ira Weiny <ira.weiny@intel.com>
+Signed-off-by: Fabio M. De Francesco <fmdefrancesco@gmail.com>
+
+Fabio M. De Francesco (7):
+  highmem: Remove unneeded spaces in kmap_local_page() kdocs
+  highmem: Specify that kmap_local_page() is callable from interrupts
+  Documentation/mm: Don't kmap*() pages which can't come from HIGHMEM
+  Documentation/mm: Avoid invalid use of addresses from
+    kmap_local_page()
+  Documentation/mm: Prefer kmap_local_page() and avoid kmap()
+  highmem: Delete a sentence from kmap_local_page() kdocs
+  Documentation/mm: Add details about kmap_local_page() and preemption
+
+ Documentation/vm/highmem.rst | 31 +++++++++++++++++++++++++++----
+ include/linux/highmem.h      |  7 +++----
+ 2 files changed, 30 insertions(+), 8 deletions(-)
+
+-- 
+2.37.1
+

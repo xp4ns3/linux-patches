@@ -1,0 +1,38 @@
+From bc4df029c7482745775a3fde85caf3434c0d4a21 Mon Sep 17 00:00:00 2001
+From: "Fabio M. De Francesco" <fmdefrancesco@gmail.com>
+Date: Wed, 13 Jul 2022 16:00:19 +0200
+Subject: [PATCH 1/7] highmem: Remove unneeded spaces in kmap_local_page() kdocs
+
+In the kdocs of kmap_local_page(), the description of @page starts after
+several unnecessary spaces.
+
+Therefore, remove those spaces.
+
+Cc: Andrew Morton <akpm@linux-foundation.org>
+Cc: Matthew Wilcox (Oracle) <willy@infradead.org>
+Cc: Mike Rapoport <rppt@linux.ibm.com>
+Cc: Sebastian Andrzej Siewior <bigeasy@linutronix.de>
+Cc: Thomas Gleixner <tglx@linutronix.de>
+Suggested-by: Ira Weiny <ira.weiny@intel.com>
+Reviewed-by: Ira Weiny <ira.weiny@intel.com>
+Signed-off-by: Fabio M. De Francesco <fmdefrancesco@gmail.com>
+---
+ include/linux/highmem.h | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/include/linux/highmem.h b/include/linux/highmem.h
+index 158a3a2907dc..accd286a6af5 100644
+--- a/include/linux/highmem.h
++++ b/include/linux/highmem.h
+@@ -60,7 +60,7 @@ static inline void kmap_flush_unused(void);
+ 
+ /**
+  * kmap_local_page - Map a page for temporary usage
+- * @page:	Pointer to the page to be mapped
++ * @page: Pointer to the page to be mapped
+  *
+  * Returns: The virtual address of the mapping
+  *
+-- 
+2.37.1
+
