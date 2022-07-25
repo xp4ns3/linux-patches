@@ -1,4 +1,4 @@
-From aecf7d429287c2c3a4e6601d4aaf35b593cf9663 Mon Sep 17 00:00:00 2001
+From f695ea0a6773a450c77e6b9c5bea3b1eca13d351 Mon Sep 17 00:00:00 2001
 From: "Fabio M. De Francesco" <fmdefrancesco@gmail.com>
 Date: Sat, 16 Jul 2022 11:41:18 +0200
 Subject: [PATCH] fs/isofs: Replace kmap() with kmap_local_page()
@@ -8,40 +8,47 @@ Content-Transfer-Encoding: 8bit
 
 The use of kmap() is being deprecated in favor of kmap_local_page().
 
-Two main problems with kmap(): (1) It comes with an overhead as mapping
-space is restricted and protected by a global lock for synchronization and
-(2) it also requires global TLB invalidation when the kmap’s pool wraps
-and it might block when the mapping space is fully utilized until a slot
-becomes available.
+There are two main problems with kmap(): (1) It comes with an overhead as
+mapping space is restricted and protected by a global lock for
+synchronization and (2) it also requires global TLB invalidation when the
+kmap’s pool wraps and it might block when the mapping space is fully
+utilized until a slot becomes available.
 
-kmap_local_page() is preferred over kmap() and kmap_atomic(). Where it
-cannot mechanically replace the latters, code refactor should be
-considered.
+With kmap_local_page() the mappings are per thread, CPU local, can take
+page faults, and can be called from any context (including interrupts).
+Tasks can be preempted and, when scheduled to run again, the kernel
+virtual addresses are restored and still valid. It is faster than kmap()
+in kernels with HIGHMEM enabled.
 
-Therefore, replace kmap() with kmap_local_page() in compress.c and use
-memzero_page() instead of open coding kmap_local_page() + memset() to fill
-the pages with zeros.
+Since kmap_local_page() can be safely used in compress.c, it should be
+called everywhere instead of kmap().
+
+Therefore, replace kmap() with kmap_local_page() in compress.c. Where it
+is needed, use memzero_page() instead of open coding kmap_local_page()
+plus memset() to fill the pages with zeros. Delete the redundant
+flush_dcache_page() in the two call sites of memzero_page().
 
 Suggested-by: Ira Weiny <ira.weiny@intel.com>
 Signed-off-by: Fabio M. De Francesco <fmdefrancesco@gmail.com>
 ---
- fs/isofs/compress.c | 22 +++++++++++++---------
- 1 file changed, 13 insertions(+), 9 deletions(-)
+ fs/isofs/compress.c | 24 +++++++++++++-----------
+ 1 file changed, 13 insertions(+), 11 deletions(-)
 
 diff --git a/fs/isofs/compress.c b/fs/isofs/compress.c
-index 95a19f25d61c..377f4cd0d9fe 100644
+index 95a19f25d61c..a1562124bb91 100644
 --- a/fs/isofs/compress.c
 +++ b/fs/isofs/compress.c
-@@ -67,7 +67,7 @@ static loff_t zisofs_uncompress_block(struct inode *inode, loff_t block_start,
+@@ -67,8 +67,7 @@ static loff_t zisofs_uncompress_block(struct inode *inode, loff_t block_start,
  		for ( i = 0 ; i < pcount ; i++ ) {
  			if (!pages[i])
  				continue;
 -			memset(page_address(pages[i]), 0, PAGE_SIZE);
+-			flush_dcache_page(pages[i]);
 +			memzero_page(pages[i], 0, PAGE_SIZE);
- 			flush_dcache_page(pages[i]);
  			SetPageUptodate(pages[i]);
  		}
-@@ -120,8 +120,7 @@ static loff_t zisofs_uncompress_block(struct inode *inode, loff_t block_start,
+ 		return ((loff_t)pcount) << PAGE_SHIFT;
+@@ -120,8 +119,7 @@ static loff_t zisofs_uncompress_block(struct inode *inode, loff_t block_start,
  	       zerr != Z_STREAM_END) {
  		if (!stream.avail_out) {
  			if (pages[curpage]) {
@@ -51,12 +58,12 @@ index 95a19f25d61c..377f4cd0d9fe 100644
  				stream.avail_out = PAGE_SIZE - poffset;
  				poffset = 0;
  			} else {
-@@ -170,6 +169,12 @@ static loff_t zisofs_uncompress_block(struct inode *inode, loff_t block_start,
+@@ -170,6 +168,12 @@ static loff_t zisofs_uncompress_block(struct inode *inode, loff_t block_start,
  			}
  		}
  
 +		if (stream.next_out)
-+			if (stream.next_out != zisofs_sink_page) {
++			if (stream.next_out != (char *)zisofs_sink_page) {
 +				kunmap_local(stream.next_out);
 +				stream.next_out = NULL;
 +			}
@@ -64,27 +71,28 @@ index 95a19f25d61c..377f4cd0d9fe 100644
  		if (!stream.avail_out) {
  			/* This page completed */
  			if (pages[curpage]) {
-@@ -183,6 +188,9 @@ static loff_t zisofs_uncompress_block(struct inode *inode, loff_t block_start,
+@@ -183,6 +187,9 @@ static loff_t zisofs_uncompress_block(struct inode *inode, loff_t block_start,
  	}
  inflate_out:
  	zlib_inflateEnd(&stream);
 +	if (stream.next_out)
-+		if (stream.next_out != zisofs_sink_page)
++		if (stream.next_out != (char *)zisofs_sink_page)
 +			kunmap_local(stream.next_out);
  
  z_eio:
  	mutex_unlock(&zisofs_zlib_lock);
-@@ -283,8 +291,7 @@ static int zisofs_fill_pages(struct inode *inode, int full_page, int pcount,
+@@ -283,9 +290,7 @@ static int zisofs_fill_pages(struct inode *inode, int full_page, int pcount,
  	}
  
  	if (poffset && *pages) {
 -		memset(page_address(*pages) + poffset, 0,
 -		       PAGE_SIZE - poffset);
+-		flush_dcache_page(*pages);
 +		memzero_page(*pages, poffset, PAGE_SIZE - poffset);
- 		flush_dcache_page(*pages);
  		SetPageUptodate(*pages);
  	}
-@@ -343,10 +350,8 @@ static int zisofs_read_folio(struct file *file, struct folio *folio)
+ 	return 0;
+@@ -343,10 +348,8 @@ static int zisofs_read_folio(struct file *file, struct folio *folio)
  	for (i = 0; i < pcount; i++, index++) {
  		if (i != full_page)
  			pages[i] = grab_cache_page_nowait(mapping, index);
@@ -96,7 +104,7 @@ index 95a19f25d61c..377f4cd0d9fe 100644
  	}
  
  	err = zisofs_fill_pages(inode, full_page, pcount, pages);
-@@ -357,7 +362,6 @@ static int zisofs_read_folio(struct file *file, struct folio *folio)
+@@ -357,7 +360,6 @@ static int zisofs_read_folio(struct file *file, struct folio *folio)
  			flush_dcache_page(pages[i]);
  			if (i == full_page && err)
  				SetPageError(pages[i]);
