@@ -1,56 +1,56 @@
-From 5cd844578bdd2aa6ac3d4b5436190d5da0f3bf7d Mon Sep 17 00:00:00 2001
+From 9e7cfcc59ff777243cfea5728bbcc286f5a13227 Mon Sep 17 00:00:00 2001
 From: "Fabio M. De Francesco" <fmdefrancesco@gmail.com>
 Date: Sun, 10 Jul 2022 11:31:34 +0200
-Subject: [PATCH] fs: Call kmap_local_page() in copy_string_kernel()
+Subject: [PATCH v2] fs: Call kmap_local_page() in copy_string_kernel()
 
 The use of kmap_atomic() is being deprecated in favor of kmap_local_page().
 
-With kmap_local_page(), the mappings are per thread, CPU local, not
-globally visible and can take page faults. Furthermore, the mappings can be
-acquired from any context (including interrupts).
+With kmap_local_page(), the mappings are per thread, CPU local and not
+globally visible. Furthermore, the mappings can be acquired from any
+context (including interrupts).
 
-Therefore, use kmap_local_page() in copy_string_kernel() instead of
-kmap_atomic().
+Therefore, replace kmap_atomic() with kmap_local_page() in
+copy_string_kernel(). Instead of open-coding local mapping + memcpy(),
+use memcpy_to_page(). Delete a redundant call to flush_dcache_page().
 
-Tested with xfstests on a QEMU + KVM 32-bits VM booting a kernel with
-HIGHMEM64GB enabled.
+Tested with xfstests on a QEMU/ KVM x86_32 VM, 6GB RAM, booting a kernel
+with HIGHMEM64GB enabled.
 
 Suggested-by: Ira Weiny <ira.weiny@intel.com>
 Signed-off-by: Fabio M. De Francesco <fmdefrancesco@gmail.com>
 ---
 
-I sent a first patch to fs/exec.c for converting kmap() and kmap_atomic()
-to kmap_local_page():
-https://lore.kernel.org/lkml/20220630163527.9776-1-fmdefrancesco@gmail.com/
+v1->v2: Instead of open-coding a local mapping + memcpy(), use
+memcpy_to_page() (thanks to Ira Weiny for his comment on v1).
 
-Some days ago, Ira Weiny, while he was reviewing that patch, made me notice
-that I had overlooked a second kmap_atomic() in the same file (thanks):
-https://lore.kernel.org/lkml/YsiQptk19txHrG4c@iweiny-desk3/
-
-I've been asked to send this as an additional change. This is why there will
-not be any second version of that previous patch.
-
- fs/exec.c | 4 ++--
- 1 file changed, 2 insertions(+), 2 deletions(-)
+ fs/exec.c | 6 +-----
+ 1 file changed, 1 insertion(+), 5 deletions(-)
 
 diff --git a/fs/exec.c b/fs/exec.c
-index 4a2129c0d422..5fa652ca5823 100644
+index d20cb09476f3..eed899188333 100644
 --- a/fs/exec.c
 +++ b/fs/exec.c
-@@ -639,11 +639,11 @@ int copy_string_kernel(const char *arg, struct linux_binprm *bprm)
+@@ -630,7 +630,6 @@ int copy_string_kernel(const char *arg, struct linux_binprm *bprm)
+ 		unsigned int bytes_to_copy = min_t(unsigned int, len,
+ 				min_not_zero(offset_in_page(pos), PAGE_SIZE));
+ 		struct page *page;
+-		char *kaddr;
+ 
+ 		pos -= bytes_to_copy;
+ 		arg -= bytes_to_copy;
+@@ -639,11 +638,8 @@ int copy_string_kernel(const char *arg, struct linux_binprm *bprm)
  		page = get_arg_page(bprm, pos, 1);
  		if (!page)
  			return -E2BIG;
 -		kaddr = kmap_atomic(page);
-+		kaddr = kmap_local_page(page);
  		flush_arg_page(bprm, pos & PAGE_MASK, page);
- 		memcpy(kaddr + offset_in_page(pos), arg, bytes_to_copy);
- 		flush_dcache_page(page);
+-		memcpy(kaddr + offset_in_page(pos), arg, bytes_to_copy);
+-		flush_dcache_page(page);
 -		kunmap_atomic(kaddr);
-+		kunmap_local(kaddr);
++		memcpy_to_page(page, offset_in_page(pos), arg, bytes_to_copy);
  		put_arg_page(page);
  	}
  
 -- 
-2.36.1
+2.37.1
 
