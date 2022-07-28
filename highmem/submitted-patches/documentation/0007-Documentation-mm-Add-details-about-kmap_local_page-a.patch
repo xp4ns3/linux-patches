@@ -1,7 +1,7 @@
-From b1ecf73d895bd23b534ab4994e1c7ce93ed8ab9f Mon Sep 17 00:00:00 2001
+From cb359fa027f41888b64a450a14bd3bf2a1e02903 Mon Sep 17 00:00:00 2001
 From: "Fabio M. De Francesco" <fmdefrancesco@gmail.com>
 Date: Thu, 21 Jul 2022 21:47:40 +0200
-Subject: [PATCH 7/7] Documentation/mm: Add details about kmap_local_page() and preemption
+Subject: [PATCH v2 7/7] Documentation/mm: Add details about kmap_local_page() and preemption
 
 What happens if a thread is preempted after mapping pages with
 kmap_local_page() was questioned recently.[1]
@@ -31,7 +31,7 @@ Signed-off-by: Fabio M. De Francesco <fmdefrancesco@gmail.com>
  1 file changed, 9 insertions(+), 4 deletions(-)
 
 diff --git a/Documentation/vm/highmem.rst b/Documentation/vm/highmem.rst
-index 564017b447b1..8ce43965ddef 100644
+index e045a4b7b3da..0f731d9196b0 100644
 --- a/Documentation/vm/highmem.rst
 +++ b/Documentation/vm/highmem.rst
 @@ -60,14 +60,19 @@ list shows them in order of preference of use.

@@ -1,16 +1,17 @@
-From 28032c1d514950b55b085e7c34801656f7143f82 Mon Sep 17 00:00:00 2001
+From 25d605f3332fdc09681d5d12c9688027738171d5 Mon Sep 17 00:00:00 2001
 From: "Fabio M. De Francesco" <fmdefrancesco@gmail.com>
 Date: Wed, 13 Jul 2022 16:53:28 +0200
-Subject: [PATCH 3/7] Documentation/mm: Don't kmap*() pages which can't come from HIGHMEM
+Subject: [PATCH v2 3/7] Documentation/mm: Don't kmap*() pages which can't come from HIGHMEM
 
 There is no need to kmap*() pages which are guaranteed to come from
 ZONE_NORMAL (or lower). Linux has currently several call sites of
-kmap{,_atomic,_local_page}() on pages allocated, for instance, with
-alloc_page(GFP_NOFS) and other similar allocations.
+kmap{,_atomic,_local_page}() on pages which are clearly known which
+can't come from ZONE_HIGHMEM.
 
 Therefore, add a paragraph to highmem.rst, to explain better that a
-plain page_address() should be used for getting the address of pages
-which cannot come from ZONE_HIGHMEM.
+plain page_address() may be used for getting the address of pages
+which cannot come from ZONE_HIGHMEM, although it is always safe to use
+kmap_local_page() / kunmap_local() also on those pages.
 
 Cc: Andrew Morton <akpm@linux-foundation.org>
 Cc: Matthew Wilcox (Oracle) <willy@infradead.org>
@@ -24,7 +25,7 @@ Signed-off-by: Fabio M. De Francesco <fmdefrancesco@gmail.com>
  1 file changed, 6 insertions(+)
 
 diff --git a/Documentation/vm/highmem.rst b/Documentation/vm/highmem.rst
-index c9887f241c6c..f266354c82ab 100644
+index c9887f241c6c..34d7097d3ce8 100644
 --- a/Documentation/vm/highmem.rst
 +++ b/Documentation/vm/highmem.rst
 @@ -71,6 +71,12 @@ list shows them in order of preference of use.
@@ -33,9 +34,9 @@ index c9887f241c6c..f266354c82ab 100644
  
 +  On CONFIG_HIGHMEM=n kernels and for low memory pages this returns the
 +  virtual address of the direct mapping. Only real highmem pages are
-+  temporarily mapped. Therefore, users should instead call a plain
-+  page_address() for getting the address of memory pages which, depending
-+  on the GFP_* flags, cannot come from ZONE_HIGHMEM.
++  temporarily mapped. Therefore, users may call a plain page_address()
++  for pages which are known to not come from ZONE_HIGHMEM. However, it is
++  always safe to use kmap_local_page() / kunmap_local().
 +
    Nesting kmap_local_page() and kmap_atomic() mappings is allowed to a certain
    extent (up to KMAP_TYPE_NR) but their invocations have to be strictly ordered

@@ -1,7 +1,7 @@
-From b1ecf73d895bd23b534ab4994e1c7ce93ed8ab9f Mon Sep 17 00:00:00 2001
+From cb359fa027f41888b64a450a14bd3bf2a1e02903 Mon Sep 17 00:00:00 2001
 From: "Fabio M. De Francesco" <fmdefrancesco@gmail.com>
-Date: Thu, 21 Jul 2022 22:22:22 +0200
-Subject: [PATCH 0/7] highmem: Extend kmap_local_page() documentation 
+Date: Thu, 28 Jul 2022 17:00:05 +0200
+Subject: [PATCH v2 0/7] highmem: Extend kmap_local_page() documentation
 
 The Highmem's interface is evolving and the current documentation does not
 reflect the intended uses of each of the calls. Furthermore, after a
@@ -21,6 +21,10 @@ Cc: Sebastian Andrzej Siewior <bigeasy@linutronix.de>
 Cc: Thomas Gleixner <tglx@linutronix.de>
 Suggested-by: Ira Weiny <ira.weiny@intel.com>
 Signed-off-by: Fabio M. De Francesco <fmdefrancesco@gmail.com>
+
+v1->v2: According to a comment from Jonathan Corbet and some
+modifications suggested by Ira Weiny, change a couple of phrases in 3/7.
+1,2,4-7/7 have no changes since v1.
 
 Fabio M. De Francesco (7):
   highmem: Remove unneeded spaces in kmap_local_page() kdocs

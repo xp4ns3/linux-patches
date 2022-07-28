@@ -1,7 +1,7 @@
-From 3af61388851ef69aa674f61ac5344a068609c6e4 Mon Sep 17 00:00:00 2001
+From 32ee532c9d713348df97ac84b7867d62dd01c613 Mon Sep 17 00:00:00 2001
 From: "Fabio M. De Francesco" <fmdefrancesco@gmail.com>
 Date: Wed, 13 Jul 2022 19:06:41 +0200
-Subject: [PATCH 5/7] Documentation/mm: Prefer kmap_local_page() and avoid kmap()
+Subject: [PATCH v2 5/7] Documentation/mm: Prefer kmap_local_page() and avoid kmap()
 
 The reasoning for converting kmap() to kmap_local_page() was questioned
 recently.[1]
@@ -30,7 +30,7 @@ Signed-off-by: Fabio M. De Francesco <fmdefrancesco@gmail.com>
  1 file changed, 5 insertions(+)
 
 diff --git a/Documentation/vm/highmem.rst b/Documentation/vm/highmem.rst
-index 50d2b1fac24a..564017b447b1 100644
+index 71dc09563ff8..e045a4b7b3da 100644
 --- a/Documentation/vm/highmem.rst
 +++ b/Documentation/vm/highmem.rst
 @@ -84,6 +84,11 @@ list shows them in order of preference of use.

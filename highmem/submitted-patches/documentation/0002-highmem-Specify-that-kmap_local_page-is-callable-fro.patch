@@ -1,7 +1,7 @@
-From 0a4a721b50becb3232a27cdd225d0274d6473eeb Mon Sep 17 00:00:00 2001
+From a6c2a3d6576024ae0d2f1dc669ae41c232426002 Mon Sep 17 00:00:00 2001
 From: "Fabio M. De Francesco" <fmdefrancesco@gmail.com>
 Date: Wed, 13 Jul 2022 16:06:54 +0200
-Subject: [PATCH 2/7] highmem: Specify that kmap_local_page() is callable from interrupts
+Subject: [PATCH v2 2/7] highmem: Specify that kmap_local_page() is callable from interrupts
 
 In a recent thread about converting kmap() to kmap_local_page(), the
 safety of calling kmap_local_page() was questioned.[1]
