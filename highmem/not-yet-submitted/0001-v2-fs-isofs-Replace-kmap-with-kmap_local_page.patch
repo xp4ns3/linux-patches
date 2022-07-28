@@ -1,4 +1,4 @@
-From f695ea0a6773a450c77e6b9c5bea3b1eca13d351 Mon Sep 17 00:00:00 2001
+From 19dc3ed8671d8f0a055871822a629d4eb69387df Mon Sep 17 00:00:00 2001
 From: "Fabio M. De Francesco" <fmdefrancesco@gmail.com>
 Date: Sat, 16 Jul 2022 11:41:18 +0200
 Subject: [PATCH] fs/isofs: Replace kmap() with kmap_local_page()
@@ -28,14 +28,17 @@ is needed, use memzero_page() instead of open coding kmap_local_page()
 plus memset() to fill the pages with zeros. Delete the redundant
 flush_dcache_page() in the two call sites of memzero_page().
 
+Tested with mkisofs on a QEMU/KVM x86_32 VM, 6GB RAM, booting a kernel
+with HIGHMEM64GB enabled.
+
 Suggested-by: Ira Weiny <ira.weiny@intel.com>
 Signed-off-by: Fabio M. De Francesco <fmdefrancesco@gmail.com>
 ---
- fs/isofs/compress.c | 24 +++++++++++++-----------
- 1 file changed, 13 insertions(+), 11 deletions(-)
+ fs/isofs/compress.c | 20 ++++++++++----------
+ 1 file changed, 10 insertions(+), 10 deletions(-)
 
 diff --git a/fs/isofs/compress.c b/fs/isofs/compress.c
-index 95a19f25d61c..a1562124bb91 100644
+index 95a19f25d61c..f17754484a75 100644
 --- a/fs/isofs/compress.c
 +++ b/fs/isofs/compress.c
 @@ -67,8 +67,7 @@ static loff_t zisofs_uncompress_block(struct inode *inode, loff_t block_start,
@@ -48,40 +51,36 @@ index 95a19f25d61c..a1562124bb91 100644
  			SetPageUptodate(pages[i]);
  		}
  		return ((loff_t)pcount) << PAGE_SHIFT;
-@@ -120,8 +119,7 @@ static loff_t zisofs_uncompress_block(struct inode *inode, loff_t block_start,
+@@ -120,7 +119,7 @@ static loff_t zisofs_uncompress_block(struct inode *inode, loff_t block_start,
  	       zerr != Z_STREAM_END) {
  		if (!stream.avail_out) {
  			if (pages[curpage]) {
 -				stream.next_out = page_address(pages[curpage])
--						+ poffset;
-+				stream.next_out = kmap_local_page(pages[curpage] + poffset);
++				stream.next_out = kmap_local_page(pages[curpage])
+ 						+ poffset;
  				stream.avail_out = PAGE_SIZE - poffset;
  				poffset = 0;
- 			} else {
-@@ -170,6 +168,12 @@ static loff_t zisofs_uncompress_block(struct inode *inode, loff_t block_start,
+@@ -176,6 +175,10 @@ static loff_t zisofs_uncompress_block(struct inode *inode, loff_t block_start,
+ 				flush_dcache_page(pages[curpage]);
+ 				SetPageUptodate(pages[curpage]);
  			}
- 		}
- 
-+		if (stream.next_out)
 +			if (stream.next_out != (char *)zisofs_sink_page) {
 +				kunmap_local(stream.next_out);
 +				stream.next_out = NULL;
 +			}
-+
- 		if (!stream.avail_out) {
- 			/* This page completed */
- 			if (pages[curpage]) {
-@@ -183,6 +187,9 @@ static loff_t zisofs_uncompress_block(struct inode *inode, loff_t block_start,
+ 			curpage++;
+ 		}
+ 		if (!stream.avail_in)
+@@ -183,6 +186,8 @@ static loff_t zisofs_uncompress_block(struct inode *inode, loff_t block_start,
  	}
  inflate_out:
  	zlib_inflateEnd(&stream);
-+	if (stream.next_out)
-+		if (stream.next_out != (char *)zisofs_sink_page)
-+			kunmap_local(stream.next_out);
++	if (stream.next_out && stream.next_out != (char *)zisofs_sink_page)
++		kunmap_local(stream.next_out);
  
  z_eio:
  	mutex_unlock(&zisofs_zlib_lock);
-@@ -283,9 +290,7 @@ static int zisofs_fill_pages(struct inode *inode, int full_page, int pcount,
+@@ -283,9 +288,7 @@ static int zisofs_fill_pages(struct inode *inode, int full_page, int pcount,
  	}
  
  	if (poffset && *pages) {
@@ -92,7 +91,7 @@ index 95a19f25d61c..a1562124bb91 100644
  		SetPageUptodate(*pages);
  	}
  	return 0;
-@@ -343,10 +348,8 @@ static int zisofs_read_folio(struct file *file, struct folio *folio)
+@@ -343,10 +346,8 @@ static int zisofs_read_folio(struct file *file, struct folio *folio)
  	for (i = 0; i < pcount; i++, index++) {
  		if (i != full_page)
  			pages[i] = grab_cache_page_nowait(mapping, index);
@@ -104,7 +103,7 @@ index 95a19f25d61c..a1562124bb91 100644
  	}
  
  	err = zisofs_fill_pages(inode, full_page, pcount, pages);
-@@ -357,7 +360,6 @@ static int zisofs_read_folio(struct file *file, struct folio *folio)
+@@ -357,7 +358,6 @@ static int zisofs_read_folio(struct file *file, struct folio *folio)
  			flush_dcache_page(pages[i]);
  			if (i == full_page && err)
  				SetPageError(pages[i]);
