@@ -1,7 +1,7 @@
 From 31628da5ebe9ea2f40fe916cb6c1502a56d5ae31 Mon Sep 17 00:00:00 2001
 From: "Fabio M. De Francesco" <fmdefrancesco@gmail.com>
 Date: Sat, 16 Jul 2022 11:41:18 +0200
-Subject: [PATCH 2/2] hfsplus: Convert kmap() to kmap_local_page() in bitmap.c
+Subject: [PATCH 2/4] hfsplus: Convert kmap() to kmap_local_page() in bitmap.c
 MIME-Version: 1.0
 Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 8bit
