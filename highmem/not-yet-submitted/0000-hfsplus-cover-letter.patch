@@ -1,0 +1,42 @@
+From df4593221efbac09cf80f62e5ef935fd294086e3 Mon Sep 17 00:00:00 2001
+From: "Fabio M. De Francesco" <fmdefrancesco@gmail.com>
+Date: Tue, 2 Aug 2022 09:18:28 +0200
+Subject: [PATCH 0/4] hfsplus: Replace kmap() with kmap_local_page()
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 8bit
+
+kmap() is being deprecated in favor of kmap_local_page().
+
+There are two main problems with kmap(): (1) It comes with an overhead as 
+mapping space is restricted and protected by a global lock for 
+synchronization and (2) it also requires global TLB invalidation when the 
+kmap’s pool wraps and it might block when the mapping space is fully 
+utilized until a slot becomes available.
+
+With kmap_local_page() the mappings are per thread, CPU local, can take
+page faults, and can be called from any context (including interrupts).
+It is faster than kmap() in kernels with HIGHMEM enabled. Furthermore,
+the tasks can be preempted and, when they are scheduled to run again, the
+kernel virtual addresses are restored and still valid.
+
+Since its use in fs/hfsplus is safe everywhere, it should be preferred.
+
+Therefore, replace kmap() with kmap_local_page() in fs/hfsplus. Where
+possible, use the suited standard helpers (memzero_page(), memcpy_page())
+instead of open coding kmap_local_page() plus memset() or memcpy().
+
+Fabio M. De Francesco (4):
+  hfsplus: Convert kmap() to kmap_local_page() in bnode.c
+  hfsplus: Convert kmap() to kmap_local_page() in bitmap.c
+  hfsplus: kunmap(page) in "fail_page" label
+  hfsplus: Convert kmap() to kmap_local_page() in btree.c
+
+ fs/hfsplus/bitmap.c |  20 ++++-----
+ fs/hfsplus/bnode.c  | 105 ++++++++++++++++++++------------------------
+ fs/hfsplus/btree.c  |  27 ++++++------
+ 3 files changed, 72 insertions(+), 80 deletions(-)
+
+-- 
+2.37.1
+
