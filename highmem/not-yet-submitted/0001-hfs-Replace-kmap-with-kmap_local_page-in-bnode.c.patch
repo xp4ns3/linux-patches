@@ -1,4 +1,4 @@
-From 70ce240f471a132d6dcf4897740b463d1459bd78 Mon Sep 17 00:00:00 2001
+From 02fb8596ae669e990bd7504a514684552820c974 Mon Sep 17 00:00:00 2001
 From: "Fabio M. De Francesco" <fmdefrancesco@gmail.com>
 Date: Tue, 2 Aug 2022 08:01:06 +0200
 Subject: [PATCH 1/2] hfs: Replace kmap() with kmap_local_page() in bnode.c
@@ -29,14 +29,22 @@ instead of open coding kmap_local_page() plus memset() or memcpy().
 Suggested-by: Ira Weiny <ira.weiny@intel.com>
 Signed-off-by: Fabio M. De Francesco <fmdefrancesco@gmail.com>
 ---
- fs/hfs/bnode.c | 31 ++++++++++++-------------------
- 1 file changed, 12 insertions(+), 19 deletions(-)
+ fs/hfs/bnode.c | 32 ++++++++++++--------------------
+ 1 file changed, 12 insertions(+), 20 deletions(-)
 
 diff --git a/fs/hfs/bnode.c b/fs/hfs/bnode.c
-index c0a73a6ffb28..9320a795568c 100644
+index c0a73a6ffb28..1769f0cf103c 100644
 --- a/fs/hfs/bnode.c
 +++ b/fs/hfs/bnode.c
-@@ -33,9 +33,7 @@ void hfs_bnode_read(struct hfs_bnode *node, void *buf, int off, int len)
+@@ -21,7 +21,6 @@ void hfs_bnode_read(struct hfs_bnode *node, void *buf, int off, int len)
+ 	int pagenum;
+ 	int bytes_read;
+ 	int bytes_to_read;
+-	void *vaddr;
+ 
+ 	off += node->page_offset;
+ 	pagenum = off >> PAGE_SHIFT;
+@@ -33,9 +32,7 @@ void hfs_bnode_read(struct hfs_bnode *node, void *buf, int off, int len)
  		page = node->page[pagenum];
  		bytes_to_read = min_t(int, len - bytes_read, PAGE_SIZE - off);
  
@@ -47,7 +55,7 @@ index c0a73a6ffb28..9320a795568c 100644
  
  		pagenum++;
  		off = 0; /* page offset only applies to the first page */
-@@ -80,8 +78,7 @@ void hfs_bnode_write(struct hfs_bnode *node, void *buf, int off, int len)
+@@ -80,8 +77,7 @@ void hfs_bnode_write(struct hfs_bnode *node, void *buf, int off, int len)
  	off += node->page_offset;
  	page = node->page[0];
  
@@ -57,7 +65,7 @@ index c0a73a6ffb28..9320a795568c 100644
  	set_page_dirty(page);
  }
  
-@@ -105,8 +102,7 @@ void hfs_bnode_clear(struct hfs_bnode *node, int off, int len)
+@@ -105,8 +101,7 @@ void hfs_bnode_clear(struct hfs_bnode *node, int off, int len)
  	off += node->page_offset;
  	page = node->page[0];
  
@@ -67,7 +75,7 @@ index c0a73a6ffb28..9320a795568c 100644
  	set_page_dirty(page);
  }
  
-@@ -123,9 +119,7 @@ void hfs_bnode_copy(struct hfs_bnode *dst_node, int dst,
+@@ -123,9 +118,7 @@ void hfs_bnode_copy(struct hfs_bnode *dst_node, int dst,
  	src_page = src_node->page[0];
  	dst_page = dst_node->page[0];
  
@@ -78,7 +86,7 @@ index c0a73a6ffb28..9320a795568c 100644
  	set_page_dirty(dst_page);
  }
  
-@@ -140,9 +134,9 @@ void hfs_bnode_move(struct hfs_bnode *node, int dst, int src, int len)
+@@ -140,9 +133,9 @@ void hfs_bnode_move(struct hfs_bnode *node, int dst, int src, int len)
  	src += node->page_offset;
  	dst += node->page_offset;
  	page = node->page[0];
@@ -90,7 +98,7 @@ index c0a73a6ffb28..9320a795568c 100644
  	set_page_dirty(page);
  }
  
-@@ -350,13 +344,14 @@ struct hfs_bnode *hfs_bnode_find(struct hfs_btree *tree, u32 num)
+@@ -350,13 +343,14 @@ struct hfs_bnode *hfs_bnode_find(struct hfs_btree *tree, u32 num)
  	if (!test_bit(HFS_BNODE_NEW, &node->flags))
  		return node;
  
@@ -107,7 +115,7 @@ index c0a73a6ffb28..9320a795568c 100644
  
  	switch (node->type) {
  	case HFS_NODE_HEADER:
-@@ -440,14 +435,12 @@ struct hfs_bnode *hfs_bnode_create(struct hfs_btree *tree, u32 num)
+@@ -440,14 +434,12 @@ struct hfs_bnode *hfs_bnode_create(struct hfs_btree *tree, u32 num)
  	}
  
  	pagep = node->page;
