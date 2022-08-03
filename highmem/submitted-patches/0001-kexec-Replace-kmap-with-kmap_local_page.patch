@@ -1,0 +1,89 @@
+From 737499964c758a596fe5c5b7b9d9e82935bbadd8 Mon Sep 17 00:00:00 2001
+From: "Fabio M. De Francesco" <fmdefrancesco@gmail.com>
+Date: Thu, 7 Jul 2022 16:51:33 +0200
+Subject: [PATCH v3] kexec: Replace kmap() with kmap_local_page()
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 8bit
+
+kmap() is being deprecated in favor of kmap_local_page().
+
+There are two main problems with kmap(): (1) It comes with an overhead as
+mapping space is restricted and protected by a global lock for
+synchronization and (2) it also requires global TLB invalidation when the
+kmap’s pool wraps and it might block when the mapping space is fully
+utilized until a slot becomes available.
+
+With kmap_local_page() the mappings are per thread, CPU local, can take
+page faults, and can be called from any context (including interrupts).
+It is faster than kmap() in kernels with HIGHMEM enabled. Furthermore,
+the tasks can be preempted and, when they are scheduled to run again, the
+kernel virtual addresses are restored and are still valid.
+
+Since its use in kexec_core.c is safe everywhere, it should be preferred.
+
+Therefore, replace kmap() with kmap_local_page() in kexec_core.c.
+
+Tested on a QEMU/KVM x86_32 VM, 6GB RAM, booting a kernel with
+HIGHMEM64GB enabled.
+
+Suggested-by: Ira Weiny <ira.weiny@intel.com>
+Reviewed-by: Ira Weiny <ira.weiny@intel.com>
+Acked-by: Baoquan He <bhe@redhat.com>
+Signed-off-by: Fabio M. De Francesco <fmdefrancesco@gmail.com>
+---
+
+v2->v3: Add more information in the commit message as requested by Baoquan
+He and forward two tags, respectively from Ira Weiny and Baoquan He (many
+thanks to them two!).
+
+v1->v2: A sentence of the commit message contained an error due to a
+mistake in copy-pasting from a previous patch. Replace "aio.c" with
+"kexec_core.c".
+
+ kernel/kexec_core.c | 8 ++++----
+ 1 file changed, 4 insertions(+), 4 deletions(-)
+
+diff --git a/kernel/kexec_core.c b/kernel/kexec_core.c
+index 4d34c78334ce..6f98274765d4 100644
+--- a/kernel/kexec_core.c
++++ b/kernel/kexec_core.c
+@@ -814,7 +814,7 @@ static int kimage_load_normal_segment(struct kimage *image,
+ 		if (result < 0)
+ 			goto out;
+ 
+-		ptr = kmap(page);
++		ptr = kmap_local_page(page);
+ 		/* Start with a clear page */
+ 		clear_page(ptr);
+ 		ptr += maddr & ~PAGE_MASK;
+@@ -827,7 +827,7 @@ static int kimage_load_normal_segment(struct kimage *image,
+ 			memcpy(ptr, kbuf, uchunk);
+ 		else
+ 			result = copy_from_user(ptr, buf, uchunk);
+-		kunmap(page);
++		kunmap_local(ptr);
+ 		if (result) {
+ 			result = -EFAULT;
+ 			goto out;
+@@ -878,7 +878,7 @@ static int kimage_load_crash_segment(struct kimage *image,
+ 			goto out;
+ 		}
+ 		arch_kexec_post_alloc_pages(page_address(page), 1, 0);
+-		ptr = kmap(page);
++		ptr = kmap_local_page(page);
+ 		ptr += maddr & ~PAGE_MASK;
+ 		mchunk = min_t(size_t, mbytes,
+ 				PAGE_SIZE - (maddr & ~PAGE_MASK));
+@@ -894,7 +894,7 @@ static int kimage_load_crash_segment(struct kimage *image,
+ 		else
+ 			result = copy_from_user(ptr, buf, uchunk);
+ 		kexec_flush_icache_page(page);
+-		kunmap(page);
++		kunmap_local(ptr);
+ 		arch_kexec_pre_free_pages(page_address(page), 1);
+ 		if (result) {
+ 			result = -EFAULT;
+-- 
+2.37.1
+
