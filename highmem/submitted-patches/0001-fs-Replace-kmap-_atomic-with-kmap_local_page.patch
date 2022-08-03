@@ -1,32 +1,60 @@
-From 0660a79142c6cd807c8f9a1932e70356f8af6a73 Mon Sep 17 00:00:00 2001
+From bc8acdcd58e9acc0910f4a2b42add1caebba92f0 Mon Sep 17 00:00:00 2001
 From: "Fabio M. De Francesco" <fmdefrancesco@gmail.com>
 Date: Thu, 30 Jun 2022 11:40:57 +0200
-Subject: [PATCH] fs: Replace kmap{,_atomic}() with kmap_local_page()
+Subject: [PATCH v2] fs: Replace kmap{,_atomic}() with kmap_local_page()
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 8bit
 
 The use of kmap() and kmap_atomic() are being deprecated in favor of
 kmap_local_page().
 
-With kmap_local_page(), the mappings are per thread, CPU local and not
-globally visible. Furthermore, the mappings can be acquired from any
-context (including interrupts).
+There are two main problems with kmap(): (1) It comes with an overhead as
+mapping space is restricted and protected by a global lock for
+synchronization and (2) it also requires global TLB invalidation when the
+kmap’s pool wraps and it might block when the mapping space is fully
+utilized until a slot becomes available.
 
-Therefore, use kmap_local_page() in exec.c because these mappings are per
-thread, CPU local, and not globally visible.
+With kmap_local_page() the mappings are per thread, CPU local, can take
+page faults, and can be called from any context (including interrupts).
+It is faster than kmap() in kernels with HIGHMEM enabled. Furthermore,
+the tasks can be preempted and, when they are scheduled to run again, the
+kernel virtual addresses are restored and are still valid.
 
-Tested with xfstests on a QEMU + KVM 32-bits VM booting a kernel with
-HIGHMEM64GB enabled.
+Since the use of kmap_local_page() in exec.c is safe, it should be
+preferred everywhere in exec.c.
 
+As said, since kmap_local_page() can be also called from atomic context,
+and since remove_arg_zero() doesn't (and shouldn't ever) rely on an
+implicit preempt_disable(), this function can also safely replace
+kmap_atomic().
+
+Therefore, replace kmap() and kmap_atomic() with kmap_local_page() in
+fs/exec.c.
+
+Tested with xfstests on a QEMU/KVM x86_32 VM, 6GB RAM, booting a kernel
+with HIGHMEM64GB enabled.
+
+Cc: Eric W. Biederman <ebiederm@xmission.com>
 Suggested-by: Ira Weiny <ira.weiny@intel.com>
+Reviewed-by: Ira Weiny <ira.weiny@intel.com>
 Signed-off-by: Fabio M. De Francesco <fmdefrancesco@gmail.com>
 ---
+
+v1->v2: Added more information to the commit log to address some
+objections expressed by Eric W. Biederman[1] in reply to v1. No changes
+have been made to the code. Forwarded a tag from Ira Weiny (thanks!).
+
+[1] https://lore.kernel.org/lkml/8735fmqcfz.fsf@email.froward.int.ebiederm.org/
+
  fs/exec.c | 14 +++++++-------
  1 file changed, 7 insertions(+), 7 deletions(-)
 
 diff --git a/fs/exec.c b/fs/exec.c
-index 0989fb8472a1..4a2129c0d422 100644
+index 5fd73915c62c..b51dd14e7388 100644
 --- a/fs/exec.c
 +++ b/fs/exec.c
-@@ -583,11 +583,11 @@ static int copy_strings(int argc, struct user_arg_ptr argv,
+@@ -584,11 +584,11 @@ static int copy_strings(int argc, struct user_arg_ptr argv,
  
  				if (kmapped_page) {
  					flush_dcache_page(kmapped_page);
@@ -40,7 +68,7 @@ index 0989fb8472a1..4a2129c0d422 100644
  				kpos = pos & PAGE_MASK;
  				flush_arg_page(bprm, kpos, kmapped_page);
  			}
-@@ -601,7 +601,7 @@ static int copy_strings(int argc, struct user_arg_ptr argv,
+@@ -602,7 +602,7 @@ static int copy_strings(int argc, struct user_arg_ptr argv,
  out:
  	if (kmapped_page) {
  		flush_dcache_page(kmapped_page);
@@ -49,7 +77,7 @@ index 0989fb8472a1..4a2129c0d422 100644
  		put_arg_page(kmapped_page);
  	}
  	return ret;
-@@ -883,11 +883,11 @@ int transfer_args_to_stack(struct linux_binprm *bprm,
+@@ -880,11 +880,11 @@ int transfer_args_to_stack(struct linux_binprm *bprm,
  
  	for (index = MAX_ARG_PAGES - 1; index >= stop; index--) {
  		unsigned int offset = index == stop ? bprm->p & ~PAGE_MASK : 0;
@@ -63,7 +91,7 @@ index 0989fb8472a1..4a2129c0d422 100644
  		if (ret)
  			goto out;
  	}
-@@ -1680,13 +1680,13 @@ int remove_arg_zero(struct linux_binprm *bprm)
+@@ -1683,13 +1683,13 @@ int remove_arg_zero(struct linux_binprm *bprm)
  			ret = -EFAULT;
  			goto out;
  		}
@@ -80,5 +108,5 @@ index 0989fb8472a1..4a2129c0d422 100644
  	} while (offset == PAGE_SIZE);
  
 -- 
-2.36.1
+2.37.1
 
