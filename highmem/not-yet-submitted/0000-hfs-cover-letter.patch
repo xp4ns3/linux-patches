@@ -26,12 +26,21 @@ Therefore, replace kmap() with kmap_local_page() in fs/hfs. Where
 possible, use the suited standard helpers (memzero_page(), memcpy_page())
 instead of open coding kmap_local_page() plus memset() or memcpy().
 
+It might be worth saying something about the bug fix in here.
+
+Also put the bug fix at the start of the series so that the maintainer can take
+it even if the other patches have issues.
+
+
 Suggested-by: Ira Weiny <ira.weiny@intel.com>
 Signed-off-by: Fabio M. De Francesco <fmdefrancesco@gmail.com>
 
 Fabio M. De Francesco (3):
   hfs: Replace kmap() with kmap_local_page() in bnode.c
   hfs: Unmap the page in the "fail_page" label
+      ^^^^^^^^^^^^^^^^^^^^^^^^^
+      Make this patch 1/3.  Even though it is not needed until the btree code.
+
   hfs: Replace kmap() with kmap_local_page() in btree.c
 
  fs/hfs/bnode.c | 32 ++++++++++++--------------------
