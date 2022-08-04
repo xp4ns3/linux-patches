@@ -25,6 +25,9 @@ Since its use in bitmap.c is safe everywhere, it should be preferred.
 Therefore, replace kmap() with kmap_local_page() in bitmap.c.
 
 Suggested-by: Ira Weiny <ira.weiny@intel.com>
+
+Reviewed-by: Ira Weiny <ira.weiny@intel.com>
+
 Signed-off-by: Fabio M. De Francesco <fmdefrancesco@gmail.com>
 ---
  fs/hfsplus/bitmap.c | 20 ++++++++++----------

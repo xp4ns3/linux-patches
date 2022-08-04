@@ -27,6 +27,9 @@ possible, use the suited standard helpers (memzero_page(), memcpy_page())
 instead of open coding kmap_local_page() plus memset() or memcpy().
 
 Suggested-by: Ira Weiny <ira.weiny@intel.com>
+
+Reviewed-by: Ira Weiny <ira.weiny@intel.com>
+
 Signed-off-by: Fabio M. De Francesco <fmdefrancesco@gmail.com>
 ---
  fs/hfsplus/bnode.c | 105 +++++++++++++++++++++------------------------

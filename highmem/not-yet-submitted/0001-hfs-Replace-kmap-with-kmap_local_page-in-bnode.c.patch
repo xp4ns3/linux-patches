@@ -105,6 +105,25 @@ index c0a73a6ffb28..1769f0cf103c 100644
 -	desc = (struct hfs_bnode_desc *)(kmap(node->page[0]) + node->page_offset);
 +	desc = (struct hfs_bnode_desc *)kmap_local_page(node->page[0]);
 +	desc += node->page_offset;
+
+This is wrong.
+
+The pointer arithmetic of
+
+	((void *) + x)
+
+is different from
+
+	((struct hfs_bnode_desc *) + x)
+
+Which is what you have turned this into.
+
+https://www.tutorialspoint.com/cprogramming/c_pointer_arithmetic.htm
+https://stackoverflow.com/questions/3523145/pointer-arithmetic-for-void-pointer-in-c
+https://gcc.gnu.org/onlinedocs/gcc-4.8.0/gcc/Pointer-Arith.html
+
+Ira
+
  	node->prev = be32_to_cpu(desc->prev);
  	node->next = be32_to_cpu(desc->next);
  	node->num_recs = be16_to_cpu(desc->num_recs);

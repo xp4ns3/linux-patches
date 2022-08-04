@@ -57,6 +57,11 @@ index 19017d296173..d5880883b522 100644
  
  fail_page:
 +	kunmap_local(head);
+
+I'm confused by this change.  Why is this not a change from kunmap() from the
+bug fix patch?  Was this patch valid still?
+
+
  	put_page(page);
  free_inode:
  	tree->inode->i_mapping->a_ops = &hfs_aops;
@@ -67,7 +72,20 @@ index 19017d296173..d5880883b522 100644
 -	head = (struct hfs_btree_header_rec *)(kmap(page) + sizeof(struct hfs_bnode_desc));
 +	head = (struct hfs_btree_header_rec *)kmap_local_page(page);
 +	head += sizeof(struct hfs_bnode_desc);
- 
+
+Same bug here regarding pointer arthmetic.
+
+((void *) + x)
+
+!=
+
+((struct hfs_btree_header_rec *) + x)
+
+The rest below looks good.
+
+Ira
+
+
  	head->root = cpu_to_be32(tree->root);
  	head->leaf_count = cpu_to_be32(tree->leaf_count);
 @@ -180,7 +183,7 @@ void hfs_btree_write(struct hfs_btree *tree)

@@ -43,6 +43,9 @@ index 56c6782436e9..d5880883b522 100644
 -	head = (struct hfs_btree_header_rec *)(kmap(page) + sizeof(struct hfs_bnode_desc));
 +	head = (struct hfs_btree_header_rec *)kmap_local_page(page);
 +	head += sizeof(struct hfs_bnode_desc);
+
+Pointer arthmetic issue.
+
  	tree->root = be32_to_cpu(head->root);
  	tree->leaf_count = be32_to_cpu(head->leaf_count);
  	tree->leaf_head = be32_to_cpu(head->leaf_head);
@@ -68,7 +71,12 @@ index 56c6782436e9..d5880883b522 100644
 -	head = (struct hfs_btree_header_rec *)(kmap(page) + sizeof(struct hfs_bnode_desc));
 +	head = (struct hfs_btree_header_rec *)kmap_local_page(page);
 +	head += sizeof(struct hfs_bnode_desc);
+
+Same pointer issue.
  
+Ira
+
+
  	head->root = cpu_to_be32(tree->root);
  	head->leaf_count = cpu_to_be32(tree->leaf_count);
 @@ -181,7 +183,7 @@ void hfs_btree_write(struct hfs_btree *tree)

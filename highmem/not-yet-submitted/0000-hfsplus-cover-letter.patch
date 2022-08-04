@@ -26,6 +26,9 @@ Therefore, replace kmap() with kmap_local_page() in fs/hfsplus. Where
 possible, use the suited standard helpers (memzero_page(), memcpy_page())
 instead of open coding kmap_local_page() plus memset() or memcpy().
 
+Mention you are fixing a bug here too.
+
+
 v1->v2:
 	1/4 - No changes.
 	2/4 - Replace an overlooked kmap().
@@ -36,6 +39,11 @@ Fabio M. De Francesco (4):
   hfsplus: Convert kmap() to kmap_local_page() in bnode.c
   hfsplus: Convert kmap() to kmap_local_page() in bitmap.c
   hfsplus: kunmap(page) in "fail_page" label
+     ^^^^^^^
+     Make 1/4 like hfs.
+
+     BTW you do know how to use git rebase to move patches right?
+
   hfsplus: Convert kmap() to kmap_local_page() in btree.c
 
  fs/hfsplus/bitmap.c |  20 ++++-----
