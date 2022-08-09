@@ -1,7 +1,7 @@
-From df4593221efbac09cf80f62e5ef935fd294086e3 Mon Sep 17 00:00:00 2001
+From b383de97eff26ef2c6a06e003b98450e5b31d618 Mon Sep 17 00:00:00 2001
 From: "Fabio M. De Francesco" <fmdefrancesco@gmail.com>
-Date: Tue, 2 Aug 2022 09:18:28 +0200
-Subject: [PATCH v2 0/4] hfsplus: Replace kmap() with kmap_local_page()
+Date: Tue, 9 Aug 2022 16:26:31 +0200
+Subject: [PATCH 0/4] hfsplus: Replace kmap() with kmap_local_page()
 MIME-Version: 1.0
 Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 8bit
@@ -26,24 +26,16 @@ Therefore, replace kmap() with kmap_local_page() in fs/hfsplus. Where
 possible, use the suited standard helpers (memzero_page(), memcpy_page())
 instead of open coding kmap_local_page() plus memset() or memcpy().
 
-Mention you are fixing a bug here too.
+Fix a bug due to a page being not unmapped if the code jumps to the
+"fail_page" label (1/4).
 
-
-v1->v2:
-	1/4 - No changes.
-	2/4 - Replace an overlooked kmap().
-	3/4 - Not in v1.
-	4/4 - Not in v1. 
+Tested in a QEMU/KVM x86_32 VM, 6GB RAM, booting a kernel with
+HIGHMEM64GB enabled.
 
 Fabio M. De Francesco (4):
+  hfsplus: Unmap the page in the "fail_page" label
   hfsplus: Convert kmap() to kmap_local_page() in bnode.c
   hfsplus: Convert kmap() to kmap_local_page() in bitmap.c
-  hfsplus: kunmap(page) in "fail_page" label
-     ^^^^^^^
-     Make 1/4 like hfs.
-
-     BTW you do know how to use git rebase to move patches right?
-
   hfsplus: Convert kmap() to kmap_local_page() in btree.c
 
  fs/hfsplus/bitmap.c |  20 ++++-----

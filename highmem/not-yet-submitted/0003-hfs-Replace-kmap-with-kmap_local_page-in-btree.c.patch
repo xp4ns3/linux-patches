@@ -1,4 +1,4 @@
-From 6eb4e4f541083623e5d90d38dbc1632a64caedff Mon Sep 17 00:00:00 2001
+From af44a04a0044e5b35d7c7fee267003ce5fbd2a61 Mon Sep 17 00:00:00 2001
 From: "Fabio M. De Francesco" <fmdefrancesco@gmail.com>
 Date: Tue, 2 Aug 2022 09:51:24 +0200
 Subject: [PATCH 3/3] hfs: Replace kmap() with kmap_local_page() in btree.c
@@ -26,6 +26,9 @@ Therefore, replace kmap() with kmap_local_page() in btree.c. Where
 possible, use the suited standard helpers (memzero_page(), memcpy_page())
 instead of open coding kmap_local_page() plus memset() or memcpy().
 
+Tested in a QEMU/KVM x86_32 VM, 6GB RAM, booting a kernel with
+HIGHMEM64GB enabled.
+
 Suggested-by: Ira Weiny <ira.weiny@intel.com>
 Signed-off-by: Fabio M. De Francesco <fmdefrancesco@gmail.com>
 ---
@@ -33,7 +36,7 @@ Signed-off-by: Fabio M. De Francesco <fmdefrancesco@gmail.com>
  1 file changed, 16 insertions(+), 14 deletions(-)
 
 diff --git a/fs/hfs/btree.c b/fs/hfs/btree.c
-index 56c6782436e9..d5880883b522 100644
+index 56c6782436e9..2fa4b1f8cc7f 100644
 --- a/fs/hfs/btree.c
 +++ b/fs/hfs/btree.c
 @@ -80,7 +80,8 @@ struct hfs_btree *hfs_btree_open(struct super_block *sb, u32 id, btree_keycmp ke
@@ -41,11 +44,8 @@ index 56c6782436e9..d5880883b522 100644
  
  	/* Load the header */
 -	head = (struct hfs_btree_header_rec *)(kmap(page) + sizeof(struct hfs_bnode_desc));
-+	head = (struct hfs_btree_header_rec *)kmap_local_page(page);
-+	head += sizeof(struct hfs_bnode_desc);
-
-Pointer arthmetic issue.
-
++	head = (struct hfs_btree_header_rec *)(kmap_local_page(page) +
++					       sizeof(struct hfs_bnode_desc));
  	tree->root = be32_to_cpu(head->root);
  	tree->leaf_count = be32_to_cpu(head->leaf_count);
  	tree->leaf_head = be32_to_cpu(head->leaf_head);
@@ -69,14 +69,9 @@ Pointer arthmetic issue.
  	/* Load the header */
  	page = node->page[0];
 -	head = (struct hfs_btree_header_rec *)(kmap(page) + sizeof(struct hfs_bnode_desc));
-+	head = (struct hfs_btree_header_rec *)kmap_local_page(page);
-+	head += sizeof(struct hfs_bnode_desc);
-
-Same pointer issue.
++	head = (struct hfs_btree_header_rec *)(kmap_local_page(page) +
++					       sizeof(struct hfs_bnode_desc));
  
-Ira
-
-
  	head->root = cpu_to_be32(tree->root);
  	head->leaf_count = cpu_to_be32(tree->leaf_count);
 @@ -181,7 +183,7 @@ void hfs_btree_write(struct hfs_btree *tree)
