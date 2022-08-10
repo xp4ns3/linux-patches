@@ -1,4 +1,4 @@
-From 9980ad6d4aa8160ef3b4e943706fe0c418d4287d Mon Sep 17 00:00:00 2001
+From 40787335ee5578f8e92a5e9c39ba8bb65adfe54d Mon Sep 17 00:00:00 2001
 From: "Fabio M. De Francesco" <fmdefrancesco@gmail.com>
 Date: Mon, 16 May 2022 12:19:25 +0200
 Subject: [PATCH] fs/ufs: Replace kmap() with kmap_local_page()
@@ -43,7 +43,7 @@ Signed-off-by: Fabio M. De Francesco <fmdefrancesco@gmail.com>
  3 files changed, 102 insertions(+), 64 deletions(-)
 
 diff --git a/fs/ufs/dir.c b/fs/ufs/dir.c
-index 391efaf1d528..592f8528a680 100644
+index 391efaf1d528..db7564852391 100644
 --- a/fs/ufs/dir.c
 +++ b/fs/ufs/dir.c
 @@ -61,9 +61,9 @@ static int ufs_commit_chunk(struct page *page, loff_t pos, unsigned len)
@@ -131,7 +131,7 @@ index 391efaf1d528..592f8528a680 100644
 +		*page_addr = kmap_local_page(page);
  		if (unlikely(!PageChecked(page))) {
 -			if (!ufs_check_page(page))
-+			if (!ufs_check_page(page, page_addr))
++			if (!ufs_check_page(page, *page_addr))
  				goto fail;
  		}
  	}
