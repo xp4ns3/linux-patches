@@ -29,6 +29,7 @@ instead of open coding kmap_local_page() plus memset() or memcpy().
 Tested in a QEMU/KVM x86_32 VM, 6GB RAM, booting a kernel with
 HIGHMEM64GB enabled.
 
+Cc: Viacheslav Dubeyko <slava@dubeyko.com>
 Suggested-by: Ira Weiny <ira.weiny@intel.com>
 Reviewed-by: Ira Weiny <ira.weiny@intel.com>
 Signed-off-by: Fabio M. De Francesco <fmdefrancesco@gmail.com>
