@@ -1,0 +1,67 @@
+From 4f41e4f39cfcefd3c64a55c3aa9a3cd975c0c082 Mon Sep 17 00:00:00 2001
+From: "Fabio M. De Francesco" <fmdefrancesco@gmail.com>
+Date: Fri, 12 Aug 2022 14:15:32 +0200
+Subject: [PATCH] nvmet-tcp: Replace kmap() with kmap_local_page()
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 8bit
+
+kmap() is being deprecated in favor of kmap_local_page().
+
+There are two main problems with kmap(): (1) It comes with an overhead as
+mapping space is restricted and protected by a global lock for
+synchronization and (2) it also requires global TLB invalidation when the
+kmap’s pool wraps and it might block when the mapping space is fully
+utilized until a slot becomes available.
+
+With kmap_local_page() the mappings are per thread, CPU local, can take
+page faults, and can be called from any context (including interrupts).
+It is faster than kmap() in kernels with HIGHMEM enabled. Furthermore,
+the tasks can be preempted and, when they are scheduled to run again, the
+kernel virtual addresses are restored and are still valid.
+
+Since its use in nvmet-tcp is safe everywhere, it should be preferred.
+
+Therefore, replace kmap() with kmap_local_page() in nvmet-tcp.
+
+Suggested-by: Ira Weiny <ira.weiny@intel.com>
+Signed-off-by: Fabio M. De Francesco <fmdefrancesco@gmail.com>
+---
+ drivers/nvme/target/tcp.c | 12 ++++++------
+ 1 file changed, 6 insertions(+), 6 deletions(-)
+
+diff --git a/drivers/nvme/target/tcp.c b/drivers/nvme/target/tcp.c
+index dc3b4dc8fe08..611dedead188 100644
+--- a/drivers/nvme/target/tcp.c
++++ b/drivers/nvme/target/tcp.c
+@@ -311,13 +311,13 @@ static void nvmet_tcp_free_cmd_buffers(struct nvmet_tcp_cmd *cmd)
+ 
+ static void nvmet_tcp_unmap_pdu_iovec(struct nvmet_tcp_cmd *cmd)
+ {
+-	struct scatterlist *sg;
++	struct kvec *iov = cmd->iov;
+ 	int i;
+ 
+-	sg = &cmd->req.sg[cmd->sg_idx];
+-
+-	for (i = 0; i < cmd->nr_mapped; i++)
+-		kunmap(sg_page(&sg[i]));
++	for (i = cmd->nr_mapped - 1; i >= 0; i--) {
++		kunmap_local(iov->iov_base);
++		iov--;
++	}
+ 
+ 	cmd->nr_mapped = 0;
+ }
+@@ -338,7 +338,7 @@ static void nvmet_tcp_map_pdu_iovec(struct nvmet_tcp_cmd *cmd)
+ 	while (length) {
+ 		u32 iov_len = min_t(u32, length, sg->length - sg_offset);
+ 
+-		iov->iov_base = kmap(sg_page(sg)) + sg->offset + sg_offset;
++		iov->iov_base = kmap_local_page(sg_page(sg)) + sg->offset + sg_offset;
+ 		iov->iov_len = iov_len;
+ 
+ 		length -= iov_len;
+-- 
+2.37.1
+
