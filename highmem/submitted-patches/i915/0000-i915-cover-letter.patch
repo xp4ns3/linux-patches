@@ -1,0 +1,48 @@
+From 24873b005cad2edfd24234db2876c10c07f73fd4 Mon Sep 17 00:00:00 2001
+From: "Fabio M. De Francesco" <fmdefrancesco@gmail.com>
+Date: Thu, 11 Aug 2022 16:59:57 +0200
+Subject: [PATCH 0/3] drm/i915: Replace kmap() with kmap_local_page()
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 8bit
+
+kmap() is being deprecated in favor of kmap_local_page().
+
+There are two main problems with kmap(): (1) It comes with an overhead as
+mapping space is restricted and protected by a global lock for
+synchronization and (2) it also requires global TLB invalidation when the
+kmap’s pool wraps and it might block when the mapping space is fully
+utilized until a slot becomes available.
+
+With kmap_local_page() the mappings are per thread, CPU local, can take
+page faults, and can be called from any context (including interrupts).
+It is faster than kmap() in kernels with HIGHMEM enabled. Furthermore,
+the tasks can be preempted and, when they are scheduled to run again, the
+kernel virtual addresses are restored and still valid.
+
+Since its use in drm/i915 is safe everywhere, it should be preferred.
+
+Therefore, replace kmap() with kmap_local_page() in drm/i915.
+
+These changes should be tested in an 32 bits system, booting a kernel
+with HIGHMEM enabled. Unfortunately I have no i915 based hardware,
+therefore any help with testing would be greatly appreciated.
+
+Suggested-by: Ira Weiny <ira.weiny@intel.com>
+Signed-off-by: Fabio M. De Francesco <fmdefrancesco@gmail.com>
+
+Fabio M. De Francesco (3):
+  drm/i915: Replace kmap() with kmap_local_page()
+  drm/i915/gt: Replace kmap() with kmap_local_page()
+  drm/i915/gem: Replace kmap() with kmap_local_page()
+
+ drivers/gpu/drm/i915/gem/i915_gem_shmem.c          |  6 ++----
+ drivers/gpu/drm/i915/gem/selftests/i915_gem_mman.c |  8 ++++----
+ drivers/gpu/drm/i915/gt/intel_ggtt_fencing.c       |  4 ++--
+ drivers/gpu/drm/i915/gt/shmem_utils.c              | 11 ++++-------
+ drivers/gpu/drm/i915/i915_gem.c                    |  8 ++++----
+ 5 files changed, 16 insertions(+), 21 deletions(-)
+
+-- 
+2.37.1
+

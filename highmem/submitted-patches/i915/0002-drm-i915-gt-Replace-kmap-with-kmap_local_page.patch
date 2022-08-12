@@ -1,9 +1,28 @@
-From 80e0040fe5eb060b0b3a7a3e823339861210b593 Mon Sep 17 00:00:00 2001
+From 60458c5732fdfb35f855b192b7e3f8f060c6ddee Mon Sep 17 00:00:00 2001
 From: "Fabio M. De Francesco" <fmdefrancesco@gmail.com>
 Date: Wed, 10 Aug 2022 21:05:48 +0200
-Subject: [PATCH] i915/gt: Replace kmap() with kmap_local_page()
+Subject: [PATCH 2/3] drm/i915/gt: Replace kmap() with kmap_local_page()
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 8bit
 
-...
+kmap() is being deprecated in favor of kmap_local_page().
+
+There are two main problems with kmap(): (1) It comes with an overhead as
+mapping space is restricted and protected by a global lock for
+synchronization and (2) it also requires global TLB invalidation when the
+kmap’s pool wraps and it might block when the mapping space is fully
+utilized until a slot becomes available.
+
+With kmap_local_page() the mappings are per thread, CPU local, can take
+page faults, and can be called from any context (including interrupts).
+It is faster than kmap() in kernels with HIGHMEM enabled. Furthermore,
+the tasks can be preempted and, when they are scheduled to run again, the
+kernel virtual addresses are restored and are still valid.
+
+Since its use in i915/gt is safe everywhere, it should be preferred.
+
+Therefore, replace kmap() with kmap_local_page() in i915/gt
 
 Suggested-by: Ira Weiny <ira.weiny@intel.com>
 Signed-off-by: Fabio M. De Francesco <fmdefrancesco@gmail.com>
