@@ -1,7 +1,7 @@
 From 17206190d4fb3f2cf0508d52873020a9bb4078e5 Mon Sep 17 00:00:00 2001
 From: "Fabio M. De Francesco" <fmdefrancesco@gmail.com>
 Date: Sun, 17 Jul 2022 13:50:35 +0200
-Subject: [PATCH 2/4] hfsplus: Convert kmap() to kmap_local_page() in bnode.c
+Subject: [RESEND PATCH 2/4] hfsplus: Convert kmap() to kmap_local_page() in bnode.c
 MIME-Version: 1.0
 Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 8bit
@@ -32,6 +32,7 @@ HIGHMEM64GB enabled.
 Cc: Viacheslav Dubeyko <slava@dubeyko.com>
 Suggested-by: Ira Weiny <ira.weiny@intel.com>
 Reviewed-by: Ira Weiny <ira.weiny@intel.com>
+Reviewed-by: Viacheslav Dubeyko <slava@dubeyko.com>
 Signed-off-by: Fabio M. De Francesco <fmdefrancesco@gmail.com>
 ---
  fs/hfsplus/bnode.c | 105 +++++++++++++++++++++------------------------

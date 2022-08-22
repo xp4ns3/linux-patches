@@ -1,7 +1,7 @@
 From 9163ad89e39bcce4dcca326b0b51396802b31ced Mon Sep 17 00:00:00 2001
 From: "Fabio M. De Francesco" <fmdefrancesco@gmail.com>
 Date: Tue, 2 Aug 2022 08:01:06 +0200
-Subject: [PATCH 2/3] hfs: Replace kmap() with kmap_local_page() in bnode.c
+Subject: [RESEND PATCH 2/3] hfs: Replace kmap() with kmap_local_page() in bnode.c
 MIME-Version: 1.0
 Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 8bit
@@ -30,6 +30,7 @@ Tested in a QEMU/KVM x86_32 VM, 6GB RAM, booting a kernel with
 HIGHMEM64GB enabled.
 
 Suggested-by: Ira Weiny <ira.weiny@intel.com>
+Reviewed-by: Viacheslav Dubeyko <slava@dubeyko.com>
 Signed-off-by: Fabio M. De Francesco <fmdefrancesco@gmail.com>
 ---
  fs/hfs/bnode.c | 32 ++++++++++++--------------------

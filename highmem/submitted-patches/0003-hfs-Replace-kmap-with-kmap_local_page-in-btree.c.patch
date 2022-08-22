@@ -1,7 +1,7 @@
 From af44a04a0044e5b35d7c7fee267003ce5fbd2a61 Mon Sep 17 00:00:00 2001
 From: "Fabio M. De Francesco" <fmdefrancesco@gmail.com>
 Date: Tue, 2 Aug 2022 09:51:24 +0200
-Subject: [PATCH 3/3] hfs: Replace kmap() with kmap_local_page() in btree.c
+Subject: [RESEND PATCH 3/3] hfs: Replace kmap() with kmap_local_page() in btree.c
 MIME-Version: 1.0
 Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 8bit
@@ -30,6 +30,7 @@ Tested in a QEMU/KVM x86_32 VM, 6GB RAM, booting a kernel with
 HIGHMEM64GB enabled.
 
 Suggested-by: Ira Weiny <ira.weiny@intel.com>
+Reviewed-by: Viacheslav Dubeyko <slava@dubeyko.com>
 Signed-off-by: Fabio M. De Francesco <fmdefrancesco@gmail.com>
 ---
  fs/hfs/btree.c | 30 ++++++++++++++++--------------

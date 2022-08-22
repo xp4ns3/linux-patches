@@ -1,7 +1,7 @@
 From 737499964c758a596fe5c5b7b9d9e82935bbadd8 Mon Sep 17 00:00:00 2001
 From: "Fabio M. De Francesco" <fmdefrancesco@gmail.com>
 Date: Thu, 7 Jul 2022 16:51:33 +0200
-Subject: [PATCH v3] kexec: Replace kmap() with kmap_local_page()
+Subject: [RESEND PATCH v3] kexec: Replace kmap() with kmap_local_page()
 MIME-Version: 1.0
 Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 8bit
@@ -27,11 +27,15 @@ Therefore, replace kmap() with kmap_local_page() in kexec_core.c.
 Tested on a QEMU/KVM x86_32 VM, 6GB RAM, booting a kernel with
 HIGHMEM64GB enabled.
 
+Cc: Andrew Morton <akpm@linux-foundation.org>
 Suggested-by: Ira Weiny <ira.weiny@intel.com>
 Reviewed-by: Ira Weiny <ira.weiny@intel.com>
 Acked-by: Baoquan He <bhe@redhat.com>
 Signed-off-by: Fabio M. De Francesco <fmdefrancesco@gmail.com>
 ---
+
+Few days ago, I've been requested by Andrew to resend this (and other
+patches) and, this time, to not forget to Cc him :-)
 
 v2->v3: Add more information in the commit message as requested by Baoquan
 He and forward two tags, respectively from Ira Weiny and Baoquan He (many

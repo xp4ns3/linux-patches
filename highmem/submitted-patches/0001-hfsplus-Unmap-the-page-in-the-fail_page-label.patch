@@ -1,7 +1,7 @@
 From cabcb75a10a6ce2f8b73e45aa95b1fcb83f3935c Mon Sep 17 00:00:00 2001
 From: "Fabio M. De Francesco" <fmdefrancesco@gmail.com>
 Date: Mon, 1 Aug 2022 20:27:17 +0200
-Subject: [PATCH 1/4] hfsplus: Unmap the page in the "fail_page" label
+Subject: [RESEND PATCH 1/4] hfsplus: Unmap the page in the "fail_page" label
 
 Several paths within hfs_btree_open() jump to the "fail_page" label
 where put_page() is called while the page is still mapped.
@@ -10,6 +10,7 @@ Call kunmap() to unmap the page soon before put_page().
 
 Cc: Viacheslav Dubeyko <slava@dubeyko.com>
 Reviewed-by: Ira Weiny <ira.weiny@intel.com>
+Reviewed-by: Viacheslav Dubeyko <slava@dubeyko.com>
 Signed-off-by: Fabio M. De Francesco <fmdefrancesco@gmail.com>
 ---
  fs/hfsplus/btree.c | 1 +

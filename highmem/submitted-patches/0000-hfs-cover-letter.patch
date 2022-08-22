@@ -1,7 +1,7 @@
 From af44a04a0044e5b35d7c7fee267003ce5fbd2a61 Mon Sep 17 00:00:00 2001
 From: "Fabio M. De Francesco" <fmdefrancesco@gmail.com>
 Date: Tue, 9 Aug 2022 16:43:23 +0200
-Subject: [PATCH 0/3] hfs: Replace kmap() with kmap_local_page()
+Subject: [RESEND PATCH 0/3] hfs: Replace kmap() with kmap_local_page()
 MIME-Version: 1.0
 Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 8bit
@@ -31,6 +31,9 @@ Fix a bug due to a page being not unmapped if the code jumps to the
 
 Tested in a QEMU/KVM x86_32 VM, 6GB RAM, booting a kernel with
 HIGHMEM64GB enabled.
+
+Few days ago Andrew requested a resend of this series. In the meantime
+I'm also forwarding a "Reviewed-by" tag from Viacheslav Dubeyko.
 
 Fabio M. De Francesco (3):
   hfs: Unmap the page in the "fail_page" label

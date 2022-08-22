@@ -1,7 +1,7 @@
 From ce9d25fcaf2eb0cef92102747859d97aab241b50 Mon Sep 17 00:00:00 2001
 From: "Fabio M. De Francesco" <fmdefrancesco@gmail.com>
 Date: Sat, 16 Jul 2022 11:41:18 +0200
-Subject: [PATCH v2] fs/isofs: Replace kmap() with kmap_local_page()
+Subject: [RESEND PATCH v2] fs/isofs: Replace kmap() with kmap_local_page()
 MIME-Version: 1.0
 Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 8bit
@@ -31,20 +31,24 @@ flush_dcache_page() in the two call sites of memzero_page().
 Tested with mkisofs on a QEMU/KVM x86_32 VM, 6GB RAM, booting a kernel
 with HIGHMEM64GB enabled.
 
+Cc: Andrew Morton <akpm@linux-foundation.org>
 Cc: Jan Kara <jack@suse.cz>
 Suggested-by: Ira Weiny <ira.weiny@intel.com>
 Signed-off-by: Fabio M. De Francesco <fmdefrancesco@gmail.com>
 ---
 
+Some days ago Andrew requested a resend of this patch.[1]
+
 v1->v2: Cast zisofs_sink_page to pointer to unsigned char.
 Reported-by: kernel test robot <lkp@intel.com>
 
 Many thanks to Jan Kara for the comments and suggestions provided with
-replying to my previous RFC.[1] Furthermore, I want to thank Ira Weiny for
+replying to my previous RFC.[2] Furthermore, I want to thank Ira Weiny for
 the advices he provided, especially about how to use mkisofs to test that
 this patch is working properly.
 
-[1] https://lore.kernel.org/lkml/20220726145024.rryvw7ot7j2c6tqv@quack3/
+[1] https://lore.kernel.org/all/20220801122709.8164-1-fmdefrancesco@gmail.com/
+[2] https://lore.kernel.org/lkml/20220726145024.rryvw7ot7j2c6tqv@quack3/
 
  fs/isofs/compress.c | 20 ++++++++++----------
  1 file changed, 10 insertions(+), 10 deletions(-)

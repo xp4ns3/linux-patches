@@ -1,7 +1,7 @@
 From 864e89b641501756d44999553b8cd68b0766016c Mon Sep 17 00:00:00 2001
 From: "Fabio M. De Francesco" <fmdefrancesco@gmail.com>
 Date: Sat, 16 Jul 2022 11:41:18 +0200
-Subject: [PATCH 3/4] hfsplus: Convert kmap() to kmap_local_page() in bitmap.c
+Subject: [RESEND PATCH 3/4] hfsplus: Convert kmap() to kmap_local_page() in bitmap.c
 MIME-Version: 1.0
 Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 8bit
@@ -30,6 +30,7 @@ HIGHMEM64GB enabled.
 Cc: Viacheslav Dubeyko <slava@dubeyko.com>
 Suggested-by: Ira Weiny <ira.weiny@intel.com>
 Reviewed-by: Ira Weiny <ira.weiny@intel.com>
+Reviewed-by: Viacheslav Dubeyko <slava@dubeyko.com>
 Signed-off-by: Fabio M. De Francesco <fmdefrancesco@gmail.com>
 ---
  fs/hfsplus/bitmap.c | 20 ++++++++++----------
