@@ -26,6 +26,9 @@ Therefore, replace kmap() with kmap_local_page() in fs/sysv. kunmap_local()
 requires the mapping address, so return that address from dir_get_page()
 to be used in dir_put_page().
 
+IKW : Also you are ensuring that dir_put_page() is used consistently in the
+code.  (Specifically you added calls in namei.c)
+
 Cc: "Venkataramanan, Anirudh" <anirudh.venkataramanan@intel.com>
 Suggested-by: Ira Weiny <ira.weiny@intel.com>
 Signed-off-by: Fabio M. De Francesco <fmdefrancesco@gmail.com>
@@ -78,6 +81,10 @@ index 88e38cd8f5c9..e6221a965f70 100644
  		struct sysv_dir_entry *de;
 -		struct page *page = dir_get_page(inode, n);
 +		struct page *page = dir_get_page(inode, n, (void **)&kaddr);
+
+
+You should not need the cast here.  C will cast to void * for you any time.
+
  
  		if (IS_ERR(page))
  			continue;
@@ -129,6 +136,13 @@ index 88e38cd8f5c9..e6221a965f70 100644
  		if (!IS_ERR(page)) {
 -			kaddr = (char*)page_address(page);
 +			kaddr = page_addr;
+
+This is wrong.  It should be kaddr.
+
+But why not lift kaddr to the outer scope and not use the additional page_addr?
+
+At least use page_addr in dir_get_page().
+
  			de = (struct sysv_dir_entry *) kaddr;
  			kaddr += PAGE_SIZE - SYSV_DIRSIZE;
  			for ( ; (char *) de <= kaddr ; de++) {
@@ -138,6 +152,9 @@ index 88e38cd8f5c9..e6221a965f70 100644
  			}
 -			dir_put_page(page);
 +			dir_put_page(page, page_addr);
+
+Also wrong.
+
  		}
  
  		if (++n >= npages)
@@ -146,6 +163,9 @@ index 88e38cd8f5c9..e6221a965f70 100644
  	SYSV_I(dir)->i_dir_start_lookup = n;
  	*res_page = page;
 +	*res_page_addr = page_addr;
+
+And here.
+
  	return de;
  }
  
@@ -258,6 +278,16 @@ index 88e38cd8f5c9..e6221a965f70 100644
  
 -		kaddr = (char *)page_address(page);
 +		page_addr = kaddr;
+
+Again I think you can skip declaring the extra page_addr variable here.
+
+
+The rest looks good!
+
+Ira
+
+
+
  		de = (struct sysv_dir_entry *)kaddr;
  		kaddr += PAGE_SIZE-SYSV_DIRSIZE;
  
