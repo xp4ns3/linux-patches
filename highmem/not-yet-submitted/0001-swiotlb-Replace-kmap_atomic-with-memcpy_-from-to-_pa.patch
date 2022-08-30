@@ -1,0 +1,46 @@
+From efb3f17890195d5be9474f57b9b597232ffceb30 Mon Sep 17 00:00:00 2001
+From: "Fabio M. De Francesco" <fmdefrancesco@gmail.com>
+Date: Wed, 31 Aug 2022 01:13:50 +0200
+Subject: [PATCH] swiotlb: Replace kmap_atomic() with memcpy_{from,to}_page()
+
+...
+
+Signed-off-by: Fabio M. De Francesco <fmdefrancesco@gmail.com>
+---
+ kernel/dma/swiotlb.c | 10 ++++------
+ 1 file changed, 4 insertions(+), 6 deletions(-)
+
+diff --git a/kernel/dma/swiotlb.c b/kernel/dma/swiotlb.c
+index c5a9190b218f..a28ac23ad8db 100644
+--- a/kernel/dma/swiotlb.c
++++ b/kernel/dma/swiotlb.c
+@@ -549,9 +549,8 @@ static void swiotlb_bounce(struct device *dev, phys_addr_t tlb_addr, size_t size
+ 	}
+ 
+ 	if (PageHighMem(pfn_to_page(pfn))) {
+-		/* The buffer does not have a mapping.  Map it in and copy */
+ 		unsigned int offset = orig_addr & ~PAGE_MASK;
+-		char *buffer;
++		struct page *page;
+ 		unsigned int sz = 0;
+ 		unsigned long flags;
+ 
+@@ -559,12 +558,11 @@ static void swiotlb_bounce(struct device *dev, phys_addr_t tlb_addr, size_t size
+ 			sz = min_t(size_t, PAGE_SIZE - offset, size);
+ 
+ 			local_irq_save(flags);
+-			buffer = kmap_atomic(pfn_to_page(pfn));
++			page = pfn_to_page(pfn);
+ 			if (dir == DMA_TO_DEVICE)
+-				memcpy(vaddr, buffer + offset, sz);
++				memcpy_from_page(vaddr, page, offset, sz);
+ 			else
+-				memcpy(buffer + offset, vaddr, sz);
+-			kunmap_atomic(buffer);
++				memcpy_to_page(page, offset, vaddr, sz);
+ 			local_irq_restore(flags);
+ 
+ 			size -= sz;
+-- 
+2.37.2
+
