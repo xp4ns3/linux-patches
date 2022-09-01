@@ -1,10 +1,30 @@
-From 8aa6aca355944b63258128b115dcde20ae85c03f Mon Sep 17 00:00:00 2001
+From 2686e051a00886cee3e5c25912df9757a82681ec Mon Sep 17 00:00:00 2001
 From: "Fabio M. De Francesco" <fmdefrancesco@gmail.com>
 Date: Wed, 31 Aug 2022 03:13:19 +0200
 Subject: [PATCH] misc/vmw_vmci: Use kmap_local_page() in vmci_queue_pair.c
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 8bit
 
-...
+kmap() is being deprecated in favor of kmap_local_page().
 
+There are two main problems with kmap(): (1) It comes with an overhead as
+the mapping space is restricted and protected by a global lock for
+synchronization and (2) it also requires global TLB invalidation when the
+kmap’s pool wraps and it might block when the mapping space is fully
+utilized until a slot becomes available.
+
+With kmap_local_page() the mappings are per thread, CPU local, can take
+page faults, and can be called from any context (including interrupts).
+It is faster than kmap() in kernels with HIGHMEM enabled. Furthermore,
+the tasks can be preempted and, when they are scheduled to run again, the
+kernel virtual addresses are restored and still valid.
+
+Since its use in vmci_queue_pair.c is safe everywhere, replace kmap() with
+kmap_local_page().
+
+Cc: "Venkataramanan, Anirudh" <anirudh.venkataramanan@intel.com>
+Suggested-by: Ira Weiny <ira.weiny@intel.com>
 Signed-off-by: Fabio M. De Francesco <fmdefrancesco@gmail.com>
 ---
  drivers/misc/vmw_vmci/vmci_queue_pair.c | 16 ++++++++--------
