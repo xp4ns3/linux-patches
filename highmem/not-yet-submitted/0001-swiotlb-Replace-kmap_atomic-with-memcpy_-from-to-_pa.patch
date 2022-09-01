@@ -1,10 +1,16 @@
-From efb3f17890195d5be9474f57b9b597232ffceb30 Mon Sep 17 00:00:00 2001
+From eaa8728747683631ca31f66d91c65481fb7dfb8f Mon Sep 17 00:00:00 2001
 From: "Fabio M. De Francesco" <fmdefrancesco@gmail.com>
 Date: Wed, 31 Aug 2022 01:13:50 +0200
 Subject: [PATCH] swiotlb: Replace kmap_atomic() with memcpy_{from,to}_page()
 
-...
+The use of kmap_atomic() is being deprecated in favor of
+kmap_local_page(), which can also be used in atomic context (including
+interrupts).
 
+Replace kmap_atomic() with kmap_local_page(). Instead of open coding
+mapping, memcpy(), and un-mapping, use the memcpy_{from,to}_page() helper.
+
+Suggested-by: Ira Weiny <ira.weiny@intel.com>
 Signed-off-by: Fabio M. De Francesco <fmdefrancesco@gmail.com>
 ---
  kernel/dma/swiotlb.c | 10 ++++------
