@@ -1,0 +1,27 @@
+From a3a73e53aa0629526ce84755ec28ce1a29b565b2 Mon Sep 17 00:00:00 2001
+From: "Fabio M. De Francesco" <fmdefrancesco@gmail.com>
+Date: Thu, 1 Sep 2022 17:25:00 +0200
+Subject: [PATCH 0/2] misc/xilinx_sdfec: Replace kmap() with kmap_local_page()
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 8bit
+
+This short series is aimed at replacing kmap() with kmap_local_page() in
+misc/xilinx_sdfec. This task is accomplished in patch 2/2. Instead patch
+1/2 unmaps the pages which are currently mapped in a loop with kmap()
+but which are never unmapped with kunmap().
+
+Cc: "Venkataramanan, Anirudh" <anirudh.venkataramanan@intel.com>
+Suggested-by: Ira Weiny <ira.weiny@intel.com>
+Signed-off-by: Fabio M. De Francesco <fmdefrancesco@gmail.com>
+
+Fabio M. De Francesco (2):
+  misc/xilinx_sdfec: Call kunmap() on pages mapped with kmap()
+  misc/xilinx_sdfec: Replace kmap() with kmap_local_page()
+
+ drivers/misc/xilinx_sdfec.c | 3 ++-
+ 1 file changed, 2 insertions(+), 1 deletion(-)
+
+-- 
+2.37.2
+

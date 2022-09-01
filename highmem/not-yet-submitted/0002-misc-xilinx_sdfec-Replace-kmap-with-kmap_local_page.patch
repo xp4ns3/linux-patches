@@ -1,10 +1,30 @@
-From f831c84dc521efc78d8a69b0eea402efb5e2d36c Mon Sep 17 00:00:00 2001
+From a3a73e53aa0629526ce84755ec28ce1a29b565b2 Mon Sep 17 00:00:00 2001
 From: "Fabio M. De Francesco" <fmdefrancesco@gmail.com>
 Date: Wed, 31 Aug 2022 02:30:08 +0200
-Subject: [PATCH] misc/xilinx_sdfec: Replace kmap() with kmap_local_page()
+Subject: [PATCH 2/2] misc/xilinx_sdfec: Replace kmap() with kmap_local_page()
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 8bit
 
-...
+kmap() is being deprecated in favor of kmap_local_page().
 
+There are two main problems with kmap(): (1) It comes with an overhead as
+the mapping space is restricted and protected by a global lock for
+synchronization and (2) it also requires global TLB invalidation when the
+kmap’s pool wraps and it might block when the mapping space is fully
+utilized until a slot becomes available.
+
+With kmap_local_page() the mappings are per thread, CPU local, can take
+page faults, and can be called from any context (including interrupts).
+It is faster than kmap() in kernels with HIGHMEM enabled. Furthermore,
+the tasks can be preempted and, when they are scheduled to run again, the
+kernel virtual addresses are restored and still valid.
+
+Since its use in xilinx_sdfec.c is safe, replace kmap()i / kunmap() with
+kmap_local_page() / kunmap_local().
+
+Cc: "Venkataramanan, Anirudh" <anirudh.venkataramanan@intel.com>
+Suggested-by: Ira Weiny <ira.weiny@intel.com>
 Signed-off-by: Fabio M. De Francesco <fmdefrancesco@gmail.com>
 ---
  drivers/misc/xilinx_sdfec.c | 4 ++--
