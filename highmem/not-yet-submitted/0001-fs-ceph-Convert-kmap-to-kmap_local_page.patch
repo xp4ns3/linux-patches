@@ -1,0 +1,77 @@
+From 71dc67d055d08f1399f14bccaf536828abe24301 Mon Sep 17 00:00:00 2001
+From: "Fabio M. De Francesco" <fmdefrancesco@gmail.com>
+Date: Tue, 27 Sep 2022 15:20:19 +0200
+Subject: [PATCH] fs/ceph: Convert kmap() to kmap_local_page()
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 8bit
+
+The use of kmap() is being deprecated in favor of kmap_local_page().
+
+There are two main problems with kmap(): (1) It comes with an overhead as
+the mapping space is restricted and protected by a global lock for
+synchronization and (2) it also requires global TLB invalidation when the
+kmap’s pool wraps and it might block when the mapping space is fully
+utilized until a slot becomes available.
+
+With kmap_local_page() the mappings are per thread, CPU local, can take
+page faults, and can be called from any context (including interrupts).
+It is faster than kmap() in kernels with HIGHMEM enabled. Furthermore,
+the tasks can be preempted and, when they are scheduled to run again, the
+kernel virtual addresses are restored and still valid.
+
+Since its use in fs/ceph is safe everywhere, it should be preferred.
+
+Therefore, replace kmap() with kmap_local_page() in fs/ceph.
+
+Tested with xfstests on a QEMU/KVM x86_32 VM, 6GB RAM, booting a kernel
+with HIGHMEM64 enabled.
+
+Cc: "Venkataramanan, Anirudh" <anirudh.venkataramanan@intel.com>
+Suggested-by: Ira Weiny <ira.weiny@intel.com>
+Signed-off-by: Fabio M. De Francesco <fmdefrancesco@gmail.com>
+---
+ fs/ceph/dir.c   | 2 +-
+ fs/ceph/inode.c | 6 +++---
+ 2 files changed, 4 insertions(+), 4 deletions(-)
+
+diff --git a/fs/ceph/dir.c b/fs/ceph/dir.c
+index e7e2ebac330d..07f681d87c55 100644
+--- a/fs/ceph/dir.c
++++ b/fs/ceph/dir.c
+@@ -147,7 +147,7 @@ __dcache_find_get_entry(struct dentry *parent, u64 idx,
+ 		/* reading/filling the cache are serialized by
+ 		   i_rwsem, no need to use page lock */
+ 		unlock_page(cache_ctl->page);
+-		cache_ctl->dentries = kmap(cache_ctl->page);
++		cache_ctl->dentries = kmap_local_page(cache_ctl->page);
+ 	}
+ 
+ 	cache_ctl->index = idx & idx_mask;
+diff --git a/fs/ceph/inode.c b/fs/ceph/inode.c
+index 42351d7a0dd6..324f52bdb1e4 100644
+--- a/fs/ceph/inode.c
++++ b/fs/ceph/inode.c
+@@ -1579,8 +1579,8 @@ static int readdir_prepopulate_inodes_only(struct ceph_mds_request *req,
+ 
+ void ceph_readdir_cache_release(struct ceph_readdir_cache_control *ctl)
+ {
+-	if (ctl->page) {
+-		kunmap(ctl->page);
++	if (ctl->dentries) {
++		kunmap_local(ctl->dentries);
+ 		put_page(ctl->page);
+ 		ctl->page = NULL;
+ 	}
+@@ -1608,7 +1608,7 @@ static int fill_readdir_cache(struct inode *dir, struct dentry *dn,
+ 		/* reading/filling the cache are serialized by
+ 		 * i_rwsem, no need to use page lock */
+ 		unlock_page(ctl->page);
+-		ctl->dentries = kmap(ctl->page);
++		ctl->dentries = kmap_local_page(ctl->page);
+ 		if (idx == 0)
+ 			memset(ctl->dentries, 0, PAGE_SIZE);
+ 	}
+-- 
+2.37.3
+
