@@ -1,0 +1,31 @@
+From 6763228a4e35bbd3399e0b6c05ac68321407b130 Mon Sep 17 00:00:00 2001
+From: "Fabio M. De Francesco" <fmdefrancesco@gmail.com>
+Date: Tue, 27 Sep 2022 20:02:13 +0200
+Subject: [PATCH] fs/fuse: Replace kmap() with kmap_local_page()
+
+...
+
+Signed-off-by: Fabio M. De Francesco <fmdefrancesco@gmail.com>
+---
+ fs/fuse/readdir.c | 4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
+
+diff --git a/fs/fuse/readdir.c b/fs/fuse/readdir.c
+index b4e565711045..9e40c19e90dc 100644
+--- a/fs/fuse/readdir.c
++++ b/fs/fuse/readdir.c
+@@ -539,9 +539,9 @@ static int fuse_readdir_cached(struct file *file, struct dir_context *ctx)
+ 	 * Contents of the page are now protected against changing by holding
+ 	 * the page lock.
+ 	 */
+-	addr = kmap(page);
++	addr = kmap_local_page(page);
+ 	res = fuse_parse_cache(ff, addr, size, ctx);
+-	kunmap(page);
++	kunmap_local(addr);
+ 	unlock_page(page);
+ 	put_page(page);
+ 
+-- 
+2.37.3
+
