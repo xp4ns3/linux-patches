@@ -1,0 +1,76 @@
+From c8fc660e21dc726dcaf19a61de70b77c38ae5c7a Mon Sep 17 00:00:00 2001
+From: "Fabio M. De Francesco" <fmdefrancesco@gmail.com>
+Date: Tue, 27 Sep 2022 17:24:15 +0200
+Subject: [PATCH] fs/cramfs: Convert kmap() to kmap_local_data()
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 8bit
+
+The use of kmap() is being deprecated in favor of kmap_local_page().
+
+There are two main problems with kmap(): (1) It comes with an overhead as
+the mapping space is restricted and protected by a global lock for
+synchronization and (2) it also requires global TLB invalidation when the
+kmap’s pool wraps and it might block when the mapping space is fully
+utilized until a slot becomes available.
+
+With kmap_local_page() the mappings are per thread, CPU local, can take
+page faults, and can be called from any context (including interrupts).
+It is faster than kmap() in kernels with HIGHMEM enabled. Furthermore,
+the tasks can be preempted and, when they are scheduled to run again, the
+kernel virtual addresses are restored and still valid.
+
+Since its use in fs/cramfs is safe everywhere, it should be preferred.
+
+Therefore, replace kmap() with kmap_local_page() in fs/cramfs. Instead
+of open-coding kmap_local_page() + memcpy(), use memcpy_from_page().
+
+Cc: "Venkataramanan, Anirudh" <anirudh.venkataramanan@intel.com>
+Suggested-by: Ira Weiny <ira.weiny@intel.com>
+Signed-off-by: Fabio M. De Francesco <fmdefrancesco@gmail.com>
+---
+ fs/cramfs/inode.c | 9 ++++-----
+ 1 file changed, 4 insertions(+), 5 deletions(-)
+
+diff --git a/fs/cramfs/inode.c b/fs/cramfs/inode.c
+index 61ccf7722fc3..c17cbba5d45e 100644
+--- a/fs/cramfs/inode.c
++++ b/fs/cramfs/inode.c
+@@ -238,8 +238,7 @@ static void *cramfs_blkdev_read(struct super_block *sb, unsigned int offset,
+ 		struct page *page = pages[i];
+ 
+ 		if (page) {
+-			memcpy(data, kmap(page), PAGE_SIZE);
+-			kunmap(page);
++			memcpy_from_page(data, page, 0, PAGE_SIZE);
+ 			put_page(page);
+ 		} else
+ 			memset(data, 0, PAGE_SIZE);
+@@ -815,7 +814,7 @@ static int cramfs_read_folio(struct file *file, struct folio *folio)
+ 
+ 	maxblock = (inode->i_size + PAGE_SIZE - 1) >> PAGE_SHIFT;
+ 	bytes_filled = 0;
+-	pgdata = kmap(page);
++	pgdata = kmap_local_page(page);
+ 
+ 	if (page->index < maxblock) {
+ 		struct super_block *sb = inode->i_sb;
+@@ -903,13 +902,13 @@ static int cramfs_read_folio(struct file *file, struct folio *folio)
+ 
+ 	memset(pgdata + bytes_filled, 0, PAGE_SIZE - bytes_filled);
+ 	flush_dcache_page(page);
+-	kunmap(page);
++	kunmap_local(pgdata);
+ 	SetPageUptodate(page);
+ 	unlock_page(page);
+ 	return 0;
+ 
+ err:
+-	kunmap(page);
++	kunmap_local(pgdata);
+ 	ClearPageUptodate(page);
+ 	SetPageError(page);
+ 	unlock_page(page);
+-- 
+2.37.3
+
