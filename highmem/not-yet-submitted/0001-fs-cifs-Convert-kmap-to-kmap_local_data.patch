@@ -1,0 +1,155 @@
+From ff47a7b4bbdc5bc85789ebe42394e0cf03e207fe Mon Sep 17 00:00:00 2001
+From: "Fabio M. De Francesco" <fmdefrancesco@gmail.com>
+Date: Tue, 27 Sep 2022 16:44:34 +0200
+Subject: [PATCH] fs/cifs: Convert kmap() to kmap_local_data()
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 8bit
+
+The use of kmap() is being deprecated in favor of kmap_local_page().
+
+There are two main problems with kmap(): (1) It comes with an overhead as
+the mapping space is restricted and protected by a global lock for
+synchronization and (2) it also requires global TLB invalidation when the
+kmap’s pool wraps and it might block when the mapping space is fully
+utilized until a slot becomes available.
+
+With kmap_local_page() the mappings are per thread, CPU local, can take
+page faults, and can be called from any context (including interrupts).
+It is faster than kmap() in kernels with HIGHMEM enabled. Furthermore,
+the tasks can be preempted and, when they are scheduled to run again, the
+kernel virtual addresses are restored and still valid.
+
+Since its use in fs/cifs is safe everywhere, it should be preferred.
+
+Therefore, replace kmap() with kmap_local_page() in fs/cifs.
+
+Tested with xfstests on a QEMU/KVM x86_32 VM, 6GB RAM, booting a kernel
+with HIGHMEM64GB enabled.
+
+Cc: "Venkataramanan, Anirudh" <anirudh.venkataramanan@intel.com>
+Suggested-by: Ira Weiny <ira.weiny@intel.com>
+Signed-off-by: Fabio M. De Francesco <fmdefrancesco@gmail.com>
+---
+ fs/cifs/cifsencrypt.c |  6 +++---
+ fs/cifs/file.c        | 16 ++++++++--------
+ fs/cifs/smb2ops.c     |  9 ++-------
+ 3 files changed, 13 insertions(+), 18 deletions(-)
+
+diff --git a/fs/cifs/cifsencrypt.c b/fs/cifs/cifsencrypt.c
+index 46f5718754f9..eb9c8d805a66 100644
+--- a/fs/cifs/cifsencrypt.c
++++ b/fs/cifs/cifsencrypt.c
+@@ -68,17 +68,17 @@ int __cifs_calc_signature(struct smb_rqst *rqst,
+ 
+ 		rqst_page_get_length(rqst, i, &len, &offset);
+ 
+-		kaddr = (char *) kmap(rqst->rq_pages[i]) + offset;
++		kaddr = (char *)kmap_local_page(rqst->rq_pages[i]) + offset;
+ 
+ 		rc = crypto_shash_update(shash, kaddr, len);
+ 		if (rc) {
+ 			cifs_dbg(VFS, "%s: Could not update with payload\n",
+ 				 __func__);
+-			kunmap(rqst->rq_pages[i]);
++			kunmap_local(kaddr);
+ 			return rc;
+ 		}
+ 
+-		kunmap(rqst->rq_pages[i]);
++		kunmap(kaddr);
+ 	}
+ 
+ 	rc = crypto_shash_final(shash, signature);
+diff --git a/fs/cifs/file.c b/fs/cifs/file.c
+index 6f38b134a346..b2b8f0f5a887 100644
+--- a/fs/cifs/file.c
++++ b/fs/cifs/file.c
+@@ -2469,17 +2469,17 @@ static int cifs_partialpagewrite(struct page *page, unsigned from, unsigned to)
+ 	inode = page->mapping->host;
+ 
+ 	offset += (loff_t)from;
+-	write_data = kmap(page);
++	write_data = kmap_local_page(page);
+ 	write_data += from;
+ 
+ 	if ((to > PAGE_SIZE) || (from > to)) {
+-		kunmap(page);
++		kunmap_local(write_data);
+ 		return -EIO;
+ 	}
+ 
+ 	/* racing with truncate? */
+ 	if (offset > mapping->host->i_size) {
+-		kunmap(page);
++		kunmap_local(write_data);
+ 		return 0; /* don't care */
+ 	}
+ 
+@@ -2507,7 +2507,7 @@ static int cifs_partialpagewrite(struct page *page, unsigned from, unsigned to)
+ 			rc = -EIO;
+ 	}
+ 
+-	kunmap(page);
++	kunmap_local(write_data);
+ 	return rc;
+ }
+ 
+@@ -2885,10 +2885,10 @@ static int cifs_write_end(struct file *file, struct address_space *mapping,
+ 		   known which we might as well	leverage */
+ 		/* BB check if anything else missing out of ppw
+ 		   such as updating last write time */
+-		page_data = kmap(page);
++		page_data = kmap_local_page(page);
+ 		rc = cifs_write(cfile, pid, page_data + offset, copied, &pos);
+ 		/* if (rc < 0) should we set writebehind rc? */
+-		kunmap(page);
++		kunmap_local(page_data);
+ 
+ 		free_xid(xid);
+ 	} else {
+@@ -4830,7 +4830,7 @@ static int cifs_readpage_worker(struct file *file, struct page *page,
+ 	if (rc == 0)
+ 		goto read_complete;
+ 
+-	read_data = kmap(page);
++	read_data = kmap_local_page(page);
+ 	/* for reads over a certain size could initiate async read ahead */
+ 
+ 	rc = cifs_read(file, read_data, PAGE_SIZE, poffset);
+@@ -4859,7 +4859,7 @@ static int cifs_readpage_worker(struct file *file, struct page *page,
+ 	rc = 0;
+ 
+ io_error:
+-	kunmap(page);
++	kunmap_local(read_data);
+ 	unlock_page(page);
+ 
+ read_complete:
+diff --git a/fs/cifs/smb2ops.c b/fs/cifs/smb2ops.c
+index 421be43af425..b6b0c1fd4f3a 100644
+--- a/fs/cifs/smb2ops.c
++++ b/fs/cifs/smb2ops.c
+@@ -4481,17 +4481,12 @@ smb3_init_transform_rq(struct TCP_Server_Info *server, int num_rqst,
+ 
+ 		/* copy pages form the old */
+ 		for (j = 0; j < npages; j++) {
+-			char *dst, *src;
+ 			unsigned int offset, len;
+ 
+ 			rqst_page_get_length(&new_rq[i], j, &len, &offset);
+ 
+-			dst = (char *) kmap(new_rq[i].rq_pages[j]) + offset;
+-			src = (char *) kmap(old_rq[i - 1].rq_pages[j]) + offset;
+-
+-			memcpy(dst, src, len);
+-			kunmap(new_rq[i].rq_pages[j]);
+-			kunmap(old_rq[i - 1].rq_pages[j]);
++			memcpy_page(new_rq[i].rq_pages[j], offset,
++				    old_rq[i - 1].rq_pages[j], offset, len);
+ 		}
+ 	}
+ 
+-- 
+2.37.3
+
