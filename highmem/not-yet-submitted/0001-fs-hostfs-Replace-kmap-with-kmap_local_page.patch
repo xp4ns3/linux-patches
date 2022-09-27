@@ -1,0 +1,72 @@
+From f3be458039b791552249bdb9ad08224aee540724 Mon Sep 17 00:00:00 2001
+From: "Fabio M. De Francesco" <fmdefrancesco@gmail.com>
+Date: Tue, 27 Sep 2022 20:09:47 +0200
+Subject: [PATCH] fs/hostfs: Replace kmap() with kmap_local_page()
+
+...
+
+Signed-off-by: Fabio M. De Francesco <fmdefrancesco@gmail.com>
+---
+ fs/hostfs/hostfs_kern.c | 15 ++++++++-------
+ 1 file changed, 8 insertions(+), 7 deletions(-)
+
+diff --git a/fs/hostfs/hostfs_kern.c b/fs/hostfs/hostfs_kern.c
+index 07881b76d42f..0c9f89352601 100644
+--- a/fs/hostfs/hostfs_kern.c
++++ b/fs/hostfs/hostfs_kern.c
+@@ -412,7 +412,7 @@ static int hostfs_writepage(struct page *page, struct writeback_control *wbc)
+ 	if (page->index >= end_index)
+ 		count = inode->i_size & (PAGE_SIZE-1);
+ 
+-	buffer = kmap(page);
++	buffer = kmap_local_page(page);
+ 
+ 	err = write_file(HOSTFS_I(inode)->fd, &base, buffer, count);
+ 	if (err != count) {
+@@ -428,9 +428,9 @@ static int hostfs_writepage(struct page *page, struct writeback_control *wbc)
+ 	err = 0;
+ 
+  out:
+-	kunmap(page);
+-
++	kunmap_local(buffer);
+ 	unlock_page(page);
++
+ 	return err;
+ }
+ 
+@@ -441,7 +441,7 @@ static int hostfs_read_folio(struct file *file, struct folio *folio)
+ 	loff_t start = page_offset(page);
+ 	int bytes_read, ret = 0;
+ 
+-	buffer = kmap(page);
++	buffer = kmap_local_page(page);
+ 	bytes_read = read_file(FILE_HOSTFS_I(file)->fd, &start, buffer,
+ 			PAGE_SIZE);
+ 	if (bytes_read < 0) {
+@@ -458,8 +458,9 @@ static int hostfs_read_folio(struct file *file, struct folio *folio)
+ 
+  out:
+ 	flush_dcache_page(page);
+-	kunmap(page);
++	kunmap_local(buffer);
+ 	unlock_page(page);
++
+ 	return ret;
+ }
+ 
+@@ -484,9 +485,9 @@ static int hostfs_write_end(struct file *file, struct address_space *mapping,
+ 	unsigned from = pos & (PAGE_SIZE - 1);
+ 	int err;
+ 
+-	buffer = kmap(page);
++	buffer = kmap_local_page(page);
+ 	err = write_file(FILE_HOSTFS_I(file)->fd, &pos, buffer + from, copied);
+-	kunmap(page);
++	kunmap_local(buffer);
+ 
+ 	if (!PageUptodate(page) && err == PAGE_SIZE)
+ 		SetPageUptodate(page);
+-- 
+2.37.3
+
