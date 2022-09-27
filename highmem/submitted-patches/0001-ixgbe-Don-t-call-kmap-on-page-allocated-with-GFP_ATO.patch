@@ -1,7 +1,7 @@
-From 9376b3ba145dd0ff5d29adbc6beb7a39b1a4aa96 Mon Sep 17 00:00:00 2001
+From 517ca8261d2caf251d8feb637fbce4aa7396ec8d Mon Sep 17 00:00:00 2001
 From: "Fabio M. De Francesco" <fmdefrancesco@gmail.com>
 Date: Mon, 4 Jul 2022 15:31:13 +0200
-Subject: [PATCH] ixgbe: Don't call kmap() on page allocated with GFP_ATOMIC
+Subject: [RESEND PATCH] ixgbe: Don't call kmap() on page allocated with GFP_ATOMIC
 
 Pages allocated with GFP_ATOMIC cannot come from Highmem. This is why
 there is no need to call kmap() on them.
@@ -11,16 +11,26 @@ plain page_address() to get the kernel address.
 
 Suggested-by: Ira Weiny <ira.weiny@intel.com>
 Suggested-by: Alexander Duyck <alexander.duyck@gmail.com>
+Reviewed-by: Ira Weiny <ira.weiny@intel.com>
+Reviewed-by: Alexander Duyck <alexander.duyck@gmail.com>
+Tested-by: Gurucharan <gurucharanx.g@intel.com>
 Signed-off-by: Fabio M. De Francesco <fmdefrancesco@gmail.com>
 ---
+
+I send again this patch because it was submitted more than two months ago,
+Monday 4th July 2022, but for one or more (good?) reasons it has not yet
+reached Linus' tree. In the meantime I am also forwarding two "Reviewed-by"
+and one "Tested-by" tags (thanks a lot to Ira, Alexander, Gurucharan).
+Obviously I have not made any changes to the code.
+
  drivers/net/ethernet/intel/ixgbe/ixgbe_ethtool.c | 4 +---
  1 file changed, 1 insertion(+), 3 deletions(-)
 
 diff --git a/drivers/net/ethernet/intel/ixgbe/ixgbe_ethtool.c b/drivers/net/ethernet/intel/ixgbe/ixgbe_ethtool.c
-index 628d0eb0599f..71196fd92f81 100644
+index 04f453eabef6..cb5c707538a5 100644
 --- a/drivers/net/ethernet/intel/ixgbe/ixgbe_ethtool.c
 +++ b/drivers/net/ethernet/intel/ixgbe/ixgbe_ethtool.c
-@@ -1966,15 +1966,13 @@ static bool ixgbe_check_lbtest_frame(struct ixgbe_rx_buffer *rx_buffer,
+@@ -1964,15 +1964,13 @@ static bool ixgbe_check_lbtest_frame(struct ixgbe_rx_buffer *rx_buffer,
  
  	frame_size >>= 1;
  
@@ -38,5 +48,5 @@ index 628d0eb0599f..71196fd92f81 100644
  }
  
 -- 
-2.36.1
+2.37.2
 
