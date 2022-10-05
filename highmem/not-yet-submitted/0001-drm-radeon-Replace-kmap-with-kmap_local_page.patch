@@ -1,0 +1,33 @@
+From ac2bffe90bede476ef4e991e712e313a103815b6 Mon Sep 17 00:00:00 2001
+From: "Fabio M. De Francesco" <fmdefrancesco@gmail.com>
+Date: Wed, 5 Oct 2022 05:34:57 +0200
+Subject: [PATCH] drm/radeon: Replace kmap() with kmap_local_page()
+
+...
+
+Signed-off-by: Fabio M. De Francesco <fmdefrancesco@gmail.com>
+---
+ drivers/gpu/drm/radeon/radeon_ttm.c | 4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
+
+diff --git a/drivers/gpu/drm/radeon/radeon_ttm.c b/drivers/gpu/drm/radeon/radeon_ttm.c
+index d33fec488713..bdb4c0e0736b 100644
+--- a/drivers/gpu/drm/radeon/radeon_ttm.c
++++ b/drivers/gpu/drm/radeon/radeon_ttm.c
+@@ -869,11 +869,11 @@ static ssize_t radeon_ttm_gtt_read(struct file *f, char __user *buf,
+ 
+ 		page = rdev->gart.pages[p];
+ 		if (page) {
+-			ptr = kmap(page);
++			ptr = kmap_local_page(page);
+ 			ptr += off;
+ 
+ 			r = copy_to_user(buf, ptr, cur_size);
+-			kunmap(rdev->gart.pages[p]);
++			kunmap_local(ptr);
+ 		} else
+ 			r = clear_user(buf, cur_size);
+ 
+-- 
+2.37.3
+
