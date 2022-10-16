@@ -1,7 +1,7 @@
 From 69ce2041dca64a77738d00dc687462a7418a2707 Mon Sep 17 00:00:00 2001
 From: "Fabio M. De Francesco" <fmdefrancesco@gmail.com>
 Date: Thu, 25 Aug 2022 17:53:30 +0200
-Subject: [PATCH] fs/sysv: Replace kmap() with kmap_local_page()
+Subject: [RESEND PATCH] fs/sysv: Replace kmap() with kmap_local_page()
 MIME-Version: 1.0
 Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 8bit
@@ -28,8 +28,12 @@ to be used in dir_put_page().
 
 Cc: "Venkataramanan, Anirudh" <anirudh.venkataramanan@intel.com>
 Suggested-by: Ira Weiny <ira.weiny@intel.com>
+Reviewed-by: Ira Weiny <ira.weiny@intel.com>
 Signed-off-by: Fabio M. De Francesco <fmdefrancesco@gmail.com>
 ---
+
+I'm resending this patch adding a review tag from Ira. No changes to the
+code. It's also a friendly ping, since first submission was on Aug 26th.
 
 This code is not tested. I have no means to create an SysV filesystem.
 Despite nothing here seems to break the strict rules about the use of
