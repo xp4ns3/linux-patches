@@ -1,10 +1,29 @@
-From ac2bffe90bede476ef4e991e712e313a103815b6 Mon Sep 17 00:00:00 2001
+From 802f19b257e06717f86f9d6c5908ec34b83c8881 Mon Sep 17 00:00:00 2001
 From: "Fabio M. De Francesco" <fmdefrancesco@gmail.com>
 Date: Wed, 5 Oct 2022 05:34:57 +0200
 Subject: [PATCH] drm/radeon: Replace kmap() with kmap_local_page()
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 8bit
 
-...
+The use of kmap() is being deprecated in favor of kmap_local_page().
 
+There are two main problems with kmap(): (1) It comes with an overhead as
+the mapping space is restricted and protected by a global lock for
+synchronization and (2) it also requires global TLB invalidation when the
+kmap’s pool wraps and it might block when the mapping space is fully
+utilized until a slot becomes available.
+
+With kmap_local_page() the mappings are per thread, CPU local, can take
+page faults, and can be called from any context (including interrupts).
+It is faster than kmap() in kernels with HIGHMEM enabled. Furthermore,
+the tasks can be preempted and, when they are scheduled to run again, the
+kernel virtual addresses are restored and still valid.
+
+Therefore, replace kmap() with kmap_local_page() in radeon_ttm_gtt_read().
+
+Cc: "Venkataramanan, Anirudh" <anirudh.venkataramanan@intel.com>
+Suggested-by: Ira Weiny <ira.weiny@intel.com>
 Signed-off-by: Fabio M. De Francesco <fmdefrancesco@gmail.com>
 ---
  drivers/gpu/drm/radeon/radeon_ttm.c | 4 ++--
