@@ -1,28 +1,45 @@
 From 0845c211a1f00ac717821ec29b4503103131393c Mon Sep 17 00:00:00 2001
 From: "Fabio M. De Francesco" <fmdefrancesco@gmail.com>
 Date: Wed, 6 Jul 2022 22:12:00 +0200
-Subject: [PATCH] aio: Replace kmap{,_atomic}() with kmap_local_page()
+Subject: [RESEND PATCH] fs/aio: Replace kmap{,_atomic}() with kmap_local_page()
 
 The use of kmap() and kmap_atomic() are being deprecated in favor of
 kmap_local_page().
 
-With kmap_local_page(), the mappings are per thread, CPU local and not
-globally visible. Furthermore, the mappings can be acquired from any
-context (including interrupts).
+There are two main problems with kmap(): (1) It comes with an overhead as
+the mapping space is restricted and protected by a global lock for
+synchronization and (2) it also requires global TLB invalidation when the
+kmap’s pool wraps and it might block when the mapping space is fully
+utilized until a slot becomes available.
 
-Therefore, use kmap_local_page() in aio.c because these mappings are per
-thread, CPU local, and not globally visible.
+With kmap_local_page() the mappings are per thread, CPU local, can take
+page faults, and can be called from any context (including interrupts).
+It is faster than kmap() in kernels with HIGHMEM enabled. Furthermore,
+the tasks can be preempted and, when they are scheduled to run again, the
+kernel virtual addresses are restored and still valid.
 
-Tested with xfstests on a QEMU + KVM 32-bits VM booting a kernel with
-HIGHMEM64GB enabled.
+Since its use in fs/aio.c is safe everywhere, it should be preferred.
 
+Therefore, replace kmap() and kmap_atomic() with kmap_local_page() in
+fs/aio.c.
+
+Tested with xfstests on a QEMU/KVM x86_32 VM, 6GB RAM, booting a kernel
+with HIGHMEM64GB enabled.
+
+Cc: "Venkataramanan, Anirudh" <anirudh.venkataramanan@intel.com>
 Suggested-by: Ira Weiny <ira.weiny@intel.com>
+Reviewed-by: Ira Weiny <ira.weiny@intel.com>
 Signed-off-by: Fabio M. De Francesco <fmdefrancesco@gmail.com>
 ---
 
 I've tested with "./check -g aio". The tests in this group fail 3/26
 times, with and without my patch. Therefore, these changes don't introduce
-further errors.
+further errors. I'm not aware of any further tests I may run, so that
+any suggestions would be precious and much appreciated :-)
+
+I'm resending this patch because some recipients were missing in the 
+previous submissions. In the meantime I'm also adding some more information 
+in the commit message. There are no changes in the code.
 
  fs/aio.c | 32 ++++++++++++++++----------------
  1 file changed, 16 insertions(+), 16 deletions(-)
