@@ -1,12 +1,41 @@
-From 6763228a4e35bbd3399e0b6c05ac68321407b130 Mon Sep 17 00:00:00 2001
+From 6932a67d28839a1afde76d87558119fdf2bde9cc Mon Sep 17 00:00:00 2001
 From: "Fabio M. De Francesco" <fmdefrancesco@gmail.com>
 Date: Tue, 27 Sep 2022 20:02:13 +0200
 Subject: [PATCH] fs/fuse: Replace kmap() with kmap_local_page()
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 8bit
 
-...
+The use of kmap() is being deprecated in favor of kmap_local_page().
 
+There are two main problems with kmap(): (1) It comes with an overhead as
+the mapping space is restricted and protected by a global lock for
+synchronization and (2) it also requires global TLB invalidation when the
+kmap’s pool wraps and it might block when the mapping space is fully
+utilized until a slot becomes available.
+
+With kmap_local_page() the mappings are per thread, CPU local, can take
+page faults, and can be called from any context (including interrupts).
+It is faster than kmap() in kernels with HIGHMEM enabled. Furthermore,
+the tasks can be preempted and, when they are scheduled to run again, the
+kernel virtual addresses are restored and still valid.
+
+Therefore, replace kmap() with kmap_local_page() in fuse_readdir_cached(), 
+it being the only call site of kmap() currently left in fs/fuse.
+
+Cc: "Venkataramanan, Anirudh" <anirudh.venkataramanan@intel.com>
+Suggested-by: Ira Weiny <ira.weiny@intel.com>
 Signed-off-by: Fabio M. De Francesco <fmdefrancesco@gmail.com>
 ---
+
+These changes are not tested in a 32 bits VM as I use to do with other more
+problematic conversions. Mere code inspection makes me reasonably think
+that the rules of local mappings are not violated by this conversion.
+
+Furthermore, I have no idea how to test this code. If maintainers think
+that tests are absolutely necessary, any hints about how to perform them
+would be greatly appreciated.
+
  fs/fuse/readdir.c | 4 ++--
  1 file changed, 2 insertions(+), 2 deletions(-)
 
