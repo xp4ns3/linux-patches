@@ -1,0 +1,63 @@
+From 936e801f0d3233c779ae76ab546e756c19aee4a1 Mon Sep 17 00:00:00 2001
+From: "Fabio M. De Francesco" <fmdefrancesco@gmail.com>
+Date: Fri, 18 Nov 2022 17:14:21 +0100
+Subject: [PATCH] Documentation/mm: Add information about conversions from
+ kmap_atomic()
+
+...
+
+Signed-off-by: Fabio M. De Francesco <fmdefrancesco@gmail.com>
+---
+ Documentation/mm/highmem.rst | 21 ++++++++++++++++++---
+ 1 file changed, 18 insertions(+), 3 deletions(-)
+
+diff --git a/Documentation/mm/highmem.rst b/Documentation/mm/highmem.rst
+index 0f731d9196b0..29019fa9df9e 100644
+--- a/Documentation/mm/highmem.rst
++++ b/Documentation/mm/highmem.rst
+@@ -66,7 +66,8 @@ list shows them in order of preference of use.
+   CPU-hotplug until the mapping is disposed.
+ 
+   It's valid to take pagefaults in a local kmap region, unless the context
+-  in which the local mapping is acquired does not allow it for other reasons.
++  in which the local mapping is acquired does not allow it for other reasons
++  (more on this subject is the section about kmap_atomic()).
+ 
+   As said, pagefaults and preemption are never disabled. There is no need to
+   disable preemption because, when context switches to a different task, the
+@@ -80,9 +81,10 @@ list shows them in order of preference of use.
+   virtual address of the direct mapping. Only real highmem pages are
+   temporarily mapped. Therefore, users may call a plain page_address()
+   for pages which are known to not come from ZONE_HIGHMEM. However, it is
+-  always safe to use kmap_local_page() / kunmap_local().
++  always safe to use kmap_local_page() / kunmap_local() on pages allocated
++  from lower zones.
+ 
+-  While it is significantly faster than kmap(), for the higmem case it
++  While it might be significantly faster than kmap(), for the higmem case it
+   comes with restrictions about the pointers validity. Contrary to kmap()
+   mappings, the local mappings are only valid in the context of the caller
+   and cannot be handed to other contexts. This implies that users must
+@@ -115,6 +117,19 @@ list shows them in order of preference of use.
+ 
+   It is assumed that k[un]map_atomic() won't fail.
+ 
++  All kmap_atomic() calls are going to be converted to kmap_local_page().
++  However, the developers involved in this effort should understand whether
++  or not the code between the mappings and the un-mappings should still run
++  with page-faults and/or preemption disabled. In those cases explicit calls
++  to pagefault_disable() and/or preempt_disable() must be provided along with
++  kmap_local_page() and, when they are done, page-faults and/or preemption
++  must explicitly re-enabled along with the call to kunmap_local().
++
++  If it were found out that the code doesn't ncessitate any explicit
++  disablings, the commit message should explicitly confirm that the converted
++  code is still "safe" because it doesn't need any of the above-mentioned
++  disablings.
++
+ * kmap().  This should be used to make short duration mapping of a single
+   page with no restrictions on preemption or migration. It comes with an
+   overhead as mapping space is restricted and protected by a global lock
+-- 
+2.38.1
+
