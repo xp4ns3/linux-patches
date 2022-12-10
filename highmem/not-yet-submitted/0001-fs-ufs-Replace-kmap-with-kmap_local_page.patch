@@ -1,4 +1,4 @@
-From 5dfcf8e851596629bc2af1acf66e3746f948a22f Mon Sep 17 00:00:00 2001
+From ca4b31eb9b667a515136c68fb92265097e0c954c Mon Sep 17 00:00:00 2001
 From: "Fabio M. De Francesco" <fmdefrancesco@gmail.com>
 Date: Tue, 6 Dec 2022 04:33:31 +0100
 Subject: [PATCH v5] fs/ufs: Replace kmap() with kmap_local_page()
@@ -31,13 +31,13 @@ Suggested-by: Al Viro <viro@zeniv.linux.org.uk>
 Suggested-by: Ira Weiny <ira.weiny@intel.com>
 Signed-off-by: Fabio M. De Francesco <fmdefrancesco@gmail.com>
 ---
- fs/ufs/dir.c   | 141 ++++++++++++++++++++++++++++---------------------
- fs/ufs/namei.c |  20 ++++---
- fs/ufs/ufs.h   |  12 +++--
- 3 files changed, 97 insertions(+), 76 deletions(-)
+ fs/ufs/dir.c   | 145 +++++++++++++++++++++++++++----------------------
+ fs/ufs/namei.c |  20 +++----
+ fs/ufs/ufs.h   |  12 ++--
+ 3 files changed, 98 insertions(+), 79 deletions(-)
 
 diff --git a/fs/ufs/dir.c b/fs/ufs/dir.c
-index 391efaf1d528..6e85b7e93a57 100644
+index 391efaf1d528..5264f11fc459 100644
 --- a/fs/ufs/dir.c
 +++ b/fs/ufs/dir.c
 @@ -61,9 +61,9 @@ static int ufs_commit_chunk(struct page *page, loff_t pos, unsigned len)
@@ -218,10 +218,11 @@ index 391efaf1d528..6e85b7e93a57 100644
 -		page = ufs_get_page(dir, n);
 -		err = PTR_ERR(page);
 -		if (IS_ERR(page))
+-			goto out;
 +		kaddr = ufs_get_page(dir, n, &page);
 +		err = PTR_ERR(kaddr);
 +		if (IS_ERR(kaddr))
- 			goto out;
++			return ERR_PTR(kaddr);
  		lock_page(page);
 -		kaddr = page_address(page);
  		dir_end = kaddr + ufs_last_byte(dir, n);
@@ -244,16 +245,18 @@ index 391efaf1d528..6e85b7e93a57 100644
  	err = ufs_prepare_chunk(page, pos, rec_len);
  	if (err)
  		goto out_unlock;
-@@ -396,7 +418,7 @@ int ufs_add_link(struct dentry *dentry, struct inode *inode)
+@@ -396,9 +418,7 @@ int ufs_add_link(struct dentry *dentry, struct inode *inode)
  	mark_inode_dirty(dir);
  	/* OFFSET_CACHE */
  out_put:
 -	ufs_put_page(page);
+-out:
+-	return err;
 +	ufs_put_page(page, kaddr);
- out:
- 	return err;
  out_unlock:
-@@ -431,6 +453,7 @@ ufs_readdir(struct file *file, struct dir_context *ctx)
+ 	unlock_page(page);
+ 	goto out_put;
+@@ -431,6 +451,7 @@ ufs_readdir(struct file *file, struct dir_context *ctx)
  	unsigned chunk_mask = ~(UFS_SB(sb)->s_uspi->s_dirblksize - 1);
  	bool need_revalidate = !inode_eq_iversion(inode, file->f_version);
  	unsigned flags = UFS_SB(sb)->s_flags;
@@ -261,7 +264,7 @@ index 391efaf1d528..6e85b7e93a57 100644
  
  	UFSD("BEGIN\n");
  
-@@ -441,16 +464,14 @@ ufs_readdir(struct file *file, struct dir_context *ctx)
+@@ -441,16 +462,14 @@ ufs_readdir(struct file *file, struct dir_context *ctx)
  		char *kaddr, *limit;
  		struct ufs_dir_entry *de;
  
@@ -280,7 +283,7 @@ index 391efaf1d528..6e85b7e93a57 100644
  		if (unlikely(need_revalidate)) {
  			if (offset) {
  				offset = ufs_validate_entry(sb, kaddr, offset, chunk_mask);
-@@ -476,13 +497,13 @@ ufs_readdir(struct file *file, struct dir_context *ctx)
+@@ -476,13 +495,13 @@ ufs_readdir(struct file *file, struct dir_context *ctx)
  					       ufs_get_de_namlen(sb, de),
  					       fs32_to_cpu(sb, de->d_ino),
  					       d_type)) {
@@ -296,7 +299,7 @@ index 391efaf1d528..6e85b7e93a57 100644
  	}
  	return 0;
  }
-@@ -493,12 +514,12 @@ ufs_readdir(struct file *file, struct dir_context *ctx)
+@@ -493,12 +512,12 @@ ufs_readdir(struct file *file, struct dir_context *ctx)
   * previous entry.
   */
  int ufs_delete_entry(struct inode *inode, struct ufs_dir_entry *dir,
@@ -313,7 +316,7 @@ index 391efaf1d528..6e85b7e93a57 100644
  	loff_t pos;
  	struct ufs_dir_entry *pde = NULL;
  	struct ufs_dir_entry *de = (struct ufs_dir_entry *) (kaddr + from);
-@@ -522,7 +543,7 @@ int ufs_delete_entry(struct inode *inode, struct ufs_dir_entry *dir,
+@@ -522,7 +541,7 @@ int ufs_delete_entry(struct inode *inode, struct ufs_dir_entry *dir,
  		de = ufs_next_entry(sb, de);
  	}
  	if (pde)
@@ -322,7 +325,7 @@ index 391efaf1d528..6e85b7e93a57 100644
  
  	pos = page_offset(page) + from;
  	lock_page(page);
-@@ -535,7 +556,7 @@ int ufs_delete_entry(struct inode *inode, struct ufs_dir_entry *dir,
+@@ -535,7 +554,7 @@ int ufs_delete_entry(struct inode *inode, struct ufs_dir_entry *dir,
  	inode->i_ctime = inode->i_mtime = current_time(inode);
  	mark_inode_dirty(inode);
  out:
@@ -331,7 +334,7 @@ index 391efaf1d528..6e85b7e93a57 100644
  	UFSD("EXIT\n");
  	return err;
  }
-@@ -559,8 +580,7 @@ int ufs_make_empty(struct inode * inode, struct inode *dir)
+@@ -559,8 +578,7 @@ int ufs_make_empty(struct inode * inode, struct inode *dir)
  		goto fail;
  	}
  
@@ -341,7 +344,7 @@ index 391efaf1d528..6e85b7e93a57 100644
  	memset(base, 0, PAGE_SIZE);
  
  	de = (struct ufs_dir_entry *) base;
-@@ -577,7 +597,7 @@ int ufs_make_empty(struct inode * inode, struct inode *dir)
+@@ -577,7 +595,7 @@ int ufs_make_empty(struct inode * inode, struct inode *dir)
  	de->d_reclen = cpu_to_fs16(sb, chunk_size - UFS_DIR_REC_LEN(1));
  	ufs_set_de_namlen(sb, de, 2);
  	strcpy (de->d_name, "..");
@@ -350,7 +353,7 @@ index 391efaf1d528..6e85b7e93a57 100644
  
  	err = ufs_commit_chunk(page, 0, chunk_size);
  fail:
-@@ -593,16 +613,15 @@ int ufs_empty_dir(struct inode * inode)
+@@ -593,16 +611,15 @@ int ufs_empty_dir(struct inode * inode)
  	struct super_block *sb = inode->i_sb;
  	struct page *page = NULL;
  	unsigned long i, npages = dir_pages(inode);
@@ -370,7 +373,7 @@ index 391efaf1d528..6e85b7e93a57 100644
  		de = (struct ufs_dir_entry *)kaddr;
  		kaddr += ufs_last_byte(inode, i) - UFS_DIR_REC_LEN(1);
  
-@@ -629,12 +648,12 @@ int ufs_empty_dir(struct inode * inode)
+@@ -629,12 +646,12 @@ int ufs_empty_dir(struct inode * inode)
  			}
  			de = ufs_next_entry(sb, de);
  		}
