@@ -7,6 +7,7 @@ Use the offset_in_page() helper because it is more suitable than doing
 explicit subtractions between pointers to directory entries and kernel
 virtual addresses of mapped pages.
 
+Cc: Ira Weiny <ira.weiny@intel.com>
 Suggested-by: Al Viro <viro@zeniv.linux.org.uk>
 Signed-off-by: Fabio M. De Francesco <fmdefrancesco@gmail.com>
 ---
