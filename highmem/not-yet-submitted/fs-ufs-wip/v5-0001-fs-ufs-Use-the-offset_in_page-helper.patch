@@ -1,0 +1,63 @@
+From cd68d4af742201ea1afc8c4e7f2f9e6a0a84cf1d Mon Sep 17 00:00:00 2001
+From: "Fabio M. De Francesco" <fmdefrancesco@gmail.com>
+Date: Sun, 11 Dec 2022 16:58:53 +0100
+Subject: [PATCH v5] fs/ufs: Use the offset_in_page() helper
+
+Use the offset_in_page() helper because it is more suitable than doing
+explicit subtractions between pointers to directory entries and kernel
+virtual addresses of mapped pages.
+
+Cc: Ira Weiny <ira.weiny@intel.com>
+Suggested-by: Al Viro <viro@zeniv.linux.org.uk>
+Signed-off-by: Fabio M. De Francesco <fmdefrancesco@gmail.com>
+---
+ fs/ufs/dir.c | 12 +++++-------
+ 1 file changed, 5 insertions(+), 7 deletions(-)
+
+diff --git a/fs/ufs/dir.c b/fs/ufs/dir.c
+index 391efaf1d528..69f78583c9c1 100644
+--- a/fs/ufs/dir.c
++++ b/fs/ufs/dir.c
+@@ -87,8 +87,7 @@ void ufs_set_link(struct inode *dir, struct ufs_dir_entry *de,
+ 		  struct page *page, struct inode *inode,
+ 		  bool update_times)
+ {
+-	loff_t pos = page_offset(page) +
+-			(char *) de - (char *) page_address(page);
++	loff_t pos = page_offset(page) + offset_in_page(de);
+ 	unsigned len = fs16_to_cpu(dir->i_sb, de->d_reclen);
+ 	int err;
+ 
+@@ -371,8 +370,7 @@ int ufs_add_link(struct dentry *dentry, struct inode *inode)
+ 	return -EINVAL;
+ 
+ got_it:
+-	pos = page_offset(page) +
+-			(char*)de - (char*)page_address(page);
++	pos = page_offset(page) + offset_in_page(de);
+ 	err = ufs_prepare_chunk(page, pos, rec_len);
+ 	if (err)
+ 		goto out_unlock;
+@@ -497,8 +495,8 @@ int ufs_delete_entry(struct inode *inode, struct ufs_dir_entry *dir,
+ {
+ 	struct super_block *sb = inode->i_sb;
+ 	char *kaddr = page_address(page);
+-	unsigned from = ((char*)dir - kaddr) & ~(UFS_SB(sb)->s_uspi->s_dirblksize - 1);
+-	unsigned to = ((char*)dir - kaddr) + fs16_to_cpu(sb, dir->d_reclen);
++	unsigned int from = offset_in_page(dir) & ~(UFS_SB(sb)->s_uspi->s_dirblksize - 1);
++	unsigned int to = offset_in_page(dir) + fs16_to_cpu(sb, dir->d_reclen);
+ 	loff_t pos;
+ 	struct ufs_dir_entry *pde = NULL;
+ 	struct ufs_dir_entry *de = (struct ufs_dir_entry *) (kaddr + from);
+@@ -522,7 +520,7 @@ int ufs_delete_entry(struct inode *inode, struct ufs_dir_entry *dir,
+ 		de = ufs_next_entry(sb, de);
+ 	}
+ 	if (pde)
+-		from = (char*)pde - (char*)page_address(page);
++		from = offset_in_page(pde);
+ 
+ 	pos = page_offset(page) + from;
+ 	lock_page(page);
+-- 
+2.38.1
+
