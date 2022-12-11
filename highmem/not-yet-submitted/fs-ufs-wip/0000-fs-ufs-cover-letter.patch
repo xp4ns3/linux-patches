@@ -1,0 +1,66 @@
+From 52c1d1c832053969e9b5edac434bb4eea9ec5898 Mon Sep 17 00:00:00 2001
+From: "Fabio M. De Francesco" <fmdefrancesco@gmail.com>
+Date: Sun, 11 Dec 2022 21:33:56 +0100
+Subject: [PATCH 0/3] fs/ufs: replace kmap() with kmap_local_page()
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 8bit
+
+kmap() is being deprecated in favor of kmap_local_page().
+
+There are two main problems with kmap(): (1) It comes with an overhead as
+the mapping space is restricted and protected by a global lock for
+synchronization and (2) it also requires global TLB invalidation when the
+kmap’s pool wraps and it might block when the mapping space is fully
+utilized until a slot becomes available.
+
+With kmap_local_page() the mappings are per thread, CPU local, can take
+page faults, and can be called from any context (including interrupts).
+It is faster than kmap() in kernels with HIGHMEM enabled. Furthermore,
+the tasks can be preempted and, when they are scheduled to run again, the
+kernel virtual addresses are restored and still valid.
+
+Since its use in fs/ufs is safe everywhere, it should be preferred.
+
+Therefore, replace kmap() with kmap_local_page() in fs/ufs. kunmap_local()
+requires the mapping address, so return that address from ufs_get_page()
+to be used in ufs_put_page().
+
+This series could have not been ever made because nothing prevented the
+previous patch from working properly but Al Viro made a long series of
+very appreciated comments about how many unnecessary and redundant lines
+of code I could have removed. He could see things I was entirely unable
+to notice. Furthermore, he also provided solutions and details about how
+I could decompose a single patch into a small series of three
+independent units.[1][2][3]
+
+I want to thank him so much for the patience, kindness and the time he
+decided to spend to provide those analysis and write three messages full
+of interesting insights. I hope to have not misunderstood too many
+things, however I'm pretty sure that I made many mistakes due to my
+scarce knowledge of filesystem and, above all, lack of experience :-)
+
+I decided to get rid of the previous numbers and start from scratch
+(i.e., version 1) because this series has too little to share with the
+design of the previous patch.[4]
+
+[1] https://lore.kernel.org/lkml/Y4E++JERgUMoqfjG@ZenIV/
+[2] https://lore.kernel.org/lkml/Y4FG0O7VWTTng5yh@ZenIV/
+[3] https://lore.kernel.org/lkml/Y4ONIFJatIGsVNpf@ZenIV/
+[4] https://lore.kernel.org/lkml/20221016163855.8173-1-fmdefrancesco@gmail.com/
+
+Cc: Ira Weiny <ira.weiny@intel.com>
+Suggested-by: Al Viro <viro@zeniv.linux.org.uk>
+Signed-off-by: Fabio M. De Francesco <fmdrefrancesco@gmail.com>
+
+Fabio M. De Francesco (3):
+  fs/ufs: Use the offset_in_page() helper
+  fs/ufs: Change the signature of ufs_get_page()
+  fs/ufs: Replace kmap() with kmap_local_page()
+
+ fs/ufs/dir.c | 140 +++++++++++++++++++++++++++------------------------
+ 1 file changed, 73 insertions(+), 67 deletions(-)
+
+-- 
+2.38.1
+

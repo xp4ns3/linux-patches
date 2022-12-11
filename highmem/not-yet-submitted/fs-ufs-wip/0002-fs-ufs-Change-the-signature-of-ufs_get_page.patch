@@ -1,7 +1,7 @@
 From 92abae33db54460e57d29e9a3915b16371fa3bdb Mon Sep 17 00:00:00 2001
 From: "Fabio M. De Francesco" <fmdefrancesco@gmail.com>
 Date: Sun, 11 Dec 2022 19:21:38 +0100
-Subject: [PATCH v5] fs/ufs: Change the signature of ufs_get_page()
+Subject: [PATCH 2/3] fs/ufs: Change the signature of ufs_get_page()
 
 Change the signature of ufs_get_page() in order to prepare this function
 to the conversion to the use of kmap_local_page(). Change also those call
