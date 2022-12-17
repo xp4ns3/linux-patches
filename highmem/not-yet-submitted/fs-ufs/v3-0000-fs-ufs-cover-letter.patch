@@ -1,7 +1,7 @@
-From 52c1d1c832053969e9b5edac434bb4eea9ec5898 Mon Sep 17 00:00:00 2001
+From c0f03c9a36687995ae87b613701e0a37fd11b341 Mon Sep 17 00:00:00 2001
 From: "Fabio M. De Francesco" <fmdefrancesco@gmail.com>
-Date: Sun, 11 Dec 2022 21:33:56 +0100
-Subject: [PATCH 0/3] fs/ufs: replace kmap() with kmap_local_page()
+Date: Sat, 17 Dec 2022 18:32:51 +0100
+Subject: [PATCH v3 0/3] fs/ufs: replace kmap() with kmap_local_page 
 MIME-Version: 1.0
 Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 8bit
@@ -36,31 +36,51 @@ independent units.[1][2][3]
 
 I want to thank him so much for the patience, kindness and the time he
 decided to spend to provide those analysis and write three messages full
-of interesting insights. I hope to have not misunderstood too many
-things, however I'm pretty sure that I made many mistakes due to my
-scarce knowledge of filesystem and, above all, lack of experience :-)
+of interesting insights.[1][2][3]
 
-I decided to get rid of the previous numbers and start from scratch
-(i.e., version 1) because this series has too little to share with the
-design of the previous patch.[4]
+Changes from v1:
+	1/3: No changes.
+	2/3: Restore the return of "err" that was mistakenly deleted
+	     together with the removal of the "out" label in
+	     ufs_add_link(). Thanks to Al Viro.[4]
+	     Return the address of the kmap()'ed page instead of a
+	     pointer to a pointer to the mapped page; a page_address()
+	     had been overlooked in ufs_get_page(). Thanks to Al
+	     Viro.[5]
+	3/3: Return the kernel virtual address got from the call to
+	     kmap_local_page() after conversion from kmap(). Again
+	     thanks to Al Viro.[6]
+
+Changes from v2:
+	1/3: No changes.
+	2/3: Rework ufs_get_page() because the previous version had two
+	     errors: (1) It could return an invalid pages with the out
+	     argument "page" and (2) it could return "page_address(page)"
+	     also in cases where read_mapping_page() returned an error
+	     and the page is never kmap()'ed. Thanks to Al Viro.[7]
+	3/3: Rework ufs_get_page() after conversion to
+	     kmap_local_page(), in accordance to the last changes in 2/3.
 
 [1] https://lore.kernel.org/lkml/Y4E++JERgUMoqfjG@ZenIV/
 [2] https://lore.kernel.org/lkml/Y4FG0O7VWTTng5yh@ZenIV/
 [3] https://lore.kernel.org/lkml/Y4ONIFJatIGsVNpf@ZenIV/
-[4] https://lore.kernel.org/lkml/20221016163855.8173-1-fmdefrancesco@gmail.com/
+[4] https://lore.kernel.org/lkml/Y5Zc0qZ3+zsI74OZ@ZenIV/
+[5] https://lore.kernel.org/lkml/Y5ZZy23FFAnQDR3C@ZenIV/
+[6] https://lore.kernel.org/lkml/Y5ZcMPzPG9h6C9eh@ZenIV/
+[7] https://lore.kernel.org/lkml/Y5glgpD7fFifC4Fi@ZenIV/#t
 
-Cc: Ira Weiny <ira.weiny@intel.com>
-Suggested-by: Al Viro <viro@zeniv.linux.org.uk>
-Signed-off-by: Fabio M. De Francesco <fmdrefrancesco@gmail.com>
+The cover letter of the v1 series is at
+https://lore.kernel.org/lkml/20221211213111.30085-1-fmdefrancesco@gmail.com/
+The cover letter of the v2 series is at
+https://lore.kernel.org/lkml/20221212231906.19424-1-fmdefrancesco@gmail.com/
 
 Fabio M. De Francesco (3):
   fs/ufs: Use the offset_in_page() helper
   fs/ufs: Change the signature of ufs_get_page()
   fs/ufs: Replace kmap() with kmap_local_page()
 
- fs/ufs/dir.c | 140 +++++++++++++++++++++++++++------------------------
- 1 file changed, 73 insertions(+), 67 deletions(-)
+ fs/ufs/dir.c | 134 +++++++++++++++++++++++++++------------------------
+ 1 file changed, 71 insertions(+), 63 deletions(-)
 
 -- 
-2.38.1
-
+2.39.0

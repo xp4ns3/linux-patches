@@ -1,7 +1,7 @@
-From 92abae33db54460e57d29e9a3915b16371fa3bdb Mon Sep 17 00:00:00 2001
+From 8ef7870c4bd0d1942e7d24dd25ad068e670ab13f Mon Sep 17 00:00:00 2001
 From: "Fabio M. De Francesco" <fmdefrancesco@gmail.com>
 Date: Sun, 11 Dec 2022 19:21:38 +0100
-Subject: [PATCH 2/3] fs/ufs: Change the signature of ufs_get_page()
+Subject: [PATCH v3 2/3] fs/ufs: Change the signature of ufs_get_page()
 
 Change the signature of ufs_get_page() in order to prepare this function
 to the conversion to the use of kmap_local_page(). Change also those call
@@ -12,43 +12,35 @@ Cc: Ira Weiny <ira.weiny@intel.com>
 Suggested-by: Al Viro <viro@zeniv.linux.org.uk>
 Signed-off-by: Fabio M. De Francesco <fmdefrancesco@gmail.com>
 ---
- fs/ufs/dir.c | 58 ++++++++++++++++++++++------------------------------
- 1 file changed, 24 insertions(+), 34 deletions(-)
+ fs/ufs/dir.c | 49 +++++++++++++++++++++----------------------------
+ 1 file changed, 21 insertions(+), 28 deletions(-)
 
 diff --git a/fs/ufs/dir.c b/fs/ufs/dir.c
-index 69f78583c9c1..bb6b29ce1d3a 100644
+index 69f78583c9c1..9fa86614d2d1 100644
 --- a/fs/ufs/dir.c
 +++ b/fs/ufs/dir.c
-@@ -185,21 +185,21 @@ static bool ufs_check_page(struct page *page)
+@@ -185,7 +185,7 @@ static bool ufs_check_page(struct page *page)
  	return false;
  }
  
 -static struct page *ufs_get_page(struct inode *dir, unsigned long n)
-+static void *ufs_get_page(struct inode *dir, unsigned long n, struct page **page)
++static void *ufs_get_page(struct inode *dir, unsigned long n, struct page **p)
  {
  	struct address_space *mapping = dir->i_mapping;
--	struct page *page = read_mapping_page(mapping, n, NULL);
--	if (!IS_ERR(page)) {
--		kmap(page);
--		if (unlikely(!PageChecked(page))) {
--			if (!ufs_check_page(page))
-+	*page = read_mapping_page(mapping, n, NULL);
-+	if (!IS_ERR(*page)) {
-+		kmap(*page);
-+		if (unlikely(!PageChecked(*page))) {
-+			if (!ufs_check_page(*page))
+ 	struct page *page = read_mapping_page(mapping, n, NULL);
+@@ -195,8 +195,10 @@ static struct page *ufs_get_page(struct inode *dir, unsigned long n)
+ 			if (!ufs_check_page(page))
  				goto fail;
  		}
++		*p = page;
++		return page_address(page);
  	}
- 	return page;
+-	return page;
++	return ERR_CAST(page);
  
  fail:
--	ufs_put_page(page);
-+	ufs_put_page(*page);
- 	return ERR_PTR(-EIO);
- }
- 
-@@ -227,15 +227,12 @@ ufs_next_entry(struct super_block *sb, struct ufs_dir_entry *p)
+ 	ufs_put_page(page);
+@@ -227,15 +229,12 @@ ufs_next_entry(struct super_block *sb, struct ufs_dir_entry *p)
  
  struct ufs_dir_entry *ufs_dotdot(struct inode *dir, struct page **p)
  {
@@ -69,7 +61,7 @@ index 69f78583c9c1..bb6b29ce1d3a 100644
  }
  
  /*
-@@ -273,11 +270,10 @@ struct ufs_dir_entry *ufs_find_entry(struct inode *dir, const struct qstr *qstr,
+@@ -273,11 +272,10 @@ struct ufs_dir_entry *ufs_find_entry(struct inode *dir, const struct qstr *qstr,
  		start = 0;
  	n = start;
  	do {
@@ -85,7 +77,7 @@ index 69f78583c9c1..bb6b29ce1d3a 100644
  			kaddr += ufs_last_byte(dir, n) - reclen;
  			while ((char *) de <= kaddr) {
  				if (ufs_match(sb, namelen, name, de))
-@@ -328,12 +324,10 @@ int ufs_add_link(struct dentry *dentry, struct inode *inode)
+@@ -328,12 +326,10 @@ int ufs_add_link(struct dentry *dentry, struct inode *inode)
  	for (n = 0; n <= npages; n++) {
  		char *dir_end;
  
@@ -101,16 +93,15 @@ index 69f78583c9c1..bb6b29ce1d3a 100644
  		dir_end = kaddr + ufs_last_byte(dir, n);
  		de = (struct ufs_dir_entry *)kaddr;
  		kaddr += PAGE_SIZE - reclen;
-@@ -395,8 +389,6 @@ int ufs_add_link(struct dentry *dentry, struct inode *inode)
+@@ -395,7 +391,6 @@ int ufs_add_link(struct dentry *dentry, struct inode *inode)
  	/* OFFSET_CACHE */
  out_put:
  	ufs_put_page(page);
 -out:
--	return err;
+ 	return err;
  out_unlock:
  	unlock_page(page);
- 	goto out_put;
-@@ -429,6 +421,7 @@ ufs_readdir(struct file *file, struct dir_context *ctx)
+@@ -429,6 +424,7 @@ ufs_readdir(struct file *file, struct dir_context *ctx)
  	unsigned chunk_mask = ~(UFS_SB(sb)->s_uspi->s_dirblksize - 1);
  	bool need_revalidate = !inode_eq_iversion(inode, file->f_version);
  	unsigned flags = UFS_SB(sb)->s_flags;
@@ -118,7 +109,7 @@ index 69f78583c9c1..bb6b29ce1d3a 100644
  
  	UFSD("BEGIN\n");
  
-@@ -439,16 +432,14 @@ ufs_readdir(struct file *file, struct dir_context *ctx)
+@@ -439,16 +435,14 @@ ufs_readdir(struct file *file, struct dir_context *ctx)
  		char *kaddr, *limit;
  		struct ufs_dir_entry *de;
  
@@ -137,7 +128,7 @@ index 69f78583c9c1..bb6b29ce1d3a 100644
  		if (unlikely(need_revalidate)) {
  			if (offset) {
  				offset = ufs_validate_entry(sb, kaddr, offset, chunk_mask);
-@@ -595,12 +586,11 @@ int ufs_empty_dir(struct inode * inode)
+@@ -595,12 +589,11 @@ int ufs_empty_dir(struct inode * inode)
  	for (i = 0; i < npages; i++) {
  		char *kaddr;
  		struct ufs_dir_entry *de;
@@ -153,5 +144,5 @@ index 69f78583c9c1..bb6b29ce1d3a 100644
  		kaddr += ufs_last_byte(inode, i) - UFS_DIR_REC_LEN(1);
  
 -- 
-2.38.1
+2.39.0
 
