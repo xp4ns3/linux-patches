@@ -1,7 +1,7 @@
-From c0f03c9a36687995ae87b613701e0a37fd11b341 Mon Sep 17 00:00:00 2001
+From 3bd0e71c532e3f9fb0f12bc74c37e9f2d81012ae Mon Sep 17 00:00:00 2001
 From: "Fabio M. De Francesco" <fmdefrancesco@gmail.com>
 Date: Sun, 11 Dec 2022 21:25:22 +0100
-Subject: [PATCH v3 3/3] fs/ufs: Replace kmap() with kmap_local_page()
+Subject: [PATCH v4 3/3] fs/ufs: Replace kmap() with kmap_local_page()
 MIME-Version: 1.0
 Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 8bit
@@ -34,7 +34,7 @@ Signed-off-by: Fabio M. De Francesco <fmdefrancesco@gmail.com>
  1 file changed, 46 insertions(+), 29 deletions(-)
 
 diff --git a/fs/ufs/dir.c b/fs/ufs/dir.c
-index 9fa86614d2d1..a9dd5023b604 100644
+index 9fa86614d2d1..ed3568da29a8 100644
 --- a/fs/ufs/dir.c
 +++ b/fs/ufs/dir.c
 @@ -61,9 +61,9 @@ static int ufs_commit_chunk(struct page *page, loff_t pos, unsigned len)
@@ -45,7 +45,7 @@ index 9fa86614d2d1..a9dd5023b604 100644
 +static inline void ufs_put_page(struct page *page, void *page_addr)
  {
 -	kunmap(page);
-+	kunmap((void *)((unsigned long)page_addr & PAGE_MASK));
++	kunmap_local((void *)((unsigned long)page_addr & PAGE_MASK));
  	put_page(page);
  }
  
