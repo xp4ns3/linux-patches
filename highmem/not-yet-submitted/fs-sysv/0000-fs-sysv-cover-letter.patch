@@ -1,0 +1,21 @@
+From ceb12c22a865335d51f658c69e999f68022327cc Mon Sep 17 00:00:00 2001
+From: "Fabio M. De Francesco" <fmdefrancesco@gmail.com>
+Date: Wed, 21 Dec 2022 21:41:48 +0100
+Subject: [PATCH 0/3] *** SUBJECT HERE ***
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 8bit
+
+*** BLURB HERE ***
+
+Fabio M. De Francesco (3):
+  fs/sysv: Use the offset_in_page() helper
+  fs/sysv: Change the signature of dir_get_page()
+  fs/sysv: Replace kmap() with kmap_local_page()
+
+ fs/sysv/dir.c | 93 ++++++++++++++++++++++++---------------------------
+ 1 file changed, 43 insertions(+), 50 deletions(-)
+
+-- 
+2.39.0
+

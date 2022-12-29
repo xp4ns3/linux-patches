@@ -1,7 +1,7 @@
-From 7d6057c0f0595d47c655267aa40614d78169713a Mon Sep 17 00:00:00 2001
+From 00b007b892ceca44f46b403225654608259a4592 Mon Sep 17 00:00:00 2001
 From: "Fabio M. De Francesco" <fmdefrancesco@gmail.com>
 Date: Sun, 11 Dec 2022 16:58:53 +0100
-Subject: [PATCH v4 1/3] fs/ufs: Use the offset_in_page() helper
+Subject: [PATCH v5 1/4] fs/ufs: Use the offset_in_page() helper
 
 Use the offset_in_page() helper because it is more suitable than doing
 explicit subtractions between pointers to directory entries and kernel

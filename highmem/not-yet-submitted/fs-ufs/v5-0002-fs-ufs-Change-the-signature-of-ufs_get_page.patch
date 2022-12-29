@@ -1,7 +1,7 @@
-From 6ab8049f8105ec4166b69d0c028d6db1cd43aabb Mon Sep 17 00:00:00 2001
+From c0427a3ee8824304f604f5ab687466c9183db351 Mon Sep 17 00:00:00 2001
 From: "Fabio M. De Francesco" <fmdefrancesco@gmail.com>
 Date: Sun, 11 Dec 2022 19:21:38 +0100
-Subject: [PATCH v4 2/3] fs/ufs: Change the signature of ufs_get_page()
+Subject: [PATCH v5 2/4] fs/ufs: Change the signature of ufs_get_page()
 
 Change the signature of ufs_get_page() in order to prepare this function
 to the conversion to the use of kmap_local_page(). Change also those call
@@ -10,13 +10,14 @@ signature.
 
 Cc: Ira Weiny <ira.weiny@intel.com>
 Suggested-by: Al Viro <viro@zeniv.linux.org.uk>
+Reviewed-by: Ira Weiny <ira.weiny@intel.com>
 Signed-off-by: Fabio M. De Francesco <fmdefrancesco@gmail.com>
 ---
  fs/ufs/dir.c | 49 +++++++++++++++++++++----------------------------
  1 file changed, 21 insertions(+), 28 deletions(-)
 
 diff --git a/fs/ufs/dir.c b/fs/ufs/dir.c
-index 69f78583c9c1..9fa86614d2d1 100644
+index 69f78583c9c1..ae3b20354a28 100644
 --- a/fs/ufs/dir.c
 +++ b/fs/ufs/dir.c
 @@ -185,7 +185,7 @@ static bool ufs_check_page(struct page *page)
@@ -101,17 +102,11 @@ index 69f78583c9c1..9fa86614d2d1 100644
  	return err;
  out_unlock:
  	unlock_page(page);
-@@ -429,6 +424,7 @@ ufs_readdir(struct file *file, struct dir_context *ctx)
- 	unsigned chunk_mask = ~(UFS_SB(sb)->s_uspi->s_dirblksize - 1);
- 	bool need_revalidate = !inode_eq_iversion(inode, file->f_version);
- 	unsigned flags = UFS_SB(sb)->s_flags;
-+	struct page *page;
- 
- 	UFSD("BEGIN\n");
- 
-@@ -439,16 +435,14 @@ ufs_readdir(struct file *file, struct dir_context *ctx)
+@@ -438,17 +433,16 @@ ufs_readdir(struct file *file, struct dir_context *ctx)
+ 	for ( ; n < npages; n++, offset = 0) {
  		char *kaddr, *limit;
  		struct ufs_dir_entry *de;
++		struct page *page;
  
 -		struct page *page = ufs_get_page(inode, n);
 -
