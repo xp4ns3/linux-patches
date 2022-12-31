@@ -1,6 +1,6 @@
-From 00b007b892ceca44f46b403225654608259a4592 Mon Sep 17 00:00:00 2001
+From 954dc378a62633b51b052f6824d667f568fd6f86 Mon Sep 17 00:00:00 2001
 From: "Fabio M. De Francesco" <fmdefrancesco@gmail.com>
-Date: Sun, 11 Dec 2022 16:58:53 +0100
+Date: Thu, 29 Dec 2022 23:50:57 +0100
 Subject: [PATCH v5 1/4] fs/ufs: Use the offset_in_page() helper
 
 Use the offset_in_page() helper because it is more suitable than doing

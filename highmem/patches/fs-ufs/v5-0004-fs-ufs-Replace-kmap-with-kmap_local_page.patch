@@ -1,6 +1,6 @@
-From cf620fdade5a747d565438d7a32477a160c51f11 Mon Sep 17 00:00:00 2001
+From a1927fcecb4aaf0ad48e2102698ce4626915b51d Mon Sep 17 00:00:00 2001
 From: "Fabio M. De Francesco" <fmdefrancesco@gmail.com>
-Date: Sun, 11 Dec 2022 21:25:22 +0100
+Date: Thu, 29 Dec 2022 23:51:00 +0100
 Subject: [PATCH v5 4/4] fs/ufs: Replace kmap() with kmap_local_page()
 MIME-Version: 1.0
 Content-Type: text/plain; charset=UTF-8

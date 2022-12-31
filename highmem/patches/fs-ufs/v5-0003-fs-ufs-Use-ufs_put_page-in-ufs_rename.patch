@@ -1,6 +1,6 @@
-From 75cd60ad47f138fd78d2a188913654fd6626dc12 Mon Sep 17 00:00:00 2001
+From 9d6e40cd56c7bd1626438e0b4587e41ab4ac3e3e Mon Sep 17 00:00:00 2001
 From: "Fabio M. De Francesco" <fmdefrancesco@gmail.com>
-Date: Wed, 28 Dec 2022 21:07:28 +0100
+Date: Thu, 29 Dec 2022 23:50:59 +0100
 Subject: [PATCH v5 3/4] fs/ufs: Use ufs_put_page() in ufs_rename()
 
 Use the ufs_put_page() helper in ufs_rename() instead of open-coding three
