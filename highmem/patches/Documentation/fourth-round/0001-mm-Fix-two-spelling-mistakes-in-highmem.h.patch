@@ -1,0 +1,38 @@
+From 4d5950fe2480108cb6d833581d0c6967594b6924 Mon Sep 17 00:00:00 2001
+From: "Fabio M. De Francesco" <fmdefrancesco@gmail.com>
+Date: Thu, 5 Jan 2023 13:08:02 +0100
+Subject: [PATCH] mm: Fix two spelling mistakes in highmem.h
+
+Substitute two occurrencies of "higmem" with "highmem" in highmem.h.
+
+Suggested-by: "Matthew Wilcox (Oracle)" <willy@infradead.org>
+Signed-off-by: Fabio M. De Francesco <fmdefrancesco@gmail.com>
+---
+ include/linux/highmem.h | 4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
+
+diff --git a/include/linux/highmem.h b/include/linux/highmem.h
+index 7b0085a61e67..ae1670ccdf45 100644
+--- a/include/linux/highmem.h
++++ b/include/linux/highmem.h
+@@ -86,7 +86,7 @@ static inline void kmap_flush_unused(void);
+  * virtual address of the direct mapping. Only real highmem pages are
+  * temporarily mapped.
+  *
+- * While it is significantly faster than kmap() for the higmem case it
++ * While it is significantly faster than kmap() for the highmem case it
+  * comes with restrictions about the pointer validity.
+  *
+  * On HIGHMEM enabled systems mapping a highmem page has the side effect of
+@@ -119,7 +119,7 @@ static inline void *kmap_local_page(struct page *page);
+  * virtual address of the direct mapping. Only real highmem pages are
+  * temporarily mapped.
+  *
+- * While it is significantly faster than kmap() for the higmem case it
++ * While it is significantly faster than kmap() for the highmem case it
+  * comes with restrictions about the pointer validity.
+  *
+  * On HIGHMEM enabled systems mapping a highmem page has the side effect of
+-- 
+2.39.0
+

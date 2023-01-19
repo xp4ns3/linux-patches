@@ -1,0 +1,40 @@
+From 088eb0389836d9bb02b64150ba3cde4a53ec3d80 Mon Sep 17 00:00:00 2001
+From: "Fabio M. De Francesco" <fmdefrancesco@gmail.com>
+Date: Wed, 4 Jan 2023 12:30:11 +0100
+Subject: [PATCH v2] mm: Remove an ambiguous sentence from kmap_local_folio() kdocs
+
+In the kdocs of kmap_local_folio() there is a an ambiguous sentence
+which suggests to use this API "only when really necessary".
+
+On the contrary, since kmap() and kmap_atomic() are deprecated, both
+kmap_local_folio(), as well as kmap_local_page(), must be preferred
+to the previous ones.
+
+Therefore, remove the above-mentioned sentence exactly how it has
+previously been done for the kmap_local_page() kdocs in
+commit 72f1c55adf70 ("highmem: delete a sentence from kmap_local_page() kdocs").
+
+Cc: Ira Weiny <ira.weiny@intel.com>
+Cc: Matthew Wilcox (Oracle) <willy@infradead.org>
+Signed-off-by: Fabio M. De Francesco <fmdefrancesco@gmail.com>
+---
+ include/linux/highmem.h | 3 +--
+ 1 file changed, 1 insertion(+), 2 deletions(-)
+
+diff --git a/include/linux/highmem.h b/include/linux/highmem.h
+index 44242268f53b..7b0085a61e67 100644
+--- a/include/linux/highmem.h
++++ b/include/linux/highmem.h
+@@ -120,8 +120,7 @@ static inline void *kmap_local_page(struct page *page);
+  * temporarily mapped.
+  *
+  * While it is significantly faster than kmap() for the higmem case it
+- * comes with restrictions about the pointer validity. Only use when really
+- * necessary.
++ * comes with restrictions about the pointer validity.
+  *
+  * On HIGHMEM enabled systems mapping a highmem page has the side effect of
+  * disabling migration in order to keep the virtual address stable across
+-- 
+2.39.0
+
