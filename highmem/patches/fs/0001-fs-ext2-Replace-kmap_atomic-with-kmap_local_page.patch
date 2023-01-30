@@ -1,0 +1,65 @@
+From cf1b7e1fa405210495c06be7f8f81def1236f8a8 Mon Sep 17 00:00:00 2001
+From: "Fabio M. De Francesco" <fmdefrancesco@gmail.com>
+Date: Sat, 31 Dec 2022 16:29:37 +0100
+Subject: [PATCH] fs/ext2: Replace kmap_atomic() with kmap_local_page()
+
+kmap_atomic() is deprecated in favor of kmap_local_page(). Therefore,
+replace kmap_atomic() with kmap_local_page().
+
+kmap_atomic() is implemented like a kmap_local_page() which also disables
+page-faults and preemption (the latter only for !PREEMPT_RT kernels).
+
+However, the code within the mapping and un-mapping in ext2_make_empty()
+does not depend on the above-mentioned side effects.
+
+Therefore, a mere replacement of the old API with the new one is all it
+is required (i.e., there is no need to explicitly add any calls to
+pagefault_disable() and/or preempt_disable()).
+
+Suggested-by: Ira Weiny <ira.weiny@intel.com>
+Signed-off-by: Fabio M. De Francesco <fmdefrancesco@gmail.com>
+---
+
+I tried my best to understand the code within mapping and un-mapping.
+However, I'm not an expert. Therefore, although I'm pretty confident, I
+cannot be 100% sure that the code between the mapping and the un-mapping
+does not depend on pagefault_disable() and/or preempt_disable().
+
+Unfortunately, I cannot currently test this changes to check the
+above-mentioned assumptions. However, if I'm required to do the tests
+with (x)fstests, I have no problems with doing them in the next days.
+
+If so, I'll test in a QEMU/KVM x86_32 VM, 6GB RAM, booting a kernel with
+HIGHMEM64GB enabled.
+
+I'd like to hear whether or not the maintainers require these tests
+and/or other tests.
+
+ fs/ext2/dir.c | 4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
+
+diff --git a/fs/ext2/dir.c b/fs/ext2/dir.c
+index e5cbc27ba459..0f144c5c7861 100644
+--- a/fs/ext2/dir.c
++++ b/fs/ext2/dir.c
+@@ -646,7 +646,7 @@ int ext2_make_empty(struct inode *inode, struct inode *parent)
+ 		unlock_page(page);
+ 		goto fail;
+ 	}
+-	kaddr = kmap_atomic(page);
++	kaddr = kmap_local_page(page);
+ 	memset(kaddr, 0, chunk_size);
+ 	de = (struct ext2_dir_entry_2 *)kaddr;
+ 	de->name_len = 1;
+@@ -661,7 +661,7 @@ int ext2_make_empty(struct inode *inode, struct inode *parent)
+ 	de->inode = cpu_to_le32(parent->i_ino);
+ 	memcpy (de->name, "..\0", 4);
+ 	ext2_set_de_type (de, inode);
+-	kunmap_atomic(kaddr);
++	kunmap_local(kaddr);
+ 	ext2_commit_chunk(page, 0, chunk_size);
+ 	err = ext2_handle_dirsync(inode);
+ fail:
+-- 
+2.39.0
+

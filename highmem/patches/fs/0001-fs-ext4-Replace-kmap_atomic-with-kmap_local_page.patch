@@ -1,0 +1,84 @@
+From 30b03ee3e2b9f65c24c44df854105b8bd3f0c926 Mon Sep 17 00:00:00 2001
+From: "Fabio M. De Francesco" <fmdefrancesco@gmail.com>
+Date: Sat, 31 Dec 2022 16:29:37 +0100
+Subject: [PATCH] fs/ext4: Replace kmap_atomic() with kmap_local_page()
+
+kmap_atomic() is deprecated in favor of kmap_local_page(). Therefore,
+replace kmap_atomic() with kmap_local_page().
+
+kmap_atomic() is implemented like a kmap_local_page() which also disables
+page-faults and preemption (the latter only for !PREEMPT_RT kernels).
+
+However, the code within the mappings and un-mappings in ext4/inline.c
+does not depend on the above-mentioned side effects.
+
+Therefore, a mere replacement of the old API with the new one is all it
+is required (i.e., there is no need to explicitly add any calls to
+pagefault_disable() and/or preempt_disable()).
+
+Suggested-by: Ira Weiny <ira.weiny@intel.com>
+Signed-off-by: Fabio M. De Francesco <fmdefrancesco@gmail.com>
+---
+
+I tried my best to understand the code within mapping and un-mapping.
+However, I'm not an expert. Therefore, although I'm pretty confident, I
+cannot be 100% sure that the code between the mapping and the un-mapping
+does not depend on pagefault_disable() and/or preempt_disable().
+
+Unfortunately, I cannot currently test this changes to check the
+above-mentioned assumptions. However, if I'm required to do the tests
+with (x)fstests, I have no problems with doing them in the next days.
+
+If so, I'll test in a QEMU/KVM x86_32 VM, 6GB RAM, booting a kernel with
+HIGHMEM64GB enabled.
+
+I'd like to hear whether or not the maintainers require these tests
+and/or other tests.
+
+ fs/ext4/inline.c | 12 ++++++------
+ 1 file changed, 6 insertions(+), 6 deletions(-)
+
+diff --git a/fs/ext4/inline.c b/fs/ext4/inline.c
+index 2b42ececa46d..bfb044425d8a 100644
+--- a/fs/ext4/inline.c
++++ b/fs/ext4/inline.c
+@@ -490,10 +490,10 @@ static int ext4_read_inline_page(struct inode *inode, struct page *page)
+ 		goto out;
+ 
+ 	len = min_t(size_t, ext4_get_inline_size(inode), i_size_read(inode));
+-	kaddr = kmap_atomic(page);
++	kaddr = kmap_local_page(page);
+ 	ret = ext4_read_inline_data(inode, kaddr, len, &iloc);
+ 	flush_dcache_page(page);
+-	kunmap_atomic(kaddr);
++	kunmap_local(kaddr);
+ 	zero_user_segment(page, len, PAGE_SIZE);
+ 	SetPageUptodate(page);
+ 	brelse(iloc.bh);
+@@ -763,9 +763,9 @@ int ext4_write_inline_data_end(struct inode *inode, loff_t pos, unsigned len,
+ 		 */
+ 		(void) ext4_find_inline_data_nolock(inode);
+ 
+-		kaddr = kmap_atomic(page);
++		kaddr = kmap_local_page(page);
+ 		ext4_write_inline_data(inode, &iloc, kaddr, pos, copied);
+-		kunmap_atomic(kaddr);
++		kunmap_local(kaddr);
+ 		SetPageUptodate(page);
+ 		/* clear page dirty so that writepages wouldn't work for us. */
+ 		ClearPageDirty(page);
+@@ -831,9 +831,9 @@ ext4_journalled_write_inline_data(struct inode *inode,
+ 	}
+ 
+ 	ext4_write_lock_xattr(inode, &no_expand);
+-	kaddr = kmap_atomic(page);
++	kaddr = kmap_local_page(page);
+ 	ext4_write_inline_data(inode, &iloc, kaddr, 0, len);
+-	kunmap_atomic(kaddr);
++	kunmap_local(kaddr);
+ 	ext4_write_unlock_xattr(inode, &no_expand);
+ 
+ 	return iloc.bh;
+-- 
+2.39.0
+
