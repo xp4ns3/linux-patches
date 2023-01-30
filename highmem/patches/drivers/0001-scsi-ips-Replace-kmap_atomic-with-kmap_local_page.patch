@@ -1,0 +1,59 @@
+From 36eace307d8d74979b71b182def4593be10096a8 Mon Sep 17 00:00:00 2001
+From: "Fabio M. De Francesco" <fmdefrancesco@gmail.com>
+Date: Tue, 3 Jan 2023 17:53:25 +0100
+Subject: [PATCH] scsi: ips: Replace kmap_atomic() with kmap_local_page()
+
+kmap_atomic() is deprecated in favor of kmap_local_page(). Therefore,
+replace kmap_atomic() with kmap_local_page() in ips_is_passthru(). In
+the meantime remove an unnecessary comment soon before local mapping,
+align code and remove spaces (the function is short, therefore the
+reviewers job won't be over-complicated by these logically unrelated
+clean-ups).
+
+kmap_atomic() is implemented like a kmap_local_page() which also disables
+page-faults and preemption (the latter only for !PREEMPT_RT kernels).
+The code within the mapping/unmapping in ips_is_passthru() is already
+in atomic context because of a call to local_irq_save() and
+kmap_local_page() can be called in atomic context too (including
+interrupts).
+
+Therefore, a mere replacement of the old API with the new one is all it
+is required (i.e., there is no need to explicitly add any calls to
+pagefault_disable() and/or preempt_disable()).
+
+Suggested-by: Ira Weiny <ira.weiny@intel.com>
+Signed-off-by: Fabio M. De Francesco <fmdefrancesco@gmail.com>
+---
+ drivers/scsi/ips.c | 11 +++++------
+ 1 file changed, 5 insertions(+), 6 deletions(-)
+
+diff --git a/drivers/scsi/ips.c b/drivers/scsi/ips.c
+index 16419aeec02d..bb206509265e 100644
+--- a/drivers/scsi/ips.c
++++ b/drivers/scsi/ips.c
+@@ -1499,17 +1499,16 @@ static int ips_is_passthru(struct scsi_cmnd *SC)
+                 struct scatterlist *sg = scsi_sglist(SC);
+                 char  *buffer;
+ 
+-                /* kmap_atomic() ensures addressability of the user buffer.*/
+                 /* local_irq_save() protects the KM_IRQ0 address slot.     */
+                 local_irq_save(flags);
+-                buffer = kmap_atomic(sg_page(sg)) + sg->offset;
+-                if (buffer && buffer[0] == 'C' && buffer[1] == 'O' &&
+-                    buffer[2] == 'P' && buffer[3] == 'P') {
+-                        kunmap_atomic(buffer - sg->offset);
++		buffer = kmap_local_page(sg_page(sg)) + sg->offset;
++		if (buffer && buffer[0] == 'C' && buffer[1] == 'O' &&
++		    buffer[2] == 'P' && buffer[3] == 'P') {
++			kunmap_local(buffer);
+                         local_irq_restore(flags);
+                         return 1;
+                 }
+-                kunmap_atomic(buffer - sg->offset);
++		kunmap_local(buffer);
+                 local_irq_restore(flags);
+ 	}
+ 	return 0;
+-- 
+2.39.0
+

@@ -1,0 +1,70 @@
+From b528ea653a4d857d08215991b0cdbfa2fa901b05 Mon Sep 17 00:00:00 2001
+From: "Fabio M. De Francesco" <fmdefrancesco@gmail.com>
+Date: Tue, 3 Jan 2023 19:17:57 +0100
+Subject: [PATCH] scsi: ipr: Replace kmap() with kmap_local_page()
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 8bit
+
+The use of kmap() is deprecated in favor of kmap_local_page().
+
+There are two main problems with kmap(): (1) It comes with an overhead as
+the mapping space is restricted and protected by a global lock for
+synchronization and (2) it also requires global TLB invalidation when the
+kmap’s pool wraps and it might block when the mapping space is fully
+utilized until a slot becomes available.
+
+With kmap_local_page() the mappings are per thread, CPU local, can take
+page faults, and can be called from any context (including interrupts).
+It is faster than kmap() in kernels with HIGHMEM enabled. Furthermore,
+the tasks can be preempted and, when they are scheduled to run again, the
+kernel virtual addresses are restored and still valid.
+
+Therefore, replace kmap() with kmap_local_page() in
+ipr_copy_ucode_buffer() and, instead of open-coding local mappings +
+memcpy() + local un-mappings, use the better suited memcpy_to_page()
+helper.
+
+Suggested-by: Ira Weiny <ira.weiny@intel.com>
+Signed-off-by: Fabio M. De Francesco <fmdefrancesco@gmail.com>
+---
+ drivers/scsi/ipr.c | 9 ++-------
+ 1 file changed, 2 insertions(+), 7 deletions(-)
+
+diff --git a/drivers/scsi/ipr.c b/drivers/scsi/ipr.c
+index 2022ffb45041..7dff517a0858 100644
+--- a/drivers/scsi/ipr.c
++++ b/drivers/scsi/ipr.c
+@@ -3912,7 +3912,6 @@ static int ipr_copy_ucode_buffer(struct ipr_sglist *sglist,
+ {
+ 	int bsize_elem, i, result = 0;
+ 	struct scatterlist *sg;
+-	void *kaddr;
+ 
+ 	/* Determine the actual number of bytes per element */
+ 	bsize_elem = PAGE_SIZE * (1 << sglist->order);
+@@ -3923,9 +3922,7 @@ static int ipr_copy_ucode_buffer(struct ipr_sglist *sglist,
+ 			buffer += bsize_elem) {
+ 		struct page *page = sg_page(sg);
+ 
+-		kaddr = kmap(page);
+-		memcpy(kaddr, buffer, bsize_elem);
+-		kunmap(page);
++		memcpy_to_page(page, 0, buffer, bsize_elem);
+ 
+ 		sg->length = bsize_elem;
+ 
+@@ -3938,9 +3935,7 @@ static int ipr_copy_ucode_buffer(struct ipr_sglist *sglist,
+ 	if (len % bsize_elem) {
+ 		struct page *page = sg_page(sg);
+ 
+-		kaddr = kmap(page);
+-		memcpy(kaddr, buffer, len % bsize_elem);
+-		kunmap(page);
++		memcpy_to_page(page, 0, buffer, len % bsize_elem);
+ 
+ 		sg->length = len % bsize_elem;
+ 	}
+-- 
+2.39.0
+
