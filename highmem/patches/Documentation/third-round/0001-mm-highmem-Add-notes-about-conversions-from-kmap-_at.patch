@@ -1,7 +1,7 @@
-From c3e52690be61b2866af4450ccbdfd5ca05285e94 Mon Sep 17 00:00:00 2001
+From 7aad2f78aa8f62875e16279ab4e8616c0ae5638d Mon Sep 17 00:00:00 2001
 From: "Fabio M. De Francesco" <fmdefrancesco@gmail.com>
 Date: Tue, 6 Dec 2022 07:41:53 +0100
-Subject: [PATCH v2] mm/highmem: Add notes about conversions from kmap{,_atomic}()
+Subject: [PATCH v3] mm/highmem: Add notes about conversions from kmap{,_atomic}()
 
 kmap() and kmap_atomic() have been deprecated. kmap_local_page() should
 always be used in new code and the call sites of the two deprecated
@@ -19,6 +19,7 @@ Relevant parts of this patch have been taken from messages exchanged
 privately with Ira Weiny (thanks!).
 
 Cc: Andrew Morton <akpm@linux-foundation.org>
+Cc: Bagas Sanjaya <bagasdotme@gmail.com>
 Cc: Ira Weiny <ira.weiny@intel.com>
 Cc: Jonathan Corbet <corbet@lwn.net>
 Cc: Mike Rapoport <rppt@linux.ibm.com>
@@ -28,16 +29,14 @@ Cc: Thomas Gleixner <tglx@linutronix.de>
 Signed-off-by: Fabio M. De Francesco <fmdefrancesco@gmail.com>
 ---
 
-v1->v2: Reworked part of the "Notes" paragraph in the kmap_atomic() section
-in order to leave less room for misinterpretation. I've made these changes
-by merging some suggestions from Sebastian (thanks!), although I'm not yet
-entirely sure I've achieved crystal clear exposition.
+Changes from v2:
+	Merge two sentences into one (thanks to bagas Sanjaya).
 
  Documentation/mm/highmem.rst | 41 +++++++++++++++++++++++++++---------
  1 file changed, 31 insertions(+), 10 deletions(-)
 
 diff --git a/Documentation/mm/highmem.rst b/Documentation/mm/highmem.rst
-index 0f731d9196b0..59d1078f53df 100644
+index 0f731d9196b0..e691a06fb337 100644
 --- a/Documentation/mm/highmem.rst
 +++ b/Documentation/mm/highmem.rst
 @@ -57,7 +57,8 @@ list shows them in order of preference of use.
@@ -45,8 +44,8 @@ index 0f731d9196b0..59d1078f53df 100644
    can only be used in the context which acquired them.
  
 -  This function should be preferred, where feasible, over all the others.
-+  This function should always be used. kmap_atomic() and kmap() have been
-+  deprecated.
++  This function should always be used, whereas kmap_atomic() and kmap() have
++  been deprecated.
  
    These mappings are thread-local and CPU-local, meaning that the mapping
    can only be accessed from within this thread and the thread is bound to the
@@ -103,5 +102,5 @@ index 0f731d9196b0..59d1078f53df 100644
    Mapping changes must be propagated across all the CPUs. kmap() also
    requires global TLB invalidation when the kmap's pool wraps and it might
 -- 
-2.38.1
+2.39.0
 
