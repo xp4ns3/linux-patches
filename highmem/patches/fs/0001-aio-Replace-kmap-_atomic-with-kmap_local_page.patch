@@ -1,7 +1,7 @@
 From 0845c211a1f00ac717821ec29b4503103131393c Mon Sep 17 00:00:00 2001
 From: "Fabio M. De Francesco" <fmdefrancesco@gmail.com>
 Date: Wed, 6 Jul 2022 22:12:00 +0200
-Subject: [RESEND PATCH] fs/aio: Replace kmap{,_atomic}() with kmap_local_page()
+Subject: [PATCH v2] fs/aio: Replace kmap{,_atomic}() with kmap_local_page()
 
 The use of kmap() and kmap_atomic() are being deprecated in favor of
 kmap_local_page().
@@ -18,7 +18,13 @@ It is faster than kmap() in kernels with HIGHMEM enabled. Furthermore,
 the tasks can be preempted and, when they are scheduled to run again, the
 kernel virtual addresses are restored and still valid.
 
-Since its use in fs/aio.c is safe everywhere, it should be preferred.
+The use of kmap_local_page() in fs/aio.c is "safe" in the sense that the
+code don't hands the returned kernel virtual addresses to other threads
+and there are no nestings which should be handled with the stack based
+(LIFO) mappings/un-mappings order. Furthermore, the code between the old
+kmap_atomic()/kunmap_atomic() did not depend on disabling page-faults
+and/or preemption, so that there is no need to call pagefault_disable()
+and/or preempt_disable() before the mappings.
 
 Therefore, replace kmap() and kmap_atomic() with kmap_local_page() in
 fs/aio.c.
@@ -29,17 +35,22 @@ with HIGHMEM64GB enabled.
 Cc: "Venkataramanan, Anirudh" <anirudh.venkataramanan@intel.com>
 Suggested-by: Ira Weiny <ira.weiny@intel.com>
 Reviewed-by: Ira Weiny <ira.weiny@intel.com>
+Reviewed-by: Jeff Moyer <jmoyer@redhat.com>
 Signed-off-by: Fabio M. De Francesco <fmdefrancesco@gmail.com>
 ---
 
 I've tested with "./check -g aio". The tests in this group fail 3/26
 times, with and without my patch. Therefore, these changes don't introduce
-further errors. I'm not aware of any further tests I may run, so that
+further errors. I'm not aware of any other tests which I may run, so that
 any suggestions would be precious and much appreciated :-)
 
 I'm resending this patch because some recipients were missing in the 
 previous submissions. In the meantime I'm also adding some more information 
 in the commit message. There are no changes in the code.
+
+Changes from v1:
+	Add further information in the commit message, and the
+	"Reviewed-by" tags from Ira and Jeff (thanks!).
 
  fs/aio.c | 32 ++++++++++++++++----------------
  1 file changed, 16 insertions(+), 16 deletions(-)
