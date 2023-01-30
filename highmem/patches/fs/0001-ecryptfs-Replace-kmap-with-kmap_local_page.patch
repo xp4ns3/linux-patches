@@ -1,49 +1,100 @@
-From b3ef4f89ae75532624c7d0e3337dbccd3de8356a Mon Sep 17 00:00:00 2001
+From 1b290cad9a3e9ce5652f859d0046fa632ddb2f77 Mon Sep 17 00:00:00 2001
 From: "Fabio M. De Francesco" <fmdefrancesco@gmail.com>
-Date: Tue, 3 Jan 2023 19:48:35 +0100
-Subject: [PATCH] fs/ecryptfs: Replace kmap_atomic() with kmap_local_page()
+Date: Thu, 23 Jun 2022 17:35:21 +0200
+Subject: [PATCH] ecryptfs: Replace kmap() with kmap_local_page()
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 8bit
 
-kmap_atomic() is deprecated in favor of kmap_local_page(). Therefore,
-replace kmap_atomic() with kmap_local_page() in ecryptfs_write().
+kmap() is being deprecated in favor of kmap_local_page().
 
-kmap_atomic() is implemented like a kmap_local_page() which also disables
-page-faults and preemption (the latter only for !PREEMPT_RT kernels).
+There are two main problems with kmap(): (1) It comes with an overhead as
+the mapping space is restricted and protected by a global lock for
+synchronization and (2) it also requires global TLB invalidation when the
+kmap’s pool wraps and it might block when the mapping space is fully
+utilized until a slot becomes available.
 
-The code within the mapping/un-mapping in ecryptfs_write() does not
-depend on the above-mentioned side effects.
+With kmap_local_page() the mappings are per thread, CPU local, can take
+page faults, and can be called from any context (including interrupts).
+It is faster than kmap() in kernels with HIGHMEM enabled. Furthermore,
+the tasks can be preempted and, when they are scheduled to run again, the
+kernel virtual addresses are restored and still valid.
 
-Therefore, a mere replacement of the old API with the new one is all that
-is required (i.e., there is no need to explicitly add any calls to
-pagefault_disable() and/or preempt_disable()).
+Since its use in fs/ecryptfs is safe everywhere, it should be preferred.
 
+Therefore, replace kmap() with kmap_local_page() in fs/ecryptfs.
+
+Cc: "Venkataramanan, Anirudh" <anirudh.venkataramanan@intel.com>
 Suggested-by: Ira Weiny <ira.weiny@intel.com>
+Reviewed-by: Ira Weiny <ira.weiny@intel.com>
 Signed-off-by: Fabio M. De Francesco <fmdefrancesco@gmail.com>
 ---
- fs/ecryptfs/read_write.c | 4 ++--
- 1 file changed, 2 insertions(+), 2 deletions(-)
+ fs/ecryptfs/crypto.c     | 8 ++++----
+ fs/ecryptfs/read_write.c | 8 ++++----
+ 2 files changed, 8 insertions(+), 8 deletions(-)
 
+diff --git a/fs/ecryptfs/crypto.c b/fs/ecryptfs/crypto.c
+index e3f5d7f3c8a0..03263ebcccc6 100644
+--- a/fs/ecryptfs/crypto.c
++++ b/fs/ecryptfs/crypto.c
+@@ -465,10 +465,10 @@ int ecryptfs_encrypt_page(struct page *page)
+ 	}
+ 
+ 	lower_offset = lower_offset_for_page(crypt_stat, page);
+-	enc_extent_virt = kmap(enc_extent_page);
++	enc_extent_virt = kmap_local_page(enc_extent_page);
+ 	rc = ecryptfs_write_lower(ecryptfs_inode, enc_extent_virt, lower_offset,
+ 				  PAGE_SIZE);
+-	kunmap(enc_extent_page);
++	kunmap_local(enc_extent_virt);
+ 	if (rc < 0) {
+ 		ecryptfs_printk(KERN_ERR,
+ 			"Error attempting to write lower page; rc = [%d]\n",
+@@ -514,10 +514,10 @@ int ecryptfs_decrypt_page(struct page *page)
+ 	BUG_ON(!(crypt_stat->flags & ECRYPTFS_ENCRYPTED));
+ 
+ 	lower_offset = lower_offset_for_page(crypt_stat, page);
+-	page_virt = kmap(page);
++	page_virt = kmap_local_page(page);
+ 	rc = ecryptfs_read_lower(page_virt, lower_offset, PAGE_SIZE,
+ 				 ecryptfs_inode);
+-	kunmap(page);
++	kunmap_local(page_virt);
+ 	if (rc < 0) {
+ 		ecryptfs_printk(KERN_ERR,
+ 			"Error attempting to read lower page; rc = [%d]\n",
 diff --git a/fs/ecryptfs/read_write.c b/fs/ecryptfs/read_write.c
-index 5edf027c8359..3458f153a588 100644
+index 60bdcaddcbe5..5edf027c8359 100644
 --- a/fs/ecryptfs/read_write.c
 +++ b/fs/ecryptfs/read_write.c
-@@ -140,7 +140,7 @@ int ecryptfs_write(struct inode *ecryptfs_inode, char *data, loff_t offset,
- 			       ecryptfs_page_idx, rc);
- 			goto out;
- 		}
--		ecryptfs_page_virt = kmap_atomic(ecryptfs_page);
-+		ecryptfs_page_virt = kmap_local_page(ecryptfs_page);
+@@ -64,11 +64,11 @@ int ecryptfs_write_lower_page_segment(struct inode *ecryptfs_inode,
  
- 		/*
- 		 * pos: where we're now writing, offset: where the request was
-@@ -163,7 +163,7 @@ int ecryptfs_write(struct inode *ecryptfs_inode, char *data, loff_t offset,
- 			       (data + data_offset), num_bytes);
- 			data_offset += num_bytes;
- 		}
--		kunmap_atomic(ecryptfs_page_virt);
-+		kunmap_local(ecryptfs_page_virt);
- 		flush_dcache_page(ecryptfs_page);
- 		SetPageUptodate(ecryptfs_page);
- 		unlock_page(ecryptfs_page);
+ 	offset = ((((loff_t)page_for_lower->index) << PAGE_SHIFT)
+ 		  + offset_in_page);
+-	virt = kmap(page_for_lower);
++	virt = kmap_local_page(page_for_lower);
+ 	rc = ecryptfs_write_lower(ecryptfs_inode, virt, offset, size);
+ 	if (rc > 0)
+ 		rc = 0;
+-	kunmap(page_for_lower);
++	kunmap_local(virt);
+ 	return rc;
+ }
+ 
+@@ -253,11 +253,11 @@ int ecryptfs_read_lower_page_segment(struct page *page_for_ecryptfs,
+ 	int rc;
+ 
+ 	offset = ((((loff_t)page_index) << PAGE_SHIFT) + offset_in_page);
+-	virt = kmap(page_for_ecryptfs);
++	virt = kmap_local_page(page_for_ecryptfs);
+ 	rc = ecryptfs_read_lower(virt, offset, size, ecryptfs_inode);
+ 	if (rc > 0)
+ 		rc = 0;
+-	kunmap(page_for_ecryptfs);
++	kunmap_local(virt);
+ 	flush_dcache_page(page_for_ecryptfs);
+ 	return rc;
+ }
 -- 
-2.39.0
+2.39.1
 

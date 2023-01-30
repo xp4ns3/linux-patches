@@ -1,0 +1,49 @@
+From 78d89976c97ace1a8ab8b1c4f0c950d6bd37594f Mon Sep 17 00:00:00 2001
+From: "Fabio M. De Francesco" <fmdefrancesco@gmail.com>
+Date: Tue, 3 Jan 2023 19:48:35 +0100
+Subject: [PATCH] fs/ecryptfs: Replace kmap_atomic() with kmap_local_page()
+
+kmap_atomic() is deprecated in favor of kmap_local_page(). Therefore,
+replace kmap_atomic() with kmap_local_page() in ecryptfs_write().
+
+kmap_atomic() is implemented like a kmap_local_page() which also disables
+page-faults and preemption (the latter only for !PREEMPT_RT kernels).
+
+The code within the mapping/un-mapping in ecryptfs_write() does not
+depend on the above-mentioned side effects.
+
+Therefore, a mere replacement of the old API with the new one is all that
+is required (i.e., there is no need to explicitly add any calls to
+pagefault_disable() and/or preempt_disable()).
+
+Suggested-by: Ira Weiny <ira.weiny@intel.com>
+Signed-off-by: Fabio M. De Francesco <fmdefrancesco@gmail.com>
+---
+ fs/ecryptfs/read_write.c | 4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
+
+diff --git a/fs/ecryptfs/read_write.c b/fs/ecryptfs/read_write.c
+index 5edf027c8359..3458f153a588 100644
+--- a/fs/ecryptfs/read_write.c
++++ b/fs/ecryptfs/read_write.c
+@@ -140,7 +140,7 @@ int ecryptfs_write(struct inode *ecryptfs_inode, char *data, loff_t offset,
+ 			       ecryptfs_page_idx, rc);
+ 			goto out;
+ 		}
+-		ecryptfs_page_virt = kmap_atomic(ecryptfs_page);
++		ecryptfs_page_virt = kmap_local_page(ecryptfs_page);
+ 
+ 		/*
+ 		 * pos: where we're now writing, offset: where the request was
+@@ -163,7 +163,7 @@ int ecryptfs_write(struct inode *ecryptfs_inode, char *data, loff_t offset,
+ 			       (data + data_offset), num_bytes);
+ 			data_offset += num_bytes;
+ 		}
+-		kunmap_atomic(ecryptfs_page_virt);
++		kunmap_local(ecryptfs_page_virt);
+ 		flush_dcache_page(ecryptfs_page);
+ 		SetPageUptodate(ecryptfs_page);
+ 		unlock_page(ecryptfs_page);
+-- 
+2.39.1
+
