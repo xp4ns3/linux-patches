@@ -1,0 +1,53 @@
+From 55a75cca434195edfb2f6f7ac77a77a08b000839 Mon Sep 17 00:00:00 2001
+From: "Fabio M. De Francesco" <fmdefrancesco@gmail.com>
+Date: Mon, 19 Dec 2022 16:22:22 +0100
+Subject: [PATCH v3 1/4] fs/sysv: Use the offset_in_page() helper
+
+Use the offset_in_page() helper because it is more suitable than doing
+explicit subtractions between pointers to directory entries and kernel
+virtual addresses of mapped pages.
+
+Cc: Ira Weiny <ira.weiny@intel.com>
+Suggested-by: Al Viro <viro@zeniv.linux.org.uk>
+Signed-off-by: Fabio M. De Francesco <fmdefrancesco@gmail.com>
+---
+ fs/sysv/dir.c | 9 +++------
+ 1 file changed, 3 insertions(+), 6 deletions(-)
+
+diff --git a/fs/sysv/dir.c b/fs/sysv/dir.c
+index 88e38cd8f5c9..685379bc9d64 100644
+--- a/fs/sysv/dir.c
++++ b/fs/sysv/dir.c
+@@ -206,8 +206,7 @@ int sysv_add_link(struct dentry *dentry, struct inode *inode)
+ 	return -EINVAL;
+ 
+ got_it:
+-	pos = page_offset(page) +
+-			(char*)de - (char*)page_address(page);
++	pos = page_offset(page) + offset_in_page(de);
+ 	lock_page(page);
+ 	err = sysv_prepare_chunk(page, pos, SYSV_DIRSIZE);
+ 	if (err)
+@@ -230,8 +229,7 @@ int sysv_add_link(struct dentry *dentry, struct inode *inode)
+ int sysv_delete_entry(struct sysv_dir_entry *de, struct page *page)
+ {
+ 	struct inode *inode = page->mapping->host;
+-	char *kaddr = (char*)page_address(page);
+-	loff_t pos = page_offset(page) + (char *)de - kaddr;
++	loff_t pos = page_offset(page) + offset_in_page(de);
+ 	int err;
+ 
+ 	lock_page(page);
+@@ -328,8 +326,7 @@ void sysv_set_link(struct sysv_dir_entry *de, struct page *page,
+ 	struct inode *inode)
+ {
+ 	struct inode *dir = page->mapping->host;
+-	loff_t pos = page_offset(page) +
+-			(char *)de-(char*)page_address(page);
++	loff_t pos = page_offset(page) + offset_in_page(de);
+ 	int err;
+ 
+ 	lock_page(page);
+-- 
+2.39.0
+
