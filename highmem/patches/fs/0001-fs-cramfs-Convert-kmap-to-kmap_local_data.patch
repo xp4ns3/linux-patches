@@ -1,7 +1,7 @@
-From c8fc660e21dc726dcaf19a61de70b77c38ae5c7a Mon Sep 17 00:00:00 2001
+From b65ad34b61066c24968518c05029feca86ae43ca Mon Sep 17 00:00:00 2001
 From: "Fabio M. De Francesco" <fmdefrancesco@gmail.com>
 Date: Tue, 27 Sep 2022 17:24:15 +0200
-Subject: [PATCH] fs/cramfs: Convert kmap() to kmap_local_data()
+Subject: [RESEND PATCH] fs/cramfs: Convert kmap() to kmap_local_data()
 MIME-Version: 1.0
 Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 8bit
@@ -25,10 +25,21 @@ Since its use in fs/cramfs is safe everywhere, it should be preferred.
 Therefore, replace kmap() with kmap_local_page() in fs/cramfs. Instead
 of open-coding kmap_local_page() + memcpy(), use memcpy_from_page().
 
+Cc: Alexander Viro <viro@zeniv.linux.org.uk>
 Cc: "Venkataramanan, Anirudh" <anirudh.venkataramanan@intel.com>
 Suggested-by: Ira Weiny <ira.weiny@intel.com>
+Reviewed-by: Nicolas Pitre <nico@fluxnic.net>
+Reviewed-by: Christian Brauner (Microsoft) <brauner@kernel.org>
+Reviewed-by: Ira Weiny <ira.weiny@intel.com>
 Signed-off-by: Fabio M. De Francesco <fmdefrancesco@gmail.com>
 ---
+
+I'm resending this patch to Al Viro as it was asked by Nicolas[1]. In
+the meantime I'm also adding three "Reviewed-by" tags from Christian,
+Ira and Nicolas (thanks to you all!).
+
+[1] https://lore.kernel.org/lkml/210n4959-p557-894p-20qp-r595540r0827@syhkavp.arg/
+
  fs/cramfs/inode.c | 9 ++++-----
  1 file changed, 4 insertions(+), 5 deletions(-)
 
@@ -72,5 +83,5 @@ index 61ccf7722fc3..c17cbba5d45e 100644
  	SetPageError(page);
  	unlock_page(page);
 -- 
-2.37.3
+2.39.0
 
