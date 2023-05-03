@@ -1,0 +1,37 @@
+From e4c2c327f5b0e1b2f48ddbd7898352b6abaaeb71 Mon Sep 17 00:00:00 2001
+From: "Fabio M. De Francesco" <fmdefrancesco@gmail.com>
+Date: Mon, 6 Mar 2023 12:46:32 +0100
+Subject: [PATCH] fs/sysv: Don't round down address for kunmap_flush_on_unmap()
+
+The kernel virtual address passed to kunmap_flush_on_unmap() has no more
+any need to be rounded down.
+
+Therefore, delete the rounding down of "page_addr" when passed to
+kunmap_local() in dir_put_page().
+
+Don't backport without commit 88d7b12068b9 ("highmem: round down the
+address passed to kunmap_flush_on_unmap()").
+
+Cc: Ira Weiny <ira.weiny@intel.com>
+Suggested-by: Al Viro <viro@zeniv.linux.org.uk>
+Signed-off-by: Fabio M. De Francesco <fmdefrancesco@gmail.com>
+---
+ fs/sysv/dir.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/fs/sysv/dir.c b/fs/sysv/dir.c
+index 999bceb99974..e2d26eb78af7 100644
+--- a/fs/sysv/dir.c
++++ b/fs/sysv/dir.c
+@@ -30,7 +30,7 @@ const struct file_operations sysv_dir_operations = {
+ 
+ inline void dir_put_page(struct page *page, void *page_addr)
+ {
+-	kunmap_local((void *)((unsigned long)page_addr & PAGE_MASK));
++	kunmap_local(page_addr);
+ 	put_page(page);
+ }
+ 
+-- 
+2.39.2
+
