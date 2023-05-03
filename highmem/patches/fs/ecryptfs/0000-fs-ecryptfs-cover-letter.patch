@@ -1,0 +1,35 @@
+From b495565ba893613e0076b45af8426c93fef049f9 Mon Sep 17 00:00:00 2001
+From: "Fabio M. De Francesco" <fmdefrancesco@gmail.com>
+Date: Mon, 17 Apr 2023 13:37:48 +0200
+Subject: [PATCH v2 0/3] fs/ecryptfs: Replace kmap{,_atomic}() with kmap_local_page()
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 8bit
+
+kmap() and kmap_atomic() have been deprecated in favor of
+kmap_local_page().
+
+Therefore, replace kmap() and kmap_atomic() with kmap_local_page().
+
+Tested in a QEMU/KVM x86_32 VM, 6GB RAM, booting a kernel with
+HIGHMEM64GB enabled.
+
+v1->v2: Patches 1/3 and 2/3 were not grouped in a series. Patch 3/3 is
+new. Therefore, currently one series groups all conversions needed if
+fs/ecryptfs. The subject of 2/3 changed to differentiate between it and
+3/3. Furthermore, the commit messages of 1/3 and 2/3 have been largely
+reworked.
+
+Fabio M. De Francesco (3):
+  fs/ecryptfs: Replace kmap() with kmap_local_page()
+  fs/ecryptfs: Use kmap_local_page() in ecryptfs_write()
+  fs/ecryptfs: Use kmap_local_page() in copy_up_encrypted_with_header()
+
+ fs/ecryptfs/crypto.c     |  8 ++++----
+ fs/ecryptfs/mmap.c       |  4 ++--
+ fs/ecryptfs/read_write.c | 12 ++++++------
+ 3 files changed, 12 insertions(+), 12 deletions(-)
+
+-- 
+2.40.0
+

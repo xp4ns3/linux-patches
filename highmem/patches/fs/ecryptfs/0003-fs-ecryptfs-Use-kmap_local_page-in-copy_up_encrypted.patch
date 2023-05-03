@@ -1,0 +1,62 @@
+From b495565ba893613e0076b45af8426c93fef049f9 Mon Sep 17 00:00:00 2001
+From: "Fabio M. De Francesco" <fmdefrancesco@gmail.com>
+Date: Tue, 31 Jan 2023 23:08:46 +0100
+Subject: [PATCH v2 3/3] fs/ecryptfs: Use kmap_local_page() in copy_up_encrypted_with_header()
+
+kmap_atomic() has been deprecated in favor of kmap_local_page().
+
+Therefore, replace kmap_atomic() with kmap_local_page() in
+ecryptfs_copy_up_encrypted_with_header().
+
+kmap_atomic() is implemented like a kmap_local_page() which also
+disables page-faults and preemption (the latter only in !PREEMPT_RT
+kernels). The kernel virtual addresses returned by these two API are
+only valid in the context of the callers (i.e., they cannot be handed to
+other threads).
+
+With kmap_local_page() the mappings are per thread and CPU local like
+in kmap_atomic(); however, they can handle page-faults and can be called
+from any context (including interrupts). The tasks that call
+kmap_local_page() can be preempted and, when they are scheduled to run
+again, the kernel virtual addresses are restored and are still valid.
+
+In ecryptfs_copy_up_encrypted_with_header(), the block of code between
+the mapping and un-mapping does not depend on the above-mentioned side
+effects of kmap_aatomic(), so that the mere replacements of the old API
+with the new one is all that is required (i.e., there is no need to
+explicitly call pagefault_disable() and/or preempt_disable()).
+
+Tested in a QEMU/KVM x86_32 VM, 6GB RAM, booting a kernel with
+HIGHMEM64GB enabled.
+
+Cc: Ira Weiny <ira.weiny@intel.com>
+Signed-off-by: Fabio M. De Francesco <fmdefrancesco@gmail.com>
+---
+ fs/ecryptfs/mmap.c | 4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
+
+diff --git a/fs/ecryptfs/mmap.c b/fs/ecryptfs/mmap.c
+index 373c3e5747e6..cb1e998ce54d 100644
+--- a/fs/ecryptfs/mmap.c
++++ b/fs/ecryptfs/mmap.c
+@@ -125,7 +125,7 @@ ecryptfs_copy_up_encrypted_with_header(struct page *page,
+ 			/* This is a header extent */
+ 			char *page_virt;
+ 
+-			page_virt = kmap_atomic(page);
++			page_virt = kmap_local_page(page);
+ 			memset(page_virt, 0, PAGE_SIZE);
+ 			/* TODO: Support more than one header extent */
+ 			if (view_extent_num == 0) {
+@@ -138,7 +138,7 @@ ecryptfs_copy_up_encrypted_with_header(struct page *page,
+ 							       crypt_stat,
+ 							       &written);
+ 			}
+-			kunmap_atomic(page_virt);
++			kunmap_local(page_virt);
+ 			flush_dcache_page(page);
+ 			if (rc) {
+ 				printk(KERN_ERR "%s: Error reading xattr "
+-- 
+2.40.0
+
