@@ -1,12 +1,12 @@
-From 24873b005cad2edfd24234db2876c10c07f73fd4 Mon Sep 17 00:00:00 2001
+From 32a39c139eddbf8ed93500aba0599a51b44e76b1 Mon Sep 17 00:00:00 2001
 From: "Fabio M. De Francesco" <fmdefrancesco@gmail.com>
-Date: Thu, 11 Aug 2022 16:59:57 +0200
-Subject: [PATCH 0/3] drm/i915: Replace kmap() with kmap_local_page()
+Date: Sun, 16 Apr 2023 19:44:22 +0200
+Subject: [PATCH v2 0/3] drm/i915: Replace kmap() with kmap_local_page()
 MIME-Version: 1.0
 Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 8bit
 
-kmap() is being deprecated in favor of kmap_local_page().
+kmap() has been deprecated in favor of kmap_local_page().
 
 There are two main problems with kmap(): (1) It comes with an overhead as
 mapping space is restricted and protected by a global lock for
@@ -16,20 +16,28 @@ utilized until a slot becomes available.
 
 With kmap_local_page() the mappings are per thread, CPU local, can take
 page faults, and can be called from any context (including interrupts).
-It is faster than kmap() in kernels with HIGHMEM enabled. Furthermore,
-the tasks can be preempted and, when they are scheduled to run again, the
-kernel virtual addresses are restored and still valid.
 
-Since its use in drm/i915 is safe everywhere, it should be preferred.
+The tasks can be preempted and, when they are scheduled to run again, the
+kernel virtual addresses are restored and so they are still valid.
 
-Therefore, replace kmap() with kmap_local_page() in drm/i915.
+Furthermore, kmap_local_page() is faster than kmap() in kernels with
+HIGHMEM enabled.
 
-These changes should be tested in an 32 bits system, booting a kernel
-with HIGHMEM enabled. Unfortunately I have no i915 based hardware,
-therefore any help with testing would be greatly appreciated.
+Thread locality implies that the kernel virtual addresses returned by
+kmap_local_page() are only valid in the context of the callers. This
+constraint is never violated with the conversions in this series,
+because the pointers are never handed to other threads, so the local
+mappings are allowed and preferred.
+
+Therefore, replace kmap() with kmap_local_page() in drm/i915/,
+drm/i915/gem/, drm/i915/gt/.
 
 Suggested-by: Ira Weiny <ira.weiny@intel.com>
 Signed-off-by: Fabio M. De Francesco <fmdefrancesco@gmail.com>
+
+v1->v2: Do some changes in the text of the cover letter and in the
+commit messages. There are no changes in the code of any of the three
+patches.
 
 Fabio M. De Francesco (3):
   drm/i915: Replace kmap() with kmap_local_page()
@@ -43,6 +51,6 @@ Fabio M. De Francesco (3):
  drivers/gpu/drm/i915/i915_gem.c                    |  8 ++++----
  5 files changed, 16 insertions(+), 21 deletions(-)
 
--- 
-2.37.1
+--
+2.40.0
 

@@ -1,12 +1,12 @@
-From 60458c5732fdfb35f855b192b7e3f8f060c6ddee Mon Sep 17 00:00:00 2001
+From 674a9f3e396018a5c1a6d2108c6496106b9b12cc Mon Sep 17 00:00:00 2001
 From: "Fabio M. De Francesco" <fmdefrancesco@gmail.com>
 Date: Wed, 10 Aug 2022 21:05:48 +0200
-Subject: [PATCH 2/3] drm/i915/gt: Replace kmap() with kmap_local_page()
+Subject: [PATCH v2 2/3] drm/i915/gt: Replace kmap() with kmap_local_page()
 MIME-Version: 1.0
 Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 8bit
 
-kmap() is being deprecated in favor of kmap_local_page().
+kmap() s been deprecated in favor of kmap_local_page().
 
 There are two main problems with kmap(): (1) It comes with an overhead as
 mapping space is restricted and protected by a global lock for
@@ -20,9 +20,12 @@ It is faster than kmap() in kernels with HIGHMEM enabled. Furthermore,
 the tasks can be preempted and, when they are scheduled to run again, the
 kernel virtual addresses are restored and are still valid.
 
-Since its use in i915/gt is safe everywhere, it should be preferred.
+Obviously, thread locality implies that the kernel virtual addresses are
+only valid in the context of the callers. The use of kmap_local_page() in
+i915/gt doesn't break the above-mentioned constraint, so it should be
+preferred to kmap().
 
-Therefore, replace kmap() with kmap_local_page() in i915/gt
+Therefore, replace kmap() with kmap_local_page() in i915/gt.
 
 Suggested-by: Ira Weiny <ira.weiny@intel.com>
 Signed-off-by: Fabio M. De Francesco <fmdefrancesco@gmail.com>
@@ -32,42 +35,42 @@ Signed-off-by: Fabio M. De Francesco <fmdefrancesco@gmail.com>
  2 files changed, 6 insertions(+), 9 deletions(-)
 
 diff --git a/drivers/gpu/drm/i915/gt/intel_ggtt_fencing.c b/drivers/gpu/drm/i915/gt/intel_ggtt_fencing.c
-index 6ebda3d65086..21d8ce40b897 100644
+index 37d0b0fe791d..89295c6921d6 100644
 --- a/drivers/gpu/drm/i915/gt/intel_ggtt_fencing.c
 +++ b/drivers/gpu/drm/i915/gt/intel_ggtt_fencing.c
-@@ -747,7 +747,7 @@ static void swizzle_page(struct page *page)
+@@ -749,7 +749,7 @@ static void swizzle_page(struct page *page)
  	char *vaddr;
  	int i;
- 
+
 -	vaddr = kmap(page);
 +	vaddr = kmap_local_page(page);
- 
+
  	for (i = 0; i < PAGE_SIZE; i += 128) {
  		memcpy(temp, &vaddr[i], 64);
-@@ -755,7 +755,7 @@ static void swizzle_page(struct page *page)
+@@ -757,7 +757,7 @@ static void swizzle_page(struct page *page)
  		memcpy(&vaddr[i + 64], temp, 64);
  	}
- 
+
 -	kunmap(page);
 +	kunmap_local(vaddr);
  }
- 
+
  /**
 diff --git a/drivers/gpu/drm/i915/gt/shmem_utils.c b/drivers/gpu/drm/i915/gt/shmem_utils.c
-index 402f085f3a02..48edbb8a33e5 100644
+index 449c9ed44382..be809839a241 100644
 --- a/drivers/gpu/drm/i915/gt/shmem_utils.c
 +++ b/drivers/gpu/drm/i915/gt/shmem_utils.c
-@@ -98,22 +98,19 @@ static int __shmem_rw(struct file *file, loff_t off,
+@@ -101,22 +101,19 @@ static int __shmem_rw(struct file *file, loff_t off,
  		unsigned int this =
  			min_t(size_t, PAGE_SIZE - offset_in_page(off), len);
  		struct page *page;
 -		void *vaddr;
- 
+
  		page = shmem_read_mapping_page_gfp(file->f_mapping, pfn,
  						   GFP_KERNEL);
  		if (IS_ERR(page))
  			return PTR_ERR(page);
- 
+
 -		vaddr = kmap(page);
  		if (write) {
 -			memcpy(vaddr + offset_in_page(off), ptr, this);
@@ -80,12 +83,12 @@ index 402f085f3a02..48edbb8a33e5 100644
  		mark_page_accessed(page);
 -		kunmap(page);
  		put_page(page);
- 
+
  		len -= this;
-@@ -140,11 +137,11 @@ int shmem_read_to_iosys_map(struct file *file, loff_t off,
+@@ -143,11 +140,11 @@ int shmem_read_to_iosys_map(struct file *file, loff_t off,
  		if (IS_ERR(page))
  			return PTR_ERR(page);
- 
+
 -		vaddr = kmap(page);
 +		vaddr = kmap_local_page(page);
  		iosys_map_memcpy_to(map, map_off, vaddr + offset_in_page(off),
@@ -94,8 +97,8 @@ index 402f085f3a02..48edbb8a33e5 100644
 -		kunmap(page);
 +		kunmap_local(vaddr);
  		put_page(page);
- 
+
  		len -= this;
--- 
-2.37.1
+--
+2.40.0
 

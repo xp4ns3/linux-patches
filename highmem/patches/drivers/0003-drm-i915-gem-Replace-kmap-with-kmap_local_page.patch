@@ -1,12 +1,12 @@
-From 24873b005cad2edfd24234db2876c10c07f73fd4 Mon Sep 17 00:00:00 2001
+From 32a39c139eddbf8ed93500aba0599a51b44e76b1 Mon Sep 17 00:00:00 2001
 From: "Fabio M. De Francesco" <fmdefrancesco@gmail.com>
 Date: Wed, 10 Aug 2022 21:46:13 +0200
-Subject: [PATCH 3/3] drm/i915/gem: Replace kmap() with kmap_local_page()
+Subject: [PATCH v2 3/3] drm/i915/gem: Replace kmap() with kmap_local_page()
 MIME-Version: 1.0
 Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 8bit
 
-kmap() is being deprecated in favor of kmap_local_page().
+kmap() s been deprecated in favor of kmap_local_page().
 
 There are two main problems with kmap(): (1) It comes with an overhead as
 mapping space is restricted and protected by a global lock for
@@ -20,9 +20,14 @@ It is faster than kmap() in kernels with HIGHMEM enabled. Furthermore,
 the tasks can be preempted and, when they are scheduled to run again, the
 kernel virtual addresses are restored and are still valid.
 
-Since its use in i915/gem is safe everywhere, it should be preferred.
+Obviously, thread locality implies that the kernel virtual addresses are
+only valid in the context of the callers. The kmap_local_page() use in
+i915/gem doesn't break the above-mentioned constraint, so it should be
+preferred to kmap().
 
-Therefore, replace kmap() with kmap_local_page() in i915/gem.
+Therefore, replace kmap() with kmap_local_page() in i915/gem and use
+memcpy_to_page() where it is possible to avoid the open coding of
+mapping + memcpy() + un-mapping.
 
 Suggested-by: Ira Weiny <ira.weiny@intel.com>
 Signed-off-by: Fabio M. De Francesco <fmdefrancesco@gmail.com>
@@ -32,60 +37,60 @@ Signed-off-by: Fabio M. De Francesco <fmdefrancesco@gmail.com>
  2 files changed, 6 insertions(+), 8 deletions(-)
 
 diff --git a/drivers/gpu/drm/i915/gem/i915_gem_shmem.c b/drivers/gpu/drm/i915/gem/i915_gem_shmem.c
-index 4eed3dd90ba8..2bc6ab9964ff 100644
+index 37d1efcd3ca6..8856a6409e83 100644
 --- a/drivers/gpu/drm/i915/gem/i915_gem_shmem.c
 +++ b/drivers/gpu/drm/i915/gem/i915_gem_shmem.c
-@@ -640,16 +640,14 @@ i915_gem_object_create_shmem_from_data(struct drm_i915_private *dev_priv,
+@@ -657,16 +657,14 @@ i915_gem_object_create_shmem_from_data(struct drm_i915_private *dev_priv,
  	do {
  		unsigned int len = min_t(typeof(size), size, PAGE_SIZE);
  		struct page *page;
 -		void *pgdata, *vaddr;
 +		void *pgdata;
- 
+
  		err = aops->write_begin(file, file->f_mapping, offset, len,
  					&page, &pgdata);
  		if (err < 0)
  			goto fail;
- 
+
 -		vaddr = kmap(page);
 -		memcpy(vaddr, data, len);
 -		kunmap(page);
 +		memcpy_to_page(page, 0, data, len);
- 
+
  		err = aops->write_end(file, file->f_mapping, offset, len, len,
  				      page, pgdata);
 diff --git a/drivers/gpu/drm/i915/gem/selftests/i915_gem_mman.c b/drivers/gpu/drm/i915/gem/selftests/i915_gem_mman.c
-index 3ced9948a331..bb25b50b5688 100644
+index 56279908ed30..5fd9e1ee2340 100644
 --- a/drivers/gpu/drm/i915/gem/selftests/i915_gem_mman.c
 +++ b/drivers/gpu/drm/i915/gem/selftests/i915_gem_mman.c
-@@ -153,7 +153,7 @@ static int check_partial_mapping(struct drm_i915_gem_object *obj,
+@@ -155,7 +155,7 @@ static int check_partial_mapping(struct drm_i915_gem_object *obj,
  	intel_gt_flush_ggtt_writes(to_gt(i915));
- 
+
  	p = i915_gem_object_get_page(obj, offset >> PAGE_SHIFT);
 -	cpu = kmap(p) + offset_in_page(offset);
 +	cpu = kmap_local_page(p) + offset_in_page(offset);
  	drm_clflush_virt_range(cpu, sizeof(*cpu));
  	if (*cpu != (u32)page) {
- 		pr_err("Partial view for %lu [%u] (offset=%llu, size=%u [%llu, row size %u], fence=%d, tiling=%d, stride=%d) misalignment, expected write to page (%llu + %u [0x%llx]) of 0x%x, found 0x%x\n",
-@@ -171,7 +171,7 @@ static int check_partial_mapping(struct drm_i915_gem_object *obj,
+ 		pr_err("Partial view for %lu [%u] (offset=%llu, size=%u [%llu, row size %u], fence=%d, tiling=%d, stride=%d) misalignment, expected write to page (%lu + %u [0x%lx]) of 0x%x, found 0x%x\n",
+@@ -173,7 +173,7 @@ static int check_partial_mapping(struct drm_i915_gem_object *obj,
  	}
  	*cpu = 0;
  	drm_clflush_virt_range(cpu, sizeof(*cpu));
 -	kunmap(p);
 +	kunmap_local(cpu);
- 
+
  out:
  	i915_gem_object_lock(obj, NULL);
-@@ -249,7 +249,7 @@ static int check_partial_mappings(struct drm_i915_gem_object *obj,
+@@ -251,7 +251,7 @@ static int check_partial_mappings(struct drm_i915_gem_object *obj,
  		intel_gt_flush_ggtt_writes(to_gt(i915));
- 
+
  		p = i915_gem_object_get_page(obj, offset >> PAGE_SHIFT);
 -		cpu = kmap(p) + offset_in_page(offset);
 +		cpu = kmap_local_page(p) + offset_in_page(offset);
  		drm_clflush_virt_range(cpu, sizeof(*cpu));
  		if (*cpu != (u32)page) {
- 			pr_err("Partial view for %lu [%u] (offset=%llu, size=%u [%llu, row size %u], fence=%d, tiling=%d, stride=%d) misalignment, expected write to page (%llu + %u [0x%llx]) of 0x%x, found 0x%x\n",
-@@ -267,7 +267,7 @@ static int check_partial_mappings(struct drm_i915_gem_object *obj,
+ 			pr_err("Partial view for %lu [%u] (offset=%llu, size=%u [%llu, row size %u], fence=%d, tiling=%d, stride=%d) misalignment, expected write to page (%lu + %u [0x%lx]) of 0x%x, found 0x%x\n",
+@@ -269,7 +269,7 @@ static int check_partial_mappings(struct drm_i915_gem_object *obj,
  		}
  		*cpu = 0;
  		drm_clflush_virt_range(cpu, sizeof(*cpu));
@@ -93,7 +98,7 @@ index 3ced9948a331..bb25b50b5688 100644
 +		kunmap_local(cpu);
  		if (err)
  			return err;
- 
--- 
-2.37.1
+
+--
+2.40.0
 
