@@ -1,0 +1,29 @@
+The `struct folio` is a vital data structure in Linux's memory management system, with a significant role in various kernel aspects, including virtual memory, page cache, filesystems, file I/O, and device drivers.
+
+Formally, the `struct folio` represents a physically, virtually, and logically contiguous set of bytes. It has a power-of-two size and alignment, ensuring efficient operations. The minimum size of a `struct folio` is the system-defined `PAGE_SIZE`, which corresponds to the page size.
+
+In the context of the page cache subsystem, a `struct folio` is responsible for mapping page frames that cache file data. When a `struct folio` resides in the page cache, it aligns with a file offset that is a multiple of its power-of-two size. This alignment facilitates efficient management and retrieval of file data within the page cache.
+
+While a `struct folio` can be mapped into user-space with an arbitrary page offset, its kernel virtual address aligns with its size. This alignment ensures efficient access and manipulation by the kernel.
+
+The `struct folio` contains essential information about a page frame, including its state, attributes, and usage. It is defined in the kernel header file `include/linux/folio.h`.
+
+Here's an overview of the key fields and functionalities provided by the `struct folio`:
+
+1. `page`: This field points to the first associated `struct page`, representing a physical page frame in memory.
+
+2. `flags`: The `flags` field holds various attributes and state information, such as lock status, dirtiness, and writeback.
+
+3. `lru`: The `lru` field is used to maintain the folio in the page cache's LRU (Least Recently Used) list, aiding the kernel in page eviction and replacement management.
+
+4. `mapping`: This field points to the `address_space` structure associated with the page, facilitating efficient file I/O operations by linking it to the corresponding file or device.
+
+5. `index`: The `index` field specifies the offset within the file or device where the first page is located, enabling logical-to-physical address mapping during file I/O.
+
+6. `private`: This field provides flexibility for filesystems or device drivers to store additional information tailored to their needs, extending the functionality of the `struct folio` for various use cases.
+
+7. `page_count`: The `page_count` field tracks the reference count of the folio, enabling the kernel to determine when a page can be safely freed or reused.
+
+Understanding the key fields of the `struct folio` data structure is crucial for developers working on file systems, storage drivers, or any other component dealing with page caching and virtual memory.
+
+By utilizing the `struct folio` and its associated functions and macros defined in `include/linux/folio.h`, developers can efficiently manipulate and manage page frames in the kernel, optimizing file I/O operations, memory usage, and caching strategies.
