@@ -1,0 +1,188 @@
+From 7d2da73eccd51705c13fcbc2341ce581b95bd40a Mon Sep 17 00:00:00 2001
+From: "Fabio M. De Francesco" <fmdefrancesco@gmail.com>
+Date: Thu, 1 Jun 2023 14:56:44 +0200
+Subject: [PATCH] highmem: Rename put_and_unmap_page() to unmap_and_put_page()
+
+With commit 849ad04cf562a ("new helper: put_and_unmap_page()"), Al Viro
+introduced the put_and_unmap_page() to use in those many places where we
+have a common pattern consisting of calls to kunmap_local() +
+put_page().
+
+Obviously, first we unmap and then we put pages. Instead, the original
+name of this helper seems to imply that we first put and then unmap.
+
+Therefore, rename the helper and change the only known upstreamed user
+(i.e., fs/sysv) before this helper enters common use and might become
+difficult to find all call sites and instead easy to break the builds.
+
+Cc: Al Viro <viro@zeniv.linux.org.uk>
+Signed-off-by: Fabio M. De Francesco <fmdefrancesco@gmail.com>
+---
+
+I had sent an RFC which had a typo in a call of unmap_and_put_page().
+The Kernel Test Robot made me notice that typo (thanks) and now it is fixed.
+
+My fault: I thought that an RFC doesn't need compiler's checks but now I
+know I was wrong :-(
+
+The RFC is at:
+https://lore.kernel.org/lkml/20230601132317.13606-1-fmdefrancesco@gmail.com/
+
+The reason of the RFC was mainly because I wasn't sure whether or not Al
+was using some obscure name calling convention which is unknown to me.
+
+Anyway, he and nobody else objected. Therefore, I decided to drop the
+RFC prefix and send a real patch. In the meantime I changed the subject
+prefif from "fs" to "mm" and added linux-mm to the list of recipients.
+
+ fs/sysv/dir.c           | 22 +++++++++++-----------
+ fs/sysv/namei.c         |  8 ++++----
+ include/linux/highmem.h |  2 +-
+ 3 files changed, 16 insertions(+), 16 deletions(-)
+
+diff --git a/fs/sysv/dir.c b/fs/sysv/dir.c
+index cdb3d632c63d..0140010aa0c3 100644
+--- a/fs/sysv/dir.c
++++ b/fs/sysv/dir.c
+@@ -52,7 +52,7 @@ static int sysv_handle_dirsync(struct inode *dir)
+ }
+ 
+ /*
+- * Calls to dir_get_page()/put_and_unmap_page() must be nested according to the
++ * Calls to dir_get_page()/unmap_and_put_page() must be nested according to the
+  * rules documented in mm/highmem.rst.
+  *
+  * NOTE: sysv_find_entry() and sysv_dotdot() act as calls to dir_get_page()
+@@ -103,11 +103,11 @@ static int sysv_readdir(struct file *file, struct dir_context *ctx)
+ 			if (!dir_emit(ctx, name, strnlen(name,SYSV_NAMELEN),
+ 					fs16_to_cpu(SYSV_SB(sb), de->inode),
+ 					DT_UNKNOWN)) {
+-				put_and_unmap_page(page, kaddr);
++				unmap_and_put_page(page, kaddr);
+ 				return 0;
+ 			}
+ 		}
+-		put_and_unmap_page(page, kaddr);
++		unmap_and_put_page(page, kaddr);
+ 	}
+ 	return 0;
+ }
+@@ -131,7 +131,7 @@ static inline int namecompare(int len, int maxlen,
+  * itself (as a parameter - res_dir). It does NOT read the inode of the
+  * entry - you'll have to do that yourself if you want to.
+  *
+- * On Success put_and_unmap_page() should be called on *res_page.
++ * On Success unmap_and_put_page() should be called on *res_page.
+  *
+  * sysv_find_entry() acts as a call to dir_get_page() and must be treated
+  * accordingly for nesting purposes.
+@@ -166,7 +166,7 @@ struct sysv_dir_entry *sysv_find_entry(struct dentry *dentry, struct page **res_
+ 							name, de->name))
+ 					goto found;
+ 			}
+-			put_and_unmap_page(page, kaddr);
++			unmap_and_put_page(page, kaddr);
+ 		}
+ 
+ 		if (++n >= npages)
+@@ -209,7 +209,7 @@ int sysv_add_link(struct dentry *dentry, struct inode *inode)
+ 				goto out_page;
+ 			de++;
+ 		}
+-		put_and_unmap_page(page, kaddr);
++		unmap_and_put_page(page, kaddr);
+ 	}
+ 	BUG();
+ 	return -EINVAL;
+@@ -228,7 +228,7 @@ int sysv_add_link(struct dentry *dentry, struct inode *inode)
+ 	mark_inode_dirty(dir);
+ 	err = sysv_handle_dirsync(dir);
+ out_page:
+-	put_and_unmap_page(page, kaddr);
++	unmap_and_put_page(page, kaddr);
+ 	return err;
+ out_unlock:
+ 	unlock_page(page);
+@@ -321,12 +321,12 @@ int sysv_empty_dir(struct inode * inode)
+ 			if (de->name[1] != '.' || de->name[2])
+ 				goto not_empty;
+ 		}
+-		put_and_unmap_page(page, kaddr);
++		unmap_and_put_page(page, kaddr);
+ 	}
+ 	return 1;
+ 
+ not_empty:
+-	put_and_unmap_page(page, kaddr);
++	unmap_and_put_page(page, kaddr);
+ 	return 0;
+ }
+ 
+@@ -352,7 +352,7 @@ int sysv_set_link(struct sysv_dir_entry *de, struct page *page,
+ }
+ 
+ /*
+- * Calls to dir_get_page()/put_and_unmap_page() must be nested according to the
++ * Calls to dir_get_page()/unmap_and_put_page() must be nested according to the
+  * rules documented in mm/highmem.rst.
+  *
+  * sysv_dotdot() acts as a call to dir_get_page() and must be treated
+@@ -376,7 +376,7 @@ ino_t sysv_inode_by_name(struct dentry *dentry)
+ 	
+ 	if (de) {
+ 		res = fs16_to_cpu(SYSV_SB(dentry->d_sb), de->inode);
+-		put_and_unmap_page(page, de);
++		unmap_and_put_page(page, de);
+ 	}
+ 	return res;
+ }
+diff --git a/fs/sysv/namei.c b/fs/sysv/namei.c
+index 2b2dba4c4f56..fcf163fea3ad 100644
+--- a/fs/sysv/namei.c
++++ b/fs/sysv/namei.c
+@@ -164,7 +164,7 @@ static int sysv_unlink(struct inode * dir, struct dentry * dentry)
+ 		inode->i_ctime = dir->i_ctime;
+ 		inode_dec_link_count(inode);
+ 	}
+-	put_and_unmap_page(page, de);
++	unmap_and_put_page(page, de);
+ 	return err;
+ }
+ 
+@@ -227,7 +227,7 @@ static int sysv_rename(struct mnt_idmap *idmap, struct inode *old_dir,
+ 		if (!new_de)
+ 			goto out_dir;
+ 		err = sysv_set_link(new_de, new_page, old_inode);
+-		put_and_unmap_page(new_page, new_de);
++		unmap_and_put_page(new_page, new_de);
+ 		if (err)
+ 			goto out_dir;
+ 		new_inode->i_ctime = current_time(new_inode);
+@@ -256,9 +256,9 @@ static int sysv_rename(struct mnt_idmap *idmap, struct inode *old_dir,
+ 
+ out_dir:
+ 	if (dir_de)
+-		put_and_unmap_page(dir_page, dir_de);
++		unmap_and_put_page(dir_page, dir_de);
+ out_old:
+-	put_and_unmap_page(old_page, old_de);
++	unmap_and_put_page(old_page, old_de);
+ out:
+ 	return err;
+ }
+diff --git a/include/linux/highmem.h b/include/linux/highmem.h
+index 4de1dbcd3ef6..68da30625a6c 100644
+--- a/include/linux/highmem.h
++++ b/include/linux/highmem.h
+@@ -507,7 +507,7 @@ static inline void folio_zero_range(struct folio *folio,
+ 	zero_user_segments(&folio->page, start, start + length, 0, 0);
+ }
+ 
+-static inline void put_and_unmap_page(struct page *page, void *addr)
++static inline void unmap_and_put_page(struct page *page, void *addr)
+ {
+ 	kunmap_local(addr);
+ 	put_page(page);
+-- 
+2.40.1
+
