@@ -1,7 +1,7 @@
-From 984b127458dc38511d4f1e3aa4a39c49e4c71dc9 Mon Sep 17 00:00:00 2001
+From 709c3f03a0a9bcd714c34948880bcb90734dc8b4 Mon Sep 17 00:00:00 2001
 From: "Fabio M. De Francesco" <fmdefrancesco@gmail.com>
 Date: Fri, 9 Jun 2023 04:56:01 +0200
-Subject: [PATCH] Documentation/mm: Add kmap_local_folio() to Temporary Virt. Mappings
+Subject: [PATCH v3] Documentation/highmem: Add information about kmap_local_folio()
 
 The differences between kmap_local_page() and kmap_local_folio() consist
 only in the first taking a pointer to a page and the second taking two
@@ -14,6 +14,7 @@ Mappings" section of the Highmem's documentation.
 Add information about kmap_local_folio() in the same subsection that
 explains kmap_local_page().
 
+Cc: Andrew Morton <akpm@linux-foundation.org>
 Cc: Catalin Marinas <catalin.marinas@arm.com>
 Cc: Ira Weiny <ira.weiny@intel.com>
 Cc: Jonathan Corbet <corbet@lwn.net>
@@ -21,17 +22,30 @@ Cc: Matthew Wilcox (Oracle) <willy@infradead.org>
 Cc: Mike Rapoport <rppt@linux.ibm.com>
 Cc: Peter Collingbourne <pcc@google.com>
 Cc: Peter Zijlstra <peterz@infradead.org>
+Cc: Randy Dunlap <rdunlap@infradead.org>
 Cc: Sebastian Andrzej Siewior <bigeasy@linutronix.de>
 Cc: Thomas Gleixner <tglx@linutronix.de>
 Cc: Vlastimil Babka <vbabka@suse.cz>
 Cc: Will Deacon <will@kernel.org>
+Reviewed-by: Ira Weiny <ira.weiny@intel.com>
+Reviewed-by: Mike Rapoport (IBM) <rppt@kernel.org>
 Signed-off-by: Fabio M. De Francesco <fmdefrancesco@gmail.com>
 ---
+
+v2->v3:	Replaced "request" with "create". Noticed by Randy (thanks),
+	fixed by Matthew (again thanks).
+	https://lore.kernel.org/lkml/970a881a-cdaf-2568-657a-3b93b0273338@infradead.org/
+
+v1-v2:	I had Cc'ed everybody but Andrew :-( Sorry, it's now fixed.
+	In the meantime, I collected the review tags by Ira and Mike
+	(thanks to both of you). All entries are listed using a simple
+	ascending lexycographycal order based on first names.
+
  Documentation/mm/highmem.rst | 27 +++++++++++++++------------
  1 file changed, 15 insertions(+), 12 deletions(-)
 
 diff --git a/Documentation/mm/highmem.rst b/Documentation/mm/highmem.rst
-index c964e0848702..bb9584f167a6 100644
+index c964e0848702..fe68e02fc8ff 100644
 --- a/Documentation/mm/highmem.rst
 +++ b/Documentation/mm/highmem.rst
 @@ -51,11 +51,14 @@ Temporary Virtual Mappings
@@ -43,7 +57,7 @@ index c964e0848702..bb9584f167a6 100644
 -  can only be used in the context which acquired them.
 -
 -  This function should always be used, whereas kmap_atomic() and kmap() have
-+* kmap_local_page(), kmap_local_folio() - These functions are used to require
++* kmap_local_page(), kmap_local_folio() - These functions are used to create
 +  short term mappings. They can be invoked from any context (including
 +  interrupts) but the mappings can only be used in the context which acquired
 +  them. The only differences between them consist in the first taking a pointer
@@ -88,5 +102,5 @@ index c964e0848702..bb9584f167a6 100644
    Nesting kmap_local_page() and kmap_atomic() mappings is allowed to a certain
    extent (up to KMAP_TYPE_NR) but their invocations have to be strictly ordered
 -- 
-2.40.1
+2.41.0
 

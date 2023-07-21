@@ -1,0 +1,67 @@
+From f5b3993737561edd6642344838ab1daa8d9b1bf2 Mon Sep 17 00:00:00 2001
+From: Al Viro <viro@zeniv.linux.org.uk>
+Date: Tue, 13 Dec 2022 20:26:27 -0500
+Subject: [PATCH 2/6] ext2: use offset_in_page() instead of open-coding it as
+ subtraction
+
+Signed-off-by: Al Viro <viro@zeniv.linux.org.uk>
+---
+ fs/ext2/dir.c | 14 ++++++--------
+ 1 file changed, 6 insertions(+), 8 deletions(-)
+
+diff --git a/fs/ext2/dir.c b/fs/ext2/dir.c
+index a3c77ea5a7de..5141ec6a6b51 100644
+--- a/fs/ext2/dir.c
++++ b/fs/ext2/dir.c
+@@ -240,7 +240,7 @@ ext2_validate_entry(char *base, unsigned offset, unsigned mask)
+ 			break;
+ 		p = ext2_next_entry(p);
+ 	}
+-	return (char *)p - base;
++	return offset_in_page(p);
+ }
+ 
+ static inline void ext2_set_de_type(ext2_dirent *de, struct inode *inode)
+@@ -465,8 +465,7 @@ int ext2_set_link(struct inode *dir, struct ext2_dir_entry_2 *de,
+ 		struct page *page, void *page_addr, struct inode *inode,
+ 		bool update_times)
+ {
+-	loff_t pos = page_offset(page) +
+-			(char *) de - (char *) page_addr;
++	loff_t pos = page_offset(page) + offset_in_page(de);
+ 	unsigned len = ext2_rec_len_from_disk(de->rec_len);
+ 	int err;
+ 
+@@ -556,8 +555,7 @@ int ext2_add_link (struct dentry *dentry, struct inode *inode)
+ 	return -EINVAL;
+ 
+ got_it:
+-	pos = page_offset(page) +
+-		(char *)de - (char *)page_addr;
++	pos = page_offset(page) + offset_in_page(de);
+ 	err = ext2_prepare_chunk(page, pos, rec_len);
+ 	if (err)
+ 		goto out_unlock;
+@@ -594,8 +592,8 @@ int ext2_delete_entry (struct ext2_dir_entry_2 *dir, struct page *page,
+ 			char *kaddr)
+ {
+ 	struct inode *inode = page->mapping->host;
+-	unsigned from = ((char*)dir - kaddr) & ~(ext2_chunk_size(inode)-1);
+-	unsigned to = ((char *)dir - kaddr) +
++	unsigned from = offset_in_page(dir) & ~(ext2_chunk_size(inode)-1);
++	unsigned to = offset_in_page(dir) +
+ 				ext2_rec_len_from_disk(dir->rec_len);
+ 	loff_t pos;
+ 	ext2_dirent * pde = NULL;
+@@ -612,7 +610,7 @@ int ext2_delete_entry (struct ext2_dir_entry_2 *dir, struct page *page,
+ 		de = ext2_next_entry(de);
+ 	}
+ 	if (pde)
+-		from = (char *)pde - kaddr;
++		from = offset_in_page(pde);
+ 	pos = page_offset(page) + from;
+ 	lock_page(page);
+ 	err = ext2_prepare_chunk(page, pos, to - from);
+-- 
+2.39.2
+

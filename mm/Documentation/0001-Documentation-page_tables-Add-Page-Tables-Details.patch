@@ -1,0 +1,57 @@
+From 703c2b53fb996c135b8db55513d44dd53af49199 Mon Sep 17 00:00:00 2001
+From: "Fabio M. De Francesco" <fmdefrancesco@gmail.com>
+Date: Fri, 21 Jul 2023 13:12:21 +0200
+Subject: [PATCH] Documentation/page_tables: Add Page Tables Details
+
+Add a new section to show further details regarding Hierarchical Page Tables
+implementation, like data structure that represent them and API
+functions to insert, walk, and delete them.
+
+Signed-off-by: Fabio M. De Francesco <fmdefrancesco@gmail.com>
+---
+ Documentation/mm/page_tables.rst | 32 ++++++++++++++++++++++++++++++++
+ 1 file changed, 32 insertions(+)
+
+diff --git a/Documentation/mm/page_tables.rst b/Documentation/mm/page_tables.rst
+index 7840c1891751..95a2bd65ef5d 100644
+--- a/Documentation/mm/page_tables.rst
++++ b/Documentation/mm/page_tables.rst
+@@ -152,3 +152,35 @@ Page table handling code that wishes to be architecture-neutral, such as the
+ virtual memory manager, will need to be written so that it traverses all of the
+ currently five levels. This style should also be preferred for
+ architecture-specific code, so as to be robust to future changes.
++
++Page Tables' Implementation Details
++===================================
++
++A slightly modified Radix Tree is used to efficiently represent the hierarchical
++page tables, allowing for dynamic allocation and management of page tables and
++their entries. The Linux API provides several functions to manage the insertion,
++walking, and deletion of page tables and their entries in the Radix Tree.
++
++The actual translation from virtual addresses is performed by the Memory
++Management Unit (MMU) with the help of a relatively small Translation Lookaside
++Buffer (TLB).
++
++The x86-64 architecture can use 4 or 5 levels depending on CONFIG_X86_5LEVEL. In
++5-levels page tables, only the lower 57 bits of the virtual address are used,
++whereas, in 4-levels ones, only the lower 48 bits are.
++
++Some of of the essential API functions include:
++
++1. Insertion:
++
++   pgd_alloc(), p4d_alloc(), pud_alloc(), pmd_alloc(), pte_alloc(). These
++   functions allocate memory for new page tables and insert them into the tree.
++
++2. Walking:
++
++   pgd_offset(). p4d_offset(), pud_offset(), pmd_offset(), pte_offset().
++   These functions compute the offset to the page table's entry in the tree.
++
++3. Deletion:
++
++   -
+-- 
+2.41.0
+
