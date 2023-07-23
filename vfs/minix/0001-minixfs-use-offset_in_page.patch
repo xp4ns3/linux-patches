@@ -1,0 +1,49 @@
+From 4ee8552fb8ab41775fe413c6a045bc4852748044 Mon Sep 17 00:00:00 2001
+From: Al Viro <viro@zeniv.linux.org.uk>
+Date: Mon, 6 Mar 2023 11:35:29 -0500
+Subject: [PATCH 1/4] minixfs: use offset_in_page()
+
+It's cheaper and more idiomatic than subtracting page_address()
+of the corresponding page...
+
+Signed-off-by: Al Viro <viro@zeniv.linux.org.uk>
+---
+ fs/minix/dir.c | 8 +++-----
+ 1 file changed, 3 insertions(+), 5 deletions(-)
+
+diff --git a/fs/minix/dir.c b/fs/minix/dir.c
+index bf9858f76b6a..921965bf065c 100644
+--- a/fs/minix/dir.c
++++ b/fs/minix/dir.c
+@@ -268,7 +268,7 @@ int minix_add_link(struct dentry *dentry, struct inode *inode)
+ 	return -EINVAL;
+ 
+ got_it:
+-	pos = page_offset(page) + p - (char *)page_address(page);
++	pos = page_offset(page) + offset_in_page(p);
+ 	err = minix_prepare_chunk(page, pos, sbi->s_dirsize);
+ 	if (err)
+ 		goto out_unlock;
+@@ -296,8 +296,7 @@ int minix_add_link(struct dentry *dentry, struct inode *inode)
+ int minix_delete_entry(struct minix_dir_entry *de, struct page *page)
+ {
+ 	struct inode *inode = page->mapping->host;
+-	char *kaddr = page_address(page);
+-	loff_t pos = page_offset(page) + (char*)de - kaddr;
++	loff_t pos = page_offset(page) + offset_in_page(de);
+ 	struct minix_sb_info *sbi = minix_sb(inode->i_sb);
+ 	unsigned len = sbi->s_dirsize;
+ 	int err;
+@@ -421,8 +420,7 @@ int minix_set_link(struct minix_dir_entry *de, struct page *page,
+ {
+ 	struct inode *dir = page->mapping->host;
+ 	struct minix_sb_info *sbi = minix_sb(dir->i_sb);
+-	loff_t pos = page_offset(page) +
+-			(char *)de-(char*)page_address(page);
++	loff_t pos = page_offset(page) + offset_in_page(de);
+ 	int err;
+ 
+ 	lock_page(page);
+-- 
+2.39.2
+
